@@ -39,7 +39,7 @@ Para instalar GSpreadManager, sigue estos pasos:
 
 Localmente (desde el código fuente):
 ```bash
-pip install path/to/GSpreadManager
+pip install GSpreadManager
 ```
 
 ## Uso Básico
