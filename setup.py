@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='GSpreadManager',
-    version='0.1.3',
+    version='0.1.5',
     author='PabloAlaniz',
     author_email='pablo@culturainteractiva.com',
     description='Un módulo de Python para gestionar y automatizar tareas en Google Sheets.',

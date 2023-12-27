@@ -49,10 +49,10 @@ Aquí hay un ejemplo básico de cómo usar GSpreadManager para conectarse a una 
 from gspreadmanager import GoogleSheetConector
 
 # Crear una instancia del conector
-conector = GoogleSheetConector(doc_name='NombreDelDocumento', sheet_name='NombreDeLaHoja')
+conector = GoogleSheetConector(doc_name='NombreDelDocumento', json_google_file='ruta/credenciales.json', sheet_name='NombreDeLaHoja')
 
 # Leer datos
-datos = conector.read_all()
+datos = conector.read_sheet_data()
 ```
 ## Contribuir
 Las contribuciones son bienvenidas. 
