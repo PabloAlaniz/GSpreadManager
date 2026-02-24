@@ -248,3 +248,225 @@ class TestEdgeCases:
         
         conn.update_cell(mock_sheet, 1, 1, None)
         mock_sheet.update_cell.assert_called_with(1, 1, None)
+
+    def test_read_sheet_data_dict_format(self, mock_all):
+        """Test reading sheet data as list of dictionaries."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].get_all_values.return_value = [
+            ["Name", "Age", "City"],
+            ["Alice", "30", "NYC"],
+            ["Bob", "25", "LA"]
+        ]
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.read_sheet_data(output_format='dict')
+        
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert result[0] == {"Name": "Alice", "Age": "30", "City": "NYC"}
+        assert result[1] == {"Name": "Bob", "Age": "25", "City": "LA"}
+
+    def test_read_sheet_data_dict_empty(self, mock_all):
+        """Test reading empty sheet as dict returns empty list."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].get_all_values.return_value = []
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.read_sheet_data(output_format='dict')
+        
+        assert result == []
+
+    def test_spreadsheet_read_range(self, mock_all):
+        """Test reading a specific range from spreadsheet."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].values_get.return_value = {
+            'values': [
+                ["A1", "B1", "C1"],
+                ["A2", "B2", "C2"],
+                ["A3", "B3", "C3"]
+            ]
+        }
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.spreadsheet_read_range(
+            mock_all['worksheet'], "Sheet1", 1, 3, "A", "C"
+        )
+        
+        assert len(result) == 3
+        assert result[0] == {"fila": 1, "values": ["A1", "B1", "C1"]}
+        assert result[1] == {"fila": 2, "values": ["A2", "B2", "C2"]}
+        assert result[2] == {"fila": 3, "values": ["A3", "B3", "C3"]}
+
+    def test_spreadsheet_read_range_empty(self, mock_all):
+        """Test reading empty range returns empty list."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].values_get.return_value = {}
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.spreadsheet_read_range(
+            mock_all['worksheet'], "Sheet1", 1, 3, "A", "C"
+        )
+        
+        assert result == []
+
+    def test_get_row_with_empty_in_column_found(self, mock_all):
+        """Test finding row with empty cell in column."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_sheet = Mock()
+        mock_sheet.col_values.return_value = ["Header", "Value1", "", "Value3"]
+        mock_sheet.range.return_value = [
+            Mock(value="Header"),
+            Mock(value="Value1"),
+            Mock(value=""),
+            Mock(value="Value3")
+        ]
+        mock_sheet.row_values.return_value = ["Data", "", "MoreData"]
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        row, index = conn.get_row_with_empty_in_column(mock_sheet, 'B')
+        
+        assert index == 3  # Empty cell is at row 3
+        assert row == ["Data", "", "MoreData"]
+
+    def test_get_row_with_empty_in_column_not_found(self, mock_all):
+        """Test when no empty cell exists in column."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_sheet = Mock()
+        mock_sheet.col_values.return_value = ["Header", "Value1", "Value2"]
+        mock_sheet.range.return_value = [
+            Mock(value="Header"),
+            Mock(value="Value1"),
+            Mock(value="Value2")
+        ]
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        row, index = conn.get_row_with_empty_in_column(mock_sheet, 'B')
+        
+        assert row is None
+        assert index is None
+
+    def test_spreadsheet_insert_at_row(self, mock_all):
+        """Test inserting data at specific row."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].values_append.return_value = {"updates": {"updatedRows": 2}}
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        data = [["A", "B"], ["C", "D"]]
+        
+        result = conn.spreadsheet_insert("TestDoc", "Sheet1", data, fila=5)
+        
+        mock_all['worksheet'].values_append.assert_called()
+        assert result is not None
+
+    def test_spreadsheet_insert_at_end(self, mock_all):
+        """Test inserting data at end of sheet."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].get_all_values.return_value = [
+            ["Header1", "Header2"],
+            ["Data1", "Data2"]
+        ]
+        mock_all['worksheet'].values_append.return_value = {"updates": {"updatedRows": 1}}
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        data = [["New1", "New2"]]
+        
+        result = conn.spreadsheet_insert("TestDoc", "Sheet1", data)
+        
+        mock_all['worksheet'].values_append.assert_called()
+
+    def test_spreadsheet_insert_invalid_data(self, mock_all):
+        """Test inserting invalid data raises error."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        
+        # Data is not list of lists
+        with pytest.raises(ValueError, match="lista de listas"):
+            conn.spreadsheet_insert("TestDoc", "Sheet1", ["not", "nested"])
+
+    def test_spreadsheet_insert_uneven_rows(self, mock_all):
+        """Test inserting rows of different lengths raises error."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        
+        # Rows have different lengths
+        data = [["A", "B", "C"], ["D", "E"]]
+        with pytest.raises(ValueError, match="misma longitud"):
+            conn.spreadsheet_insert("TestDoc", "Sheet1", data)
+
+    def test_update_row_with_start_column(self, mock_all):
+        """Test updating row starting from specific column."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        mock_sheet = Mock()
+        data = ["X", "Y", "Z"]
+        
+        conn.update_row(mock_sheet, 3, data, start_column=5)
+        
+        # Should start from column 5
+        calls = mock_sheet.update_cell.call_args_list
+        assert calls[0][0] == (3, 5, "X")
+        assert calls[1][0] == (3, 6, "Y")
+        assert calls[2][0] == (3, 7, "Z")
+
+    def test_spreadsheet_append_with_tab_name(self, mock_all):
+        """Test appending data with specific tab name."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].append_rows.return_value = {"updates": {"updatedRows": 2}}
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        data = [["A", "B"], ["C", "D"]]
+        
+        result = conn.spreadsheet_append(data, tab_name="OtherSheet")
+        
+        mock_all['worksheet'].append_rows.assert_called()
+
+    def test_get_last_row_with_tab_name(self, mock_all):
+        """Test getting last row with specific tab name."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].get_all_values.return_value = [
+            ["Row1"], ["Row2"], ["Row3"]
+        ]
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.get_last_row(tab_name="SpecificTab")
+        
+        assert result == 3
+
+    def test_read_sheet_data_with_tab_name(self, mock_all):
+        """Test reading data with specific tab name."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].get_all_values.return_value = [
+            ["Header"], ["Data"]
+        ]
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.read_sheet_data(tab_name="CustomTab", output_format='list')
+        
+        assert len(result) == 2
+
+    def test_spreadsheet_insert_api_error(self, mock_all):
+        """Test spreadsheet_insert wraps API errors properly."""
+        from gspreadmanager.connector import GoogleSheetConector
+        
+        mock_all['worksheet'].values_append.side_effect = Exception("API quota exceeded")
+        mock_all['worksheet'].get_all_values.return_value = [["Row1"]]
+        
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        data = [["A", "B"]]
+        
+        with pytest.raises(Exception, match="Error al insertar datos en Sheet1"):
+            conn.spreadsheet_insert("TestDoc", "Sheet1", data)
