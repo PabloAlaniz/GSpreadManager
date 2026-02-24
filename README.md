@@ -286,8 +286,10 @@ GSpreadManager/
 ### Dependencias
 
 - **gspread** (>=3.0.0): Cliente de Google Sheets API
-- **oauth2client** (>=4.1.0): Autenticación con cuentas de servicio
-- **pandas** (>=1.0.0): Manipulación de datos (opcional, solo para formato DataFrame)
+- **google-auth** (>=2.0.0): Autenticación oficial de Google (reemplaza oauth2client deprecado)
+- **pandas** (>=1.2.4): Manipulación de datos (opcional, solo para formato DataFrame)
+
+> **Note:** A partir de v0.2.0, migramos de `oauth2client` (deprecado) a `google-auth`. Ver [CHANGELOG.md](CHANGELOG.md) para detalles.
 
 ### Flujo de Autenticación
 

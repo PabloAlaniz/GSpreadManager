@@ -9,7 +9,7 @@ with open(os.path.join(HERE, 'README.md'), encoding='utf-8') as fh:
     long_description = fh.read()
 setup(
     name='GSpreadManager',
-    version='0.1.5',
+    version='0.2.0',
     author='PabloAlaniz',
     author_email='pablo@culturainteractiva.com',
     description='Un módulo de Python para gestionar y automatizar tareas en Google Sheets.',
@@ -19,7 +19,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'gspread>=3.0',
-        'oauth2client>=4.0',
+        'google-auth>=2.0',
         'pandas>=1.2.4',
     ],
     classifiers=[
