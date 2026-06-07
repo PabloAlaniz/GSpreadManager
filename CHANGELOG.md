@@ -5,6 +5,16 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Sprint 0 de purificación (tooling, sin cambios de comportamiento):** ruff estricto
+  (se suman `W`, `C4`, `SIM`, `TID`, `PTH`, `RET`, `ARG`, `PIE`, `PERF`, `PL`, `RUF`,
+  `ANN`, `S`, `PT`, `D`) con `per-file-ignores` para `tests/`; mypy en modo `strict`
+  ahora también type-checkea `tests/`, con el `Any` de gspread acotado al borde
+  (`gspreadmanager.connector`) vía override. Pin de `ruff-pre-commit` actualizado.
+  Primer paso del plan de migración hacia DDD/SOLID/Clean (2.0).
+
 ## [1.2.0] - 2026-06-07
 
 ### Added

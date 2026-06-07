@@ -9,7 +9,6 @@ import pandas as pd
 import pytest
 from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
-
 from gspreadmanager import (
     CellFormat,
     Color,
@@ -396,7 +395,7 @@ class TestEdgeCases:
 
         # Data is not list of lists
         with pytest.raises(ValueError, match="lista de listas"):
-            conn.spreadsheet_insert("TestDoc", "Sheet1", ["not", "nested"])
+            conn.spreadsheet_insert("TestDoc", "Sheet1", ["not", "nested"])  # type: ignore[list-item]
 
     def test_spreadsheet_insert_uneven_rows(self, mock_all):
         """Test inserting rows of different lengths raises error."""
@@ -544,7 +543,7 @@ class TestDeprecation:
         conn = GoogleSheetConector("TestDoc", "fake.json")
         legacy_sheet = Mock()
 
-        with pytest.warns(DeprecationWarning):
+        with pytest.warns(DeprecationWarning, match="obsoleto"):
             conn.update_cell(1, 1, "x", sheet=legacy_sheet)
 
         legacy_sheet.update_cell.assert_called_once_with(1, 1, "x")

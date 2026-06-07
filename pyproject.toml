@@ -63,16 +63,71 @@ gspreadmanager = ["py.typed"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+src = ["gspreadmanager", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
-ignore = ["E501"]
+select = [
+    "E", "W", "F", "I", "UP", "B",
+    "C4",    # comprehensions
+    "SIM",   # simplify
+    "TID",   # tidy imports
+    "PTH",   # pathlib over os.path
+    "RET",   # return cleanups
+    "ARG",   # unused arguments
+    "PIE", "PERF",
+    "PL",    # pylint subset
+    "RUF",
+    "ANN",   # annotations (API público tipado)
+    "S",     # seguridad estilo bandit
+    "PT",    # pytest style
+    "D",     # docstrings
+]
+ignore = [
+    "E501",      # longitud de línea la maneja el formatter
+    "ANN401",    # Any es inevitable en el borde con gspread
+    "PLR0913",   # métodos de API con muchos parámetros (share/format) son intencionales
+    "D203", "D212",  # estilos de docstring mutuamente excluyentes (se usa resumen en 2ª línea)
+    "D100", "D104",  # no forzar docstring de módulo/paquete en todos lados
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "parents"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN", "D", "PLR2004", "ARG", "S105", "S106"]
+"__init__.py" = ["F401"]
 
 [tool.mypy]
-files = ["gspreadmanager"]
-ignore_missing_imports = true
-warn_unused_ignores = true
+# Sin python_version explícito: mypy infiere del intérprete del job de lint.
+# La compatibilidad con 3.9 la garantizan ruff (target py39) y la matriz de tests.
+files = ["gspreadmanager", "tests"]
+strict = true
+warn_unreachable = true
 warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+pretty = true
+
+[[tool.mypy.overrides]]
+module = ["gspread.*", "google.*", "pandas.*"]
+ignore_missing_imports = true
+
+# connector.py es hoy el borde con gspread (todavía no extraído a infrastructure/).
+# gspread expone tipos parciales, por lo que llamadas y retornos quedan como Any.
+# Se relajan SOLO aquí los avisos de Any; el resto de capas siguen estrictas.
+# Este override se moverá a "gspreadmanager.infrastructure.*" en el Sprint 5.
+[[tool.mypy.overrides]]
+module = ["gspreadmanager.connector"]
+warn_return_any = false
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_any_expr = false
 
 [tool.bandit]
 exclude_dirs = ["tests"]
