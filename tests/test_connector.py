@@ -540,3 +540,140 @@ class TestDeprecation:
             conn.update_cell(1, 1, "x", sheet=legacy_sheet)
 
         legacy_sheet.update_cell.assert_called_once_with(1, 1, "x")
+
+
+class TestFeatures:
+    """Tests for the higher-level feature methods added in 0.4.0."""
+
+    @pytest.fixture
+    def mock_all(self):
+        with (
+            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.connector.gspread") as mock_gs,
+        ):
+            mock_creds.from_service_account_file.return_value = Mock()
+            mock_client = Mock()
+            mock_spreadsheet = Mock()
+            mock_worksheet = Mock()
+            # La hoja activa expone su Spreadsheet contenedor.
+            mock_worksheet.spreadsheet = mock_spreadsheet
+
+            mock_gs.authorize.return_value = mock_client
+            mock_client.open.return_value = mock_spreadsheet
+            mock_spreadsheet.worksheet.return_value = mock_worksheet
+            mock_spreadsheet.sheet1 = mock_worksheet
+
+            yield {
+                "worksheet": mock_worksheet,
+                "spreadsheet": mock_spreadsheet,
+                "client": mock_client,
+            }
+
+    def test_create_sheet(self, mock_all):
+        new_ws = Mock()
+        mock_all["spreadsheet"].add_worksheet.return_value = new_ws
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.create_sheet("NuevaHoja", rows=50, cols=5)
+
+        mock_all["spreadsheet"].add_worksheet.assert_called_once_with(
+            "NuevaHoja", rows=50, cols=5, index=None
+        )
+        assert result is new_ws
+
+    def test_create_sheet_activate(self, mock_all):
+        new_ws = Mock()
+        new_ws.spreadsheet = mock_all["spreadsheet"]
+        mock_all["spreadsheet"].add_worksheet.return_value = new_ws
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.create_sheet("Activa", activate=True)
+
+        assert conn.sheet is new_ws
+        assert conn.tab_name == "Activa"
+
+    def test_delete_sheet(self, mock_all):
+        target = Mock()
+        mock_all["spreadsheet"].worksheet.return_value = target
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.delete_sheet("Vieja")
+
+        mock_all["spreadsheet"].worksheet.assert_called_with("Vieja")
+        mock_all["spreadsheet"].del_worksheet.assert_called_once_with(target)
+
+    def test_clear_range_single(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.clear_range("A1:C10")
+
+        mock_all["worksheet"].batch_clear.assert_called_once_with(["A1:C10"])
+
+    def test_clear_range_multiple(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.clear_range(["A1:A5", "C1:C5"])
+
+        mock_all["worksheet"].batch_clear.assert_called_once_with(["A1:A5", "C1:C5"])
+
+    def test_clear_range_whole_sheet(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.clear_range()
+
+        mock_all["worksheet"].clear.assert_called_once()
+        mock_all["worksheet"].batch_clear.assert_not_called()
+
+    def test_find_cell_found(self, mock_all):
+        cell = Mock(row=4, col=2, value="Total")
+        mock_all["worksheet"].find.return_value = cell
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.find_cell("Total")
+
+        assert result is cell
+        mock_all["worksheet"].find.assert_called_once_with("Total", case_sensitive=True)
+
+    def test_find_cell_not_found(self, mock_all):
+        mock_all["worksheet"].find.return_value = None
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        assert conn.find_cell("nope") is None
+
+    def test_from_gsheet(self, mock_all):
+        mock_all["worksheet"].get_all_values.return_value = [
+            ["Name", "Age"],
+            ["Alice", "30"],
+            ["Bob", "25"],
+        ]
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        df = conn.from_gsheet()
+
+        assert isinstance(df, pd.DataFrame)
+        assert list(df.columns) == ["Name", "Age"]
+        assert len(df) == 2
+
+    def test_to_gsheet(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        df = pd.DataFrame({"Name": ["Alice", "Bob"], "Age": [30, 25]})
+
+        conn.to_gsheet(df)
+
+        mock_all["worksheet"].clear.assert_called_once()
+        values = mock_all["worksheet"].update.call_args[0][0]
+        assert values[0] == ["Name", "Age"]
+        assert values[1] == ["Alice", 30]
+        assert values[2] == ["Bob", 25]
+
+    def test_to_gsheet_no_header_no_clear(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        df = pd.DataFrame({"A": [1], "B": [2]})
+
+        conn.to_gsheet(df, include_header=False, clear=False)
+
+        mock_all["worksheet"].clear.assert_not_called()
+        values = mock_all["worksheet"].update.call_args[0][0]
+        assert values == [[1, 2]]
+
+    def test_context_manager(self, mock_all):
+        with GoogleSheetConector("TestDoc", "fake.json") as conn:
+            assert isinstance(conn, GoogleSheetConector)
+            assert conn.sheet is mock_all["worksheet"]

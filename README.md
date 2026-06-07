@@ -11,10 +11,14 @@ GSpreadManager es un wrapper de Python para facilitar la interacción con Google
 - 🔐 **Autenticación segura** usando cuentas de servicio de Google
 - 📖 **Lectura flexible** de datos (listas, diccionarios, pandas DataFrame)
 - ✏️ **Escritura y actualización** de celdas, filas y rangos
+- 🗂️ **Gestión de hojas**: crear, eliminar y limpiar pestañas
 - 🔍 **Búsqueda y filtrado** de datos
+- 🐼 **Integración con pandas** (`to_gsheet` / `from_gsheet`)
+- ♻️ **Reintentos automáticos** con backoff ante límites de cuota
+- 🧩 **Context manager** (`with ... as conn:`)
 - ⚡ **Operaciones en lote** para mejor rendimiento
-- 🐍 **API pythonic** con docstrings completas
-- 📦 **Sin dependencias pesadas** - solo gspread, oauth2client y pandas
+- 🐍 **API pythonic** con docstrings completas y type hints (PEP 561)
+- 📦 **Dependencias mínimas** — solo `gspread` y `google-auth` (pandas opcional)
 
 ---
 
@@ -268,6 +272,53 @@ nueva_hoja = conector.connect_to_sheet(
 )
 ```
 
+### Gestión de Hojas
+
+```python
+# Crear una nueva pestaña (y opcionalmente activarla)
+conector.create_sheet('Reporte 2026', rows=500, cols=10)
+conector.create_sheet('Borrador', activate=True)
+
+# Eliminar una pestaña por nombre
+conector.delete_sheet('Borrador')
+
+# Limpiar rangos o toda la hoja
+conector.clear_range('A1:C10')
+conector.clear_range(['A1:A5', 'C1:C5'])
+conector.clear_range()  # limpia toda la hoja activa
+```
+
+### Búsqueda de celdas
+
+```python
+celda = conector.find_cell('Total')
+if celda:
+    print(f"'Total' está en fila {celda.row}, columna {celda.col}")
+```
+
+### Integración con pandas
+
+```python
+# Leer la hoja como DataFrame
+df = conector.from_gsheet()
+
+# Volcar un DataFrame a la hoja (limpia la hoja y escribe desde A1)
+conector.to_gsheet(df, tab_name='Resultados')
+
+# Sin encabezados y sin limpiar la hoja previamente
+conector.to_gsheet(df, include_header=False, clear=False)
+```
+
+> Requiere el extra pandas: `pip install "GSpreadManager[pandas]"`.
+
+### Uso como context manager
+
+```python
+with GoogleSheetConector('Mi Hoja', 'creds.json', 'Hoja1') as conector:
+    datos = conector.read_sheet_data(output_format='dict')
+    conector.update_cell(2, 1, 'Actualizado')
+```
+
 ---
 
 ## 🏗️ Arquitectura
@@ -277,10 +328,13 @@ nueva_hoja = conector.connect_to_sheet(
 ```
 GSpreadManager/
 ├── gspreadmanager/
-│   ├── __init__.py          # Exporta GoogleSheetConector
+│   ├── __init__.py          # Exporta GoogleSheetConector y excepciones
 │   ├── connector.py         # Clase principal con toda la lógica
-│   └── config.py            # Configuraciones y constantes
-├── setup.py                 # Configuración de instalación
+│   ├── config.py            # Configuraciones y constantes
+│   ├── exceptions.py        # GSpreadManagerError, InsertError
+│   ├── retry.py             # Reintentos con backoff ante límites de cuota
+│   └── py.typed             # Marcador PEP 561 (tipos exportados)
+├── pyproject.toml           # Metadata de packaging y tooling
 ├── README.md                # Este archivo
 └── LICENSE                  # Licencia MIT
 ```
@@ -556,6 +610,51 @@ updates = [
     ]}
 ]
 conector.batch_update(updates)
+```
+
+---
+
+#### Métodos de Gestión de Hojas
+
+##### `create_sheet(title, rows=100, cols=26, index=None, activate=False)`
+
+Crea una nueva pestaña. Devuelve el worksheet creado. Si `activate=True`, pasa a ser la hoja activa.
+
+##### `delete_sheet(title)`
+
+Elimina la pestaña con el nombre indicado.
+
+##### `clear_range(ranges=None, tab_name=None)`
+
+Limpia uno o varios rangos en notación A1 (str o list[str]). Si `ranges=None`, limpia toda la hoja activa.
+
+##### `find_cell(query, case_sensitive=True)`
+
+Devuelve la primera celda (`gspread.Cell` con `row`, `col`, `value`) cuyo valor coincide con `query`, o `None`.
+
+---
+
+#### Integración con pandas
+
+> Requiere el extra pandas: `pip install "GSpreadManager[pandas]"`.
+
+##### `from_gsheet(tab_name=None, skiprows=0)`
+
+Lee la hoja como un `pandas.DataFrame` (atajo de `read_sheet_data(output_format='pandas')`).
+
+##### `to_gsheet(df, tab_name=None, include_header=True, clear=True)`
+
+Vuelca un `DataFrame` en la hoja empezando en A1. Por defecto incluye encabezados y limpia la hoja antes de escribir.
+
+---
+
+#### Context manager
+
+`GoogleSheetConector` soporta el protocolo `with`. Como las operaciones se aplican de inmediato, `__exit__` no descarta cambios ni suprime excepciones.
+
+```python
+with GoogleSheetConector('Mi Hoja', 'creds.json') as conector:
+    df = conector.from_gsheet()
 ```
 
 ---

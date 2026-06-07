@@ -5,6 +5,16 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-07
+
+### Added
+- Gestión de hojas: `create_sheet(title, rows, cols, index, activate)` y `delete_sheet(title)`.
+- `clear_range(ranges=None, tab_name=None)`: limpia uno o varios rangos, o toda la hoja.
+- `find_cell(query, case_sensitive=True)`: devuelve la primera celda coincidente o `None`.
+- Integración con pandas: `from_gsheet(...)` (lee como DataFrame) y
+  `to_gsheet(df, tab_name, include_header, clear)` (vuelca un DataFrame a la hoja).
+- Soporte de **context manager**: `with GoogleSheetConector(...) as conn:`.
+
 ## [0.3.0] - 2026-06-07
 
 ### Added
