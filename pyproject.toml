@@ -38,6 +38,7 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.4.0",
+    "mypy>=1.0",
     "pandas>=1.2.4",
 ]
 
@@ -47,6 +48,9 @@ version = { attr = "gspreadmanager.__version__" }
 [tool.setuptools.packages.find]
 include = ["gspreadmanager*"]
 
+[tool.setuptools.package-data]
+gspreadmanager = ["py.typed"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py39"
@@ -54,3 +58,9 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
+
+[tool.mypy]
+files = ["gspreadmanager"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true

@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Archivo `LICENSE` (MIT) y `CONTRIBUTING.md`.
 - Configuración de `ruff` (lint + format) y `.pre-commit-config.yaml`.
 - Extra opcional `pandas` (`pip install GSpreadManager[pandas]`) y extra `dev`.
+- **Type hints** en todos los métodos públicos de `GoogleSheetConector`.
+- Marcador `py.typed` (PEP 561) para que los consumidores reciban los tipos.
+- `mypy` configurado y agregado al job de lint del CI.
 
 ### Changed
 - **`pandas` ahora es una dependencia opcional**, ya no se instala por defecto. Solo
