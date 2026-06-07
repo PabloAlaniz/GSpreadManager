@@ -1,10 +1,15 @@
 # GSpreadManager
 
 [![PyPI version](https://badge.fury.io/py/GSpreadManager.svg)](https://badge.fury.io/py/GSpreadManager)
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://github.com/PabloAlaniz/GSpreadManager/actions/workflows/ci.yml/badge.svg)](https://github.com/PabloAlaniz/GSpreadManager/actions/workflows/ci.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 GSpreadManager es un wrapper de Python para facilitar la interacción con Google Sheets. Proporciona una interfaz simple y pythonic para operaciones comunes como lectura, escritura, actualización y búsqueda de datos en hojas de cálculo de Google.
+
+📚 **Documentación completa:** <https://pabloalaniz.github.io/GSpreadManager/>
 
 ## ✨ Características
 

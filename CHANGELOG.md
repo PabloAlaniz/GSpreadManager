@@ -5,6 +5,20 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-06-07
+
+Primer release estable. Consolida los sprints de estabilización, tipado, robustez y features.
+
+### Added
+- Sitio de documentación con **MkDocs Material** + **mkdocstrings** (`docs/`, `mkdocs.yml`).
+- **Bandit** (escaneo de seguridad) integrado al job de lint del CI; job de build de docs.
+- Badges de CI, mypy y ruff en el README.
+
+### Changed
+- Estado del paquete a `Development Status :: 5 - Production/Stable`; clasificadores
+  `Typing :: Typed` y de tópicos.
+- `.gitignore` ampliado para cubrir artefactos de build, caches y `site/`.
+
 ## [0.4.0] - 2026-06-07
 
 ### Added
