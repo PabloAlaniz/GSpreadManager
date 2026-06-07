@@ -5,6 +5,23 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `pyproject.toml` con metadata de packaging moderna (PEP 621) y versión dinámica.
+- Archivo `LICENSE` (MIT) y `CONTRIBUTING.md`.
+- Configuración de `ruff` (lint + format) y `.pre-commit-config.yaml`.
+- Extra opcional `pandas` (`pip install GSpreadManager[pandas]`) y extra `dev`.
+
+### Changed
+- **`pandas` ahora es una dependencia opcional**, ya no se instala por defecto. Solo
+  se requiere para `read_sheet_data(output_format='pandas')`, que lo importa de forma
+  lazy y lanza un `ImportError` claro si no está instalado.
+- Versión unificada: `gspreadmanager.__version__` es la única fuente de verdad (`0.2.0`),
+  antes había desincronización entre `__init__.py` (0.1.5) y `setup.py` (0.2.0).
+- `requires-python` elevado a `>=3.9`.
+- CI: matriz de Python 3.9–3.12, paso de lint con `ruff`, cobertura sobre `gspreadmanager`.
+
 ## [0.2.0] - 2026-02-22
 
 ### Changed
