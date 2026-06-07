@@ -26,6 +26,7 @@ nav:
   - Inicio: index.md
   - Guía de uso: guide.md
   - Referencia de API: api.md
+  - Análisis competitivo: competitive-analysis.md
   - Changelog: changelog.md
 
 plugins:

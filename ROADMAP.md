@@ -1,93 +1,46 @@
 # ROADMAP - GSpreadManager
 
-## v0.2.0 - Estabilización Crítica (Prioridad URGENTE)
+Roadmap posterior al release **1.0.0**, derivado del [análisis competitivo](docs/competitive-analysis.md).
+Prioridad por impacto/esfuerzo, reusando el ecosistema (`gspread-*`) donde conviene.
 
-### Tests (Crítico para paquete PyPI)
-- [ ] Setup pytest con fixtures
-- [ ] Crear mocks de gspread para tests aislados
-- [ ] Tests unitarios para todos los métodos públicos:
-  - [ ] `connect_to_sheet()`
-  - [ ] `read_sheet_data()` - los 3 formatos de output
-  - [ ] `spreadsheet_append()`
-  - [ ] `update_cell()` / `update_row()`
-  - [ ] `batch_update()`
-  - [ ] `get_rows_where_column_equals()`
-- [ ] Coverage mínimo: 80%
-- [ ] Badge de coverage en README
+## ✅ Hecho (hasta 1.0.0)
 
-### CI/CD
-- [ ] GitHub Actions con tests en push/PR
-- [ ] Matrix de Python versions (3.9, 3.10, 3.11, 3.12)
-- [ ] Publicación automática a PyPI en tags
+- Packaging moderno (`pyproject.toml`), versión única, `ruff` + `mypy` + `bandit`, CI 3.9–3.12.
+- Type hints completos + `py.typed`. `pandas` opcional.
+- Fix de bugs (`values_get`/`values_append`, rangos > columna Z), retry + backoff, excepciones propias.
+- Gestión de hojas (`create_sheet`/`delete_sheet`/`clear_range`/`find_cell`), integración pandas, context manager.
+- Documentación con MkDocs. Primer release estable.
 
----
+## ✅ v1.1 - Eficiencia y autenticación (HECHO)
 
-## v0.3.0 - Modernización (Prioridad Alta)
+- [x] **Caché de cliente + documento** (no re-autenticar al cambiar de pestaña).
+- [x] **Autenticación flexible**: service account (file/dict), credenciales de google-auth, cliente ya autorizado, ADC.
+- [ ] **Caché opcional de lecturas** con invalidación al escribir.
 
-### Migración a google-auth
-- [ ] Reemplazar oauth2client por google-auth + google-auth-oauthlib
-- [ ] Soportar múltiples métodos de autenticación:
-  - [ ] Service Account (JSON file)
-  - [ ] OAuth2 (user credentials)
-  - [ ] Application Default Credentials (ADC)
-- [ ] Documentar migración para usuarios existentes
+## v1.2 - Formato y operaciones de documento (paridad con pygsheets)
 
-### Type Hints
-- [ ] Anotaciones de tipos en todos los métodos
-- [ ] Crear archivo py.typed para PEP 561
-- [ ] Configurar mypy en CI
+- [ ] **Formato de celdas**: integrar `gspread-formatting` como extra opcional (`[formatting]`)
+      con helpers (`format_range`, negrita/color/número, formato condicional).
+- [ ] **Operaciones a nivel documento**: `create_spreadsheet`, `delete_spreadsheet`,
+      `copy_spreadsheet`, `list_spreadsheets` (vía Drive).
+- [ ] **Compartir / permisos**: `share(email, role)`, `list_permissions`, `remove_permission`.
 
-### Dependencias
-- [ ] Actualizar gspread a versión más reciente
-- [ ] Hacer pandas opcional (no forzar instalación)
+## v1.3 - Productividad de datos (paridad con gspread-pandas)
 
----
+- [ ] **Pandas avanzado**: anclar DataFrame en posición arbitraria, `drop_empty_rows/cols`,
+      escribir el índice opcional, inferencia de tipos.
+- [ ] **Freeze rows/cols, merge cells, auto-filtros**.
+- [ ] **Data validation**: dropdowns y checkboxes.
 
-## v0.4.0 - Mejoras de API (Prioridad Media)
+## v2.0 - Async y escala
 
-### Nuevos Métodos
-- [ ] `find_cell(value)` - Buscar celda por valor
-- [ ] `clear_range(range)` - Limpiar rango
-- [ ] `format_cells(range, format)` - Aplicar formato
-- [ ] `create_sheet(name)` - Crear nueva hoja
-- [ ] `delete_sheet(name)` - Eliminar hoja
+- [ ] **Soporte async** (wrapper con threadpool al estilo `gspread-asyncio`).
+- [ ] **Paginación/streaming** para hojas grandes.
+- [ ] **Rate limiting** proactivo (token bucket), además del retry reactivo.
 
-### Context Manager
-- [ ] Implementar `__enter__` / `__exit__`
-- [ ] Auto-flush de cambios pendientes
+## Backlog (sin priorizar)
 
-### Async Support
-- [ ] Versión async de métodos principales
-- [ ] Usar httpx en lugar de requests internamente
-
----
-
-## v1.0.0 - Release Estable
-
-### Documentación
-- [ ] Sitio de documentación con MkDocs
-- [ ] Guía de migración desde gspread directo
-- [ ] Ejemplos de uso comunes (notebooks)
-- [ ] API reference completa
-
-### Calidad
-- [ ] 90%+ code coverage
-- [ ] 0 issues de seguridad (bandit)
-- [ ] 0 code smells (ruff/pylint)
-
-### Release
-- [ ] Semantic versioning automático
-- [ ] CHANGELOG.md automático
-- [ ] Anuncio en redes/Medium
-
----
-
-## Backlog (Sin Priorizar)
-
-- [ ] Soporte para Google Drive (listar archivos, crear spreadsheets)
-- [ ] Caché de lecturas para reducir API calls
-- [ ] Rate limiting automático
-- [ ] Retry con backoff exponencial
-- [ ] Integración con pandas más profunda (to_gsheet, from_gsheet)
-- [ ] CLI para operaciones comunes
-- [ ] Streaming de datos grandes (paginación)
+- [ ] **CLI** para operaciones comunes (`gspreadmanager read/append/export`).
+- [ ] Named ranges / protected ranges.
+- [ ] Export a CSV/Excel.
+- [ ] Documentación bilingüe (es/en).

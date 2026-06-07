@@ -377,15 +377,34 @@ GSpreadManager/
 #### Constructor
 
 ```python
-GoogleSheetConector(doc_name, json_google_file, sheet_name=None, max_retries=3, retry_backoff=1.0)
+GoogleSheetConector(
+    doc_name,
+    json_google_file=None,
+    sheet_name=None,
+    max_retries=3,
+    retry_backoff=1.0,
+    *,
+    credentials=None,
+    client=None,
+    service_account_info=None,
+    use_adc=False,
+)
 ```
 
 **Parámetros:**
 - `doc_name` (str): Nombre del documento de Google Sheets
-- `json_google_file` (str): Ruta al archivo JSON de credenciales
+- `json_google_file` (str, opcional): Ruta al archivo JSON de un service account
 - `sheet_name` (str, opcional): Nombre de la hoja específica (por defecto: primera hoja)
 - `max_retries` (int, opcional): Reintentos ante errores transitorios de la API (cuota/sobrecarga: HTTP 429/500/503). Por defecto `3`. Usar `0` para desactivar.
 - `retry_backoff` (float, opcional): Tiempo base en segundos para el backoff exponencial entre reintentos. Por defecto `1.0`.
+- `credentials` (opcional): Objeto de credenciales de `google-auth` ya construido (p. ej. OAuth de usuario).
+- `client` (opcional): Cliente de `gspread` ya autorizado.
+- `service_account_info` (dict, opcional): Credenciales de service account como diccionario.
+- `use_adc` (bool, opcional): Usa Application Default Credentials.
+
+> **Autenticación flexible (v1.1):** se usa el primer método provisto en este orden:
+> `client` → `credentials` → `service_account_info` → `json_google_file` → `use_adc`.
+> El cliente y el documento se **cachean**: cambiar de pestaña ya no re-autentica ni reabre el documento.
 
 **Atributos:**
 - `sheet_title`: Nombre del documento

@@ -10,7 +10,7 @@ import pytest
 from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 
-from gspreadmanager import GoogleSheetConector, InsertError
+from gspreadmanager import GoogleSheetConector, GSpreadManagerError, InsertError
 
 
 def make_api_error(status_code: int) -> APIError:
@@ -677,3 +677,88 @@ class TestFeatures:
         with GoogleSheetConector("TestDoc", "fake.json") as conn:
             assert isinstance(conn, GoogleSheetConector)
             assert conn.sheet is mock_all["worksheet"]
+
+
+class TestAuthAndCache:
+    """Tests for flexible authentication and client/spreadsheet caching (0.x -> 1.1.0)."""
+
+    @pytest.fixture
+    def mock_all(self):
+        with (
+            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.connector.gspread") as mock_gs,
+        ):
+            mock_creds.from_service_account_file.return_value = Mock()
+            mock_creds.from_service_account_info.return_value = Mock()
+            mock_client = Mock()
+            mock_spreadsheet = Mock()
+            mock_worksheet = Mock()
+
+            mock_gs.authorize.return_value = mock_client
+            mock_client.open.return_value = mock_spreadsheet
+            mock_spreadsheet.worksheet.return_value = mock_worksheet
+            mock_spreadsheet.sheet1 = mock_worksheet
+
+            yield {
+                "gspread": mock_gs,
+                "creds": mock_creds,
+                "client": mock_client,
+                "spreadsheet": mock_spreadsheet,
+                "worksheet": mock_worksheet,
+            }
+
+    def test_client_is_cached_across_tab_switches(self, mock_all):
+        """Switching tabs must not re-authenticate nor re-open the spreadsheet."""
+        mock_all["worksheet"].get_all_values.return_value = [["x"]]
+
+        conn = GoogleSheetConector("TestDoc", "fake.json", "Sheet1")
+        # Varias operaciones que cambian de pestaña
+        conn.read_sheet_data(tab_name="A", output_format="list")
+        conn.get_last_row(tab_name="B")
+
+        # Credenciales y autorización ocurren una sola vez
+        mock_all["creds"].from_service_account_file.assert_called_once()
+        mock_all["gspread"].authorize.assert_called_once()
+        # El documento se abre una sola vez (cacheado)
+        mock_all["client"].open.assert_called_once_with("TestDoc")
+
+    def test_auth_with_explicit_client(self, mock_all):
+        """Passing a pre-authorized client skips credential building entirely."""
+        custom_client = Mock()
+        custom_client.open.return_value = mock_all["spreadsheet"]
+
+        conn = GoogleSheetConector("TestDoc", client=custom_client)
+
+        assert conn.sheet is mock_all["worksheet"]
+        custom_client.open.assert_called_once_with("TestDoc")
+        mock_all["creds"].from_service_account_file.assert_not_called()
+        mock_all["gspread"].authorize.assert_not_called()
+
+    def test_auth_with_credentials_object(self, mock_all):
+        """Passing a google-auth credentials object authorizes with it."""
+        creds = Mock()
+        GoogleSheetConector("TestDoc", credentials=creds)
+
+        mock_all["gspread"].authorize.assert_called_once_with(creds)
+        mock_all["creds"].from_service_account_file.assert_not_called()
+
+    def test_auth_with_service_account_info(self, mock_all):
+        """Passing service account info as a dict builds credentials from it."""
+        info = {"type": "service_account", "client_email": "x@y.iam"}
+        GoogleSheetConector("TestDoc", service_account_info=info)
+
+        mock_all["creds"].from_service_account_info.assert_called_once()
+        mock_all["creds"].from_service_account_file.assert_not_called()
+
+    def test_auth_with_adc(self, mock_all):
+        """use_adc=True resolves Application Default Credentials."""
+        with patch("google.auth.default", return_value=(Mock(), "my-project")) as mock_default:
+            GoogleSheetConector("TestDoc", use_adc=True)
+
+        mock_default.assert_called_once()
+        mock_all["gspread"].authorize.assert_called_once()
+
+    def test_no_credentials_raises(self, mock_all):
+        """Providing no auth method raises a clear GSpreadManagerError."""
+        with pytest.raises(GSpreadManagerError, match="No se proporcionaron credenciales"):
+            GoogleSheetConector("TestDoc")

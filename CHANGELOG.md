@@ -5,6 +5,20 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-06-07
+
+### Added
+- **Autenticación flexible:** además del service account por archivo, ahora se acepta
+  `credentials` (objeto google-auth), `client` (cliente gspread ya autorizado),
+  `service_account_info` (dict) y `use_adc=True` (Application Default Credentials).
+- Documento de [análisis competitivo](https://github.com/PabloAlaniz/GSpreadManager/blob/main/docs/competitive-analysis.md) y roadmap actualizado.
+
+### Changed
+- **Caché de cliente y documento:** cambiar de pestaña ya no re-autentica ni reabre el
+  documento (antes `connect_to_sheet` reconstruía el cliente en cada llamada).
+- `json_google_file` pasa a ser opcional (default `None`) para habilitar los otros métodos
+  de autenticación; sigue siendo el segundo parámetro posicional (compatible).
+
 ## [1.0.0] - 2026-06-07
 
 Primer release estable. Consolida los sprints de estabilización, tipado, robustez y features.
