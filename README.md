@@ -26,6 +26,13 @@ GSpreadManager es un wrapper de Python para facilitar la interacción con Google
 pip install GSpreadManager
 ```
 
+> **pandas opcional:** desde la v0.2.0 `pandas` ya no se instala por defecto. Si vas a usar
+> `read_sheet_data(output_format='pandas')`, instalá el extra:
+>
+> ```bash
+> pip install "GSpreadManager[pandas]"
+> ```
+
 ### Configuración Inicial
 
 #### 1. Crear Cuenta de Servicio en Google Cloud
@@ -71,7 +78,7 @@ nueva_fila = [['Juan', 'juan@example.com', '555-1234']]
 conector.spreadsheet_append(nueva_fila)
 
 # Actualizar una celda específica
-conector.update_cell(conector.sheet, row_index=2, col_index=1, value='María')
+conector.update_cell(row_index=2, col_index=1, value='María')
 ```
 
 ---
@@ -113,7 +120,6 @@ print(df.describe())
 ```python
 # Leer filas 1-10, columnas A-D
 datos = conector.spreadsheet_read_range(
-    sheet=conector.sheet,
     tab_name='Hoja1',
     fila_start=1,
     fila_end=10,
@@ -161,7 +167,6 @@ conector.spreadsheet_insert('Mi Hoja', 'Hoja1', datos, fila=None)
 ```python
 # Actualizar celda en fila 3, columna 2
 conector.update_cell(
-    sheet=conector.sheet,
     row_index=3,
     col_index=2,
     value='Nuevo Valor'
@@ -174,14 +179,12 @@ conector.update_cell(
 # Actualizar desde la columna 1
 nueva_fila = ['Valor1', 'Valor2', 'Valor3']
 conector.update_row(
-    sheet=conector.sheet,
     row_index=5,
     data=nueva_fila
 )
 
 # Actualizar desde una columna específica
 conector.update_row(
-    sheet=conector.sheet,
     row_index=5,
     data=nueva_fila,
     start_column=3  # Empieza desde la columna C
@@ -232,7 +235,6 @@ for numero_fila, contenido_fila in filas_encontradas:
 ```python
 # Útil para encontrar dónde insertar el próximo registro
 fila, indice = conector.get_row_with_empty_in_column(
-    sheet=conector.sheet,
     column_letter='B'
 )
 
@@ -316,13 +318,15 @@ GSpreadManager/
 #### Constructor
 
 ```python
-GoogleSheetConector(doc_name, json_google_file, sheet_name=None)
+GoogleSheetConector(doc_name, json_google_file, sheet_name=None, max_retries=3, retry_backoff=1.0)
 ```
 
 **Parámetros:**
 - `doc_name` (str): Nombre del documento de Google Sheets
 - `json_google_file` (str): Ruta al archivo JSON de credenciales
 - `sheet_name` (str, opcional): Nombre de la hoja específica (por defecto: primera hoja)
+- `max_retries` (int, opcional): Reintentos ante errores transitorios de la API (cuota/sobrecarga: HTTP 429/500/503). Por defecto `3`. Usar `0` para desactivar.
+- `retry_backoff` (float, opcional): Tiempo base en segundos para el backoff exponencial entre reintentos. Por defecto `1.0`.
 
 **Atributos:**
 - `sheet_title`: Nombre del documento
@@ -330,6 +334,34 @@ GoogleSheetConector(doc_name, json_google_file, sheet_name=None)
 - `tab_name`: Nombre de la hoja actual
 - `sheet`: Objeto worksheet activo
 - `options`: Configuración para value_input_option
+
+---
+
+#### Manejo de errores y reintentos
+
+Las operaciones que llaman a la API reintentan automáticamente ante errores transitorios
+(HTTP 429/500/503) usando backoff exponencial, configurable vía `max_retries` y
+`retry_backoff` en el constructor. Los errores no transitorios se propagan de inmediato.
+
+La librería expone excepciones propias:
+
+- `GSpreadManagerError`: error base de la librería.
+- `InsertError`: se lanza cuando falla `spreadsheet_insert`.
+
+```python
+from gspreadmanager import GSpreadManagerError, InsertError
+
+try:
+    conector.spreadsheet_insert('Mi Hoja', 'Hoja1', datos)
+except InsertError as e:
+    print(f"No se pudo insertar: {e}")
+```
+
+> **⚠️ Cambio en v0.3.0 (breaking):** los métodos `update_cell`, `update_row`,
+> `spreadsheet_read_range` y `get_row_with_empty_in_column` ya **no** reciben el objeto
+> `sheet` como primer parámetro: usan la hoja activa del conector. El parámetro `sheet`
+> sigue aceptándose como argumento opcional al final por compatibilidad, pero emite
+> `DeprecationWarning` y se eliminará en una versión futura.
 
 ---
 
@@ -361,12 +393,11 @@ df = conector.read_sheet_data(output_format='pandas')
 
 ---
 
-##### `spreadsheet_read_range(sheet, tab_name, fila_start, fila_end, column_start, column_end)`
+##### `spreadsheet_read_range(tab_name, fila_start, fila_end, column_start, column_end)`
 
 Lee un rango específico de celdas.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `tab_name` (str): Nombre de la pestaña
 - `fila_start` (int): Fila inicial
 - `fila_end` (int): Fila final
@@ -411,12 +442,11 @@ Obtiene el número de la última fila con datos.
 
 ---
 
-##### `get_row_with_empty_in_column(sheet, column_letter)`
+##### `get_row_with_empty_in_column(column_letter)`
 
 Encuentra la primera fila con celda vacía en una columna.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `column_letter` (str): Letra de la columna (ej: 'B')
 
 **Returns:**
@@ -468,12 +498,11 @@ Inserta datos en una fila específica o al final.
 
 #### Métodos de Actualización
 
-##### `update_cell(sheet, row_index, col_index, value)`
+##### `update_cell(row_index, col_index, value)`
 
 Actualiza una celda específica.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `row_index` (int): Índice de fila (1-indexed)
 - `col_index` (int): Índice de columna (1-indexed)
 - `value`: Nuevo valor para la celda
@@ -481,17 +510,16 @@ Actualiza una celda específica.
 **Ejemplo:**
 ```python
 # Actualizar celda B3 (fila 3, columna 2)
-conector.update_cell(conector.sheet, 3, 2, 'Nuevo Valor')
+conector.update_cell(3, 2, 'Nuevo Valor')
 ```
 
 ---
 
-##### `update_row(sheet, row_index, data, start_column=None)`
+##### `update_row(row_index, data, start_column=None)`
 
 Actualiza una fila completa o parte de ella.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `row_index` (int): Índice de fila
 - `data` (list): Valores a escribir
 - `start_column` (int, opcional): Columna inicial (por defecto: 1)
@@ -499,10 +527,10 @@ Actualiza una fila completa o parte de ella.
 **Ejemplo:**
 ```python
 # Actualizar fila 5 completa
-conector.update_row(conector.sheet, 5, ['A', 'B', 'C'])
+conector.update_row(5, ['A', 'B', 'C'])
 
 # Actualizar desde columna 3
-conector.update_row(conector.sheet, 5, ['X', 'Y'], start_column=3)
+conector.update_row(5, ['X', 'Y'], start_column=3)
 ```
 
 ---

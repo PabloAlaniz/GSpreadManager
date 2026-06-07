@@ -5,25 +5,40 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.0] - 2026-06-07
 
 ### Added
 - `pyproject.toml` con metadata de packaging moderna (PEP 621) y versión dinámica.
 - Archivo `LICENSE` (MIT) y `CONTRIBUTING.md`.
-- Configuración de `ruff` (lint + format) y `.pre-commit-config.yaml`.
+- Configuración de `ruff` (lint + format), `mypy` y `.pre-commit-config.yaml`.
 - Extra opcional `pandas` (`pip install GSpreadManager[pandas]`) y extra `dev`.
 - **Type hints** en todos los métodos públicos de `GoogleSheetConector`.
 - Marcador `py.typed` (PEP 561) para que los consumidores reciban los tipos.
-- `mypy` configurado y agregado al job de lint del CI.
+- **Reintentos automáticos con backoff exponencial** ante errores transitorios de la API
+  (HTTP 429/500/503), configurables vía `max_retries` y `retry_backoff` en el constructor.
+- **Excepciones propias** `GSpreadManagerError` e `InsertError`, exportadas desde el paquete.
 
 ### Changed
+- **BREAKING:** los métodos `update_cell`, `update_row`, `spreadsheet_read_range` y
+  `get_row_with_empty_in_column` ya no reciben `sheet` como primer parámetro; usan la hoja
+  activa del conector. `sheet` sigue aceptándose como argumento opcional final por
+  compatibilidad, pero emite `DeprecationWarning`.
 - **`pandas` ahora es una dependencia opcional**, ya no se instala por defecto. Solo
   se requiere para `read_sheet_data(output_format='pandas')`, que lo importa de forma
   lazy y lanza un `ImportError` claro si no está instalado.
-- Versión unificada: `gspreadmanager.__version__` es la única fuente de verdad (`0.2.0`),
+- Versión unificada: `gspreadmanager.__version__` es la única fuente de verdad,
   antes había desincronización entre `__init__.py` (0.1.5) y `setup.py` (0.2.0).
-- `requires-python` elevado a `>=3.9`.
-- CI: matriz de Python 3.9–3.12, paso de lint con `ruff`, cobertura sobre `gspreadmanager`.
+- `requires-python` elevado a `>=3.9`; CI con matriz 3.9–3.12, lint (`ruff` + `mypy`) y
+  cobertura sobre `gspreadmanager`.
+- `value_input_option` usa el enum `gspread.utils.ValueInputOption` en lugar de strings sueltos.
+
+### Fixed
+- `spreadsheet_read_range` y `spreadsheet_insert` llamaban a `values_get`/`values_append`
+  sobre el `Worksheet`; ahora se invocan correctamente sobre el `Spreadsheet`
+  (`sheet.spreadsheet`), evitando un `AttributeError` en runtime con gspread 6.x.
+- `spreadsheet_insert` construía el rango con `chr(ord('A') + n)`, que se rompía más allá de
+  la columna Z; ahora usa `gspread.utils.rowcol_to_a1` y soporta cualquier cantidad de columnas.
+- `spreadsheet_insert` ahora lanza `InsertError` (antes `Exception` genérica).
 
 ## [0.2.0] - 2026-02-22
 
