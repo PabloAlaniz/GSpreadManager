@@ -17,15 +17,15 @@ Prioridad por impacto/esfuerzo, reusando el ecosistema (`gspread-*`) donde convi
 - [x] **Autenticación flexible**: service account (file/dict), credenciales de google-auth, cliente ya autorizado, ADC.
 - [ ] **Caché opcional de lecturas** con invalidación al escribir.
 
-## v1.2 - Formato y operaciones de documento (paridad con pygsheets)
+## ✅ v1.2 - Formato y operaciones de documento (HECHO)
 
 - [x] **Formato de celdas (implementación propia)**: modelo tipado + `format_range`,
       `format_header`, `set_background`, `set_text_format`, `set_number_format`, `freeze`, `merge`.
 - [x] **Validación de datos**: `add_dropdown`, `add_checkbox`, `set_data_validation`.
 - [x] **Formato condicional**: `add_conditional_format`.
-- [ ] **Operaciones a nivel documento**: `create_spreadsheet`, `delete_spreadsheet`,
+- [x] **Operaciones a nivel documento**: `create_spreadsheet`, `delete_spreadsheet`,
       `copy_spreadsheet`, `list_spreadsheets` (vía Drive).
-- [ ] **Compartir / permisos**: `share(email, role)`, `list_permissions`, `remove_permission`.
+- [x] **Compartir / permisos**: `share`, `list_permissions`, `remove_permission`.
 
 ## v1.3 - Productividad de datos (paridad con gspread-pandas)
 

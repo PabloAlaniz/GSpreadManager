@@ -895,3 +895,96 @@ class TestFormatting:
         assert rule["booleanRule"]["condition"]["type"] == "NUMBER_LESS"
         assert rule["booleanRule"]["condition"]["values"] == [{"userEnteredValue": "0"}]
         assert "backgroundColor" in rule["booleanRule"]["format"]
+
+
+class TestDocumentOps:
+    """Tests for document-level operations (Drive) and permissions."""
+
+    @pytest.fixture
+    def mock_all(self):
+        with (
+            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.connector.gspread") as mock_gs,
+        ):
+            mock_creds.from_service_account_file.return_value = Mock()
+            mock_client = Mock()
+            mock_spreadsheet = Mock()
+            mock_worksheet = Mock()
+            mock_worksheet.spreadsheet = mock_spreadsheet
+
+            mock_gs.authorize.return_value = mock_client
+            mock_client.open.return_value = mock_spreadsheet
+            mock_spreadsheet.worksheet.return_value = mock_worksheet
+            mock_spreadsheet.sheet1 = mock_worksheet
+
+            yield {
+                "client": mock_client,
+                "spreadsheet": mock_spreadsheet,
+                "worksheet": mock_worksheet,
+            }
+
+    def test_create_spreadsheet(self, mock_all):
+        new_doc = Mock()
+        mock_all["client"].create.return_value = new_doc
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.create_spreadsheet("Nuevo Doc")
+
+        mock_all["client"].create.assert_called_once_with("Nuevo Doc", folder_id=None)
+        assert result is new_doc
+
+    def test_delete_spreadsheet(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.delete_spreadsheet("file-123")
+        mock_all["client"].del_spreadsheet.assert_called_once_with("file-123")
+
+    def test_copy_spreadsheet(self, mock_all):
+        copy = Mock()
+        mock_all["client"].copy.return_value = copy
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.copy_spreadsheet("file-123", title="Copia")
+
+        mock_all["client"].copy.assert_called_once_with(
+            "file-123", title="Copia", copy_permissions=False, folder_id=None
+        )
+        assert result is copy
+
+    def test_list_spreadsheets(self, mock_all):
+        mock_all["client"].list_spreadsheet_files.return_value = [{"id": "1", "name": "A"}]
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.list_spreadsheets(title="A")
+
+        mock_all["client"].list_spreadsheet_files.assert_called_once_with(title="A", folder_id=None)
+        assert result == [{"id": "1", "name": "A"}]
+
+    def test_share(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.share("user@example.com", role="writer")
+
+        _, kwargs = mock_all["spreadsheet"].share.call_args
+        args = mock_all["spreadsheet"].share.call_args[0]
+        assert args[0] == "user@example.com"
+        assert kwargs["role"] == "writer"
+        assert kwargs["perm_type"] == "user"
+
+    def test_list_permissions(self, mock_all):
+        mock_all["spreadsheet"].list_permissions.return_value = [{"role": "owner"}]
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.list_permissions()
+
+        assert result == [{"role": "owner"}]
+        mock_all["spreadsheet"].list_permissions.assert_called_once()
+
+    def test_remove_permission(self, mock_all):
+        mock_all["spreadsheet"].remove_permissions.return_value = ["perm-1"]
+
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        result = conn.remove_permission("user@example.com")
+
+        mock_all["spreadsheet"].remove_permissions.assert_called_once_with(
+            "user@example.com", role="any"
+        )
+        assert result == ["perm-1"]

@@ -111,6 +111,25 @@ rojo = CellFormat(background_color=Color.from_hex("#F4CCCC"))
 conector.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
 ```
 
+## Operaciones a nivel documento
+
+```python
+# Crear, copiar, listar y borrar documentos (vía Drive)
+nuevo = conector.create_spreadsheet("Reporte mensual")
+copia = conector.copy_spreadsheet(nuevo.id, title="Reporte (copia)")
+docs = conector.list_spreadsheets(title="Reporte")
+conector.delete_spreadsheet(copia.id)
+```
+
+## Compartir y permisos
+
+```python
+conector.share("alguien@example.com", role="writer")        # editor
+conector.share("", perm_type="anyone", role="reader")        # cualquiera con el enlace
+permisos = conector.list_permissions()
+conector.remove_permission("alguien@example.com")
+```
+
 ## Manejo de errores
 
 Las operaciones reintentan automáticamente ante errores transitorios (HTTP 429/500/503).

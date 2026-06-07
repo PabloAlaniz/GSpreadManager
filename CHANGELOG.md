@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `set_text_format`, `set_number_format`, `freeze`, `merge`.
 - **Validación de datos:** `add_dropdown`, `add_checkbox`, `set_data_validation`.
 - **Formato condicional:** `add_conditional_format` (reglas booleanas).
+- **Operaciones a nivel documento (Drive):** `create_spreadsheet`, `delete_spreadsheet`,
+  `copy_spreadsheet`, `list_spreadsheets`.
+- **Compartir / permisos:** `share`, `list_permissions`, `remove_permission`.
 
 ### Notes
 - Decisión de diseño: en lugar de depender de `gspread-formatting` (~1.564 LOC, un solo

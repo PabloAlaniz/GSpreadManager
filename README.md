@@ -17,6 +17,7 @@ GSpreadManager es un wrapper de Python para facilitar la interacción con Google
 - 📖 **Lectura flexible** de datos (listas, diccionarios, pandas DataFrame)
 - ✏️ **Escritura y actualización** de celdas, filas y rangos
 - 🗂️ **Gestión de hojas**: crear, eliminar y limpiar pestañas
+- 📁 **Operaciones de documento** (Drive): crear, copiar, listar, borrar y **compartir/permisos**
 - 🎨 **Formato de celdas** propio: colores, fuentes, nº, freeze, merge, validación y condicional
 - 🔍 **Búsqueda y filtrado** de datos
 - 🐼 **Integración con pandas** (`to_gsheet` / `from_gsheet`)
@@ -348,6 +349,21 @@ conector.add_checkbox("F2:F100")
 # Formato condicional (valores negativos en rojo)
 rojo = CellFormat(background_color=Color.from_hex("#F4CCCC"))
 conector.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
+```
+
+### Operaciones a nivel documento y permisos
+
+```python
+# Documentos (vía Drive)
+nuevo = conector.create_spreadsheet('Reporte mensual')
+copia = conector.copy_spreadsheet(nuevo.id, title='Reporte (copia)')
+docs = conector.list_spreadsheets(title='Reporte')
+conector.delete_spreadsheet(copia.id)
+
+# Permisos
+conector.share('alguien@example.com', role='writer')
+conector.list_permissions()
+conector.remove_permission('alguien@example.com')
 ```
 
 ### Uso como context manager
