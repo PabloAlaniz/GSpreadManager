@@ -19,8 +19,10 @@ Prioridad por impacto/esfuerzo, reusando el ecosistema (`gspread-*`) donde convi
 
 ## v1.2 - Formato y operaciones de documento (paridad con pygsheets)
 
-- [ ] **Formato de celdas**: integrar `gspread-formatting` como extra opcional (`[formatting]`)
-      con helpers (`format_range`, negrita/color/número, formato condicional).
+- [x] **Formato de celdas (implementación propia)**: modelo tipado + `format_range`,
+      `format_header`, `set_background`, `set_text_format`, `set_number_format`, `freeze`, `merge`.
+- [x] **Validación de datos**: `add_dropdown`, `add_checkbox`, `set_data_validation`.
+- [x] **Formato condicional**: `add_conditional_format`.
 - [ ] **Operaciones a nivel documento**: `create_spreadsheet`, `delete_spreadsheet`,
       `copy_spreadsheet`, `list_spreadsheets` (vía Drive).
 - [ ] **Compartir / permisos**: `share(email, role)`, `list_permissions`, `remove_permission`.

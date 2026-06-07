@@ -66,6 +66,51 @@ df = conector.from_gsheet()
 conector.to_gsheet(df, tab_name="Resultados")
 ```
 
+## Formato de celdas
+
+Modelo tipado propio (sin dependencias externas):
+
+```python
+from gspreadmanager import CellFormat, TextFormat, Color, NumberFormat
+
+# Encabezado en negrita con fondo verde claro
+conector.format_header()  # primera fila, atajo
+
+# Formato arbitrario sobre un rango
+fmt = CellFormat(
+    text_format=TextFormat(bold=True, foreground_color=Color.from_hex("#FFFFFF")),
+    background_color=Color.from_hex("#0B5394"),
+    horizontal_alignment="CENTER",
+)
+conector.format_range("A1:D1", fmt)
+
+# Atajos
+conector.set_background("A2:A100", Color.from_hex("#FFF2CC"))
+conector.set_text_format("B2:B100", bold=True, font_size=11)
+conector.set_number_format("C2:C100", "#,##0.00", number_type="CURRENCY")
+
+# Estructura
+conector.freeze(rows=1)            # congelar encabezado
+conector.merge("A1:D1")            # combinar celdas
+```
+
+## Validación de datos
+
+```python
+conector.add_dropdown("E2:E100", ["Pendiente", "En curso", "Hecho"])
+conector.add_checkbox("F2:F100")
+```
+
+## Formato condicional
+
+```python
+from gspreadmanager import CellFormat, Color
+
+# Pintar de rojo los valores negativos
+rojo = CellFormat(background_color=Color.from_hex("#F4CCCC"))
+conector.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
+```
+
 ## Manejo de errores
 
 Las operaciones reintentan automáticamente ante errores transitorios (HTTP 429/500/503).

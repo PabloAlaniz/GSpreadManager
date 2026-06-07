@@ -10,7 +10,15 @@ import pytest
 from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 
-from gspreadmanager import GoogleSheetConector, GSpreadManagerError, InsertError
+from gspreadmanager import (
+    CellFormat,
+    Color,
+    GoogleSheetConector,
+    GSpreadManagerError,
+    InsertError,
+    NumberFormat,
+    TextFormat,
+)
 
 
 def make_api_error(status_code: int) -> APIError:
@@ -762,3 +770,128 @@ class TestAuthAndCache:
         """Providing no auth method raises a clear GSpreadManagerError."""
         with pytest.raises(GSpreadManagerError, match="No se proporcionaron credenciales"):
             GoogleSheetConector("TestDoc")
+
+
+class TestFormattingModels:
+    """Tests for the typed formatting model (no API)."""
+
+    def test_color_from_hex(self):
+        c = Color.from_hex("#FF8000")
+        assert c.red == 1.0
+        assert round(c.green, 2) == 0.5
+        assert c.blue == 0.0
+        assert c.to_dict() == {"red": 1.0, "green": c.green, "blue": 0.0, "alpha": 1.0}
+
+    def test_color_from_hex_invalid(self):
+        with pytest.raises(ValueError, match="hex inválido"):
+            Color.from_hex("#FFF")
+
+    def test_text_format_omits_none_and_uses_camelcase(self):
+        d = TextFormat(bold=True, font_size=12).to_dict()
+        assert d == {"bold": True, "fontSize": 12}
+
+    def test_cell_format_nesting(self):
+        fmt = CellFormat(
+            background_color=Color(1, 1, 1),
+            text_format=TextFormat(bold=True, foreground_color=Color(0, 0, 0)),
+            number_format=NumberFormat(type="PERCENT", pattern="0.0%"),
+            horizontal_alignment="CENTER",
+        )
+        d = fmt.to_dict()
+        assert d["textFormat"]["bold"] is True
+        assert d["textFormat"]["foregroundColor"]["red"] == 0.0
+        assert d["numberFormat"] == {"type": "PERCENT", "pattern": "0.0%"}
+        assert d["horizontalAlignment"] == "CENTER"
+        assert "verticalAlignment" not in d  # None omitido
+
+
+class TestFormatting:
+    """Tests for the connector formatting methods."""
+
+    @pytest.fixture
+    def mock_all(self):
+        with (
+            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.connector.gspread") as mock_gs,
+        ):
+            mock_creds.from_service_account_file.return_value = Mock()
+            mock_client = Mock()
+            mock_spreadsheet = Mock()
+            mock_worksheet = Mock()
+            mock_worksheet.spreadsheet = mock_spreadsheet
+            mock_worksheet.id = 12345
+
+            mock_gs.authorize.return_value = mock_client
+            mock_client.open.return_value = mock_spreadsheet
+            mock_spreadsheet.worksheet.return_value = mock_worksheet
+            mock_spreadsheet.sheet1 = mock_worksheet
+
+            yield {"worksheet": mock_worksheet, "spreadsheet": mock_spreadsheet}
+
+    def test_format_range(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        fmt = CellFormat(text_format=TextFormat(bold=True))
+
+        conn.format_range("A1:C1", fmt)
+
+        ranges, fmt_dict = mock_all["worksheet"].format.call_args[0]
+        assert ranges == "A1:C1"
+        assert fmt_dict["textFormat"]["bold"] is True
+
+    def test_format_header(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.format_header()
+
+        ranges, fmt_dict = mock_all["worksheet"].format.call_args[0]
+        assert ranges == "1:1"
+        assert fmt_dict["textFormat"]["bold"] is True
+        assert "backgroundColor" in fmt_dict
+
+    def test_set_number_format(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.set_number_format("B:B", "#,##0.00")
+
+        _, fmt_dict = mock_all["worksheet"].format.call_args[0]
+        assert fmt_dict["numberFormat"] == {"type": "NUMBER", "pattern": "#,##0.00"}
+
+    def test_freeze(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.freeze(rows=1)
+        mock_all["worksheet"].freeze.assert_called_once_with(rows=1, cols=None)
+
+    def test_merge(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.merge("A1:C1")
+        mock_all["worksheet"].merge_cells.assert_called_once_with("A1:C1", merge_type="MERGE_ALL")
+
+    def test_add_dropdown(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.add_dropdown("A2:A10", ["Sí", "No"])
+
+        body = mock_all["spreadsheet"].batch_update.call_args[0][0]
+        rule = body["requests"][0]["setDataValidation"]["rule"]
+        assert rule["condition"]["type"] == "ONE_OF_LIST"
+        assert rule["condition"]["values"] == [
+            {"userEnteredValue": "Sí"},
+            {"userEnteredValue": "No"},
+        ]
+        assert body["requests"][0]["setDataValidation"]["range"]["sheetId"] == 12345
+
+    def test_add_checkbox(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        conn.add_checkbox("D2:D10")
+
+        body = mock_all["spreadsheet"].batch_update.call_args[0][0]
+        assert body["requests"][0]["setDataValidation"]["rule"]["condition"]["type"] == "BOOLEAN"
+
+    def test_add_conditional_format(self, mock_all):
+        conn = GoogleSheetConector("TestDoc", "fake.json")
+        fmt = CellFormat(background_color=Color.from_hex("#F4CCCC"))
+
+        conn.add_conditional_format("B2:B100", "NUMBER_LESS", [0], fmt)
+
+        body = mock_all["spreadsheet"].batch_update.call_args[0][0]
+        rule = body["requests"][0]["addConditionalFormatRule"]["rule"]
+        assert rule["booleanRule"]["condition"]["type"] == "NUMBER_LESS"
+        assert rule["booleanRule"]["condition"]["values"] == [{"userEnteredValue": "0"}]
+        assert "backgroundColor" in rule["booleanRule"]["format"]

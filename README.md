@@ -17,6 +17,7 @@ GSpreadManager es un wrapper de Python para facilitar la interacción con Google
 - 📖 **Lectura flexible** de datos (listas, diccionarios, pandas DataFrame)
 - ✏️ **Escritura y actualización** de celdas, filas y rangos
 - 🗂️ **Gestión de hojas**: crear, eliminar y limpiar pestañas
+- 🎨 **Formato de celdas** propio: colores, fuentes, nº, freeze, merge, validación y condicional
 - 🔍 **Búsqueda y filtrado** de datos
 - 🐼 **Integración con pandas** (`to_gsheet` / `from_gsheet`)
 - ♻️ **Reintentos automáticos** con backoff ante límites de cuota
@@ -316,6 +317,39 @@ conector.to_gsheet(df, include_header=False, clear=False)
 
 > Requiere el extra pandas: `pip install "GSpreadManager[pandas]"`.
 
+### Formato de celdas
+
+Modelo de formato tipado **propio** (sin dependencias externas):
+
+```python
+from gspreadmanager import CellFormat, TextFormat, Color
+
+# Encabezado en negrita con fondo (atajo) + congelar fila
+conector.format_header()
+conector.freeze(rows=1)
+
+# Formato arbitrario
+fmt = CellFormat(
+    text_format=TextFormat(bold=True, foreground_color=Color.from_hex("#FFFFFF")),
+    background_color=Color.from_hex("#0B5394"),
+    horizontal_alignment="CENTER",
+)
+conector.format_range("A1:D1", fmt)
+
+# Atajos y formato numérico
+conector.set_background("A2:A100", Color.from_hex("#FFF2CC"))
+conector.set_number_format("C2:C100", "#,##0.00", number_type="CURRENCY")
+conector.merge("A1:D1")
+
+# Validación de datos
+conector.add_dropdown("E2:E100", ["Pendiente", "En curso", "Hecho"])
+conector.add_checkbox("F2:F100")
+
+# Formato condicional (valores negativos en rojo)
+rojo = CellFormat(background_color=Color.from_hex("#F4CCCC"))
+conector.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
+```
+
 ### Uso como context manager
 
 ```python
@@ -337,6 +371,7 @@ GSpreadManager/
 │   ├── connector.py         # Clase principal con toda la lógica
 │   ├── config.py            # Configuraciones y constantes
 │   ├── exceptions.py        # GSpreadManagerError, InsertError
+│   ├── formatting.py        # Modelo de formato propio (CellFormat, Color, …)
 │   ├── retry.py             # Reintentos con backoff ante límites de cuota
 │   └── py.typed             # Marcador PEP 561 (tipos exportados)
 ├── pyproject.toml           # Metadata de packaging y tooling

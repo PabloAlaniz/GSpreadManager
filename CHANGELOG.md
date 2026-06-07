@@ -5,6 +5,23 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-07
+
+### Added
+- **Formato de celdas (implementación propia, sin dependencias nuevas):** módulo
+  `gspreadmanager.formatting` con modelo tipado (`CellFormat`, `Color`, `TextFormat`,
+  `NumberFormat`, `Border`, `Borders`), exportado desde el paquete.
+- Métodos en el conector: `format_range`, `format_header`, `set_background`,
+  `set_text_format`, `set_number_format`, `freeze`, `merge`.
+- **Validación de datos:** `add_dropdown`, `add_checkbox`, `set_data_validation`.
+- **Formato condicional:** `add_conditional_format` (reglas booleanas).
+
+### Notes
+- Decisión de diseño: en lugar de depender de `gspread-formatting` (~1.564 LOC, un solo
+  mantenedor), se implementó un modelo propio y enfocado sobre el transporte de gspread
+  (`worksheet.format`, `freeze`, `merge_cells` y `spreadsheets.batchUpdate`). Ver
+  [análisis competitivo](https://github.com/PabloAlaniz/GSpreadManager/blob/main/docs/competitive-analysis.md).
+
 ## [1.1.0] - 2026-06-07
 
 ### Added
