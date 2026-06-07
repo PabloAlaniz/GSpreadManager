@@ -1,5 +1,26 @@
-GSpreadManager.egg-info/
+# Packaging
+*.egg-info/
 dist/
-build/__pycache__/
+build/
+
+# Byte-compiled
+__pycache__/
 *.pyc
 *.pyo
+
+# Test & coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Tooling caches
+.mypy_cache/
+.ruff_cache/
+
+# Docs
+site/
+
+# Virtualenvs
+.venv/
+venv/

@@ -1,20 +1,31 @@
 # GSpreadManager
 
 [![PyPI version](https://badge.fury.io/py/GSpreadManager.svg)](https://badge.fury.io/py/GSpreadManager)
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://github.com/PabloAlaniz/GSpreadManager/actions/workflows/ci.yml/badge.svg)](https://github.com/PabloAlaniz/GSpreadManager/actions/workflows/ci.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Checked with mypy](https://img.shields.io/badge/mypy-checked-blue.svg)](https://mypy-lang.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 GSpreadManager es un wrapper de Python para facilitar la interacción con Google Sheets. Proporciona una interfaz simple y pythonic para operaciones comunes como lectura, escritura, actualización y búsqueda de datos en hojas de cálculo de Google.
+
+📚 **Documentación completa:** <https://pabloalaniz.github.io/GSpreadManager/>
 
 ## ✨ Características
 
 - 🔐 **Autenticación segura** usando cuentas de servicio de Google
 - 📖 **Lectura flexible** de datos (listas, diccionarios, pandas DataFrame)
 - ✏️ **Escritura y actualización** de celdas, filas y rangos
+- 🗂️ **Gestión de hojas**: crear, eliminar y limpiar pestañas
+- 📁 **Operaciones de documento** (Drive): crear, copiar, listar, borrar y **compartir/permisos**
+- 🎨 **Formato de celdas** propio: colores, fuentes, nº, freeze, merge, validación y condicional
 - 🔍 **Búsqueda y filtrado** de datos
+- 🐼 **Integración con pandas** (`to_gsheet` / `from_gsheet`)
+- ♻️ **Reintentos automáticos** con backoff ante límites de cuota
+- 🧩 **Context manager** (`with ... as conn:`)
 - ⚡ **Operaciones en lote** para mejor rendimiento
-- 🐍 **API pythonic** con docstrings completas
-- 📦 **Sin dependencias pesadas** - solo gspread, oauth2client y pandas
+- 🐍 **API pythonic** con docstrings completas y type hints (PEP 561)
+- 📦 **Dependencias mínimas** — solo `gspread` y `google-auth` (pandas opcional)
 
 ---
 
@@ -25,6 +36,13 @@ GSpreadManager es un wrapper de Python para facilitar la interacción con Google
 ```bash
 pip install GSpreadManager
 ```
+
+> **pandas opcional:** desde la v0.2.0 `pandas` ya no se instala por defecto. Si vas a usar
+> `read_sheet_data(output_format='pandas')`, instalá el extra:
+>
+> ```bash
+> pip install "GSpreadManager[pandas]"
+> ```
 
 ### Configuración Inicial
 
@@ -71,7 +89,7 @@ nueva_fila = [['Juan', 'juan@example.com', '555-1234']]
 conector.spreadsheet_append(nueva_fila)
 
 # Actualizar una celda específica
-conector.update_cell(conector.sheet, row_index=2, col_index=1, value='María')
+conector.update_cell(row_index=2, col_index=1, value='María')
 ```
 
 ---
@@ -113,7 +131,6 @@ print(df.describe())
 ```python
 # Leer filas 1-10, columnas A-D
 datos = conector.spreadsheet_read_range(
-    sheet=conector.sheet,
     tab_name='Hoja1',
     fila_start=1,
     fila_end=10,
@@ -161,7 +178,6 @@ conector.spreadsheet_insert('Mi Hoja', 'Hoja1', datos, fila=None)
 ```python
 # Actualizar celda en fila 3, columna 2
 conector.update_cell(
-    sheet=conector.sheet,
     row_index=3,
     col_index=2,
     value='Nuevo Valor'
@@ -174,14 +190,12 @@ conector.update_cell(
 # Actualizar desde la columna 1
 nueva_fila = ['Valor1', 'Valor2', 'Valor3']
 conector.update_row(
-    sheet=conector.sheet,
     row_index=5,
     data=nueva_fila
 )
 
 # Actualizar desde una columna específica
 conector.update_row(
-    sheet=conector.sheet,
     row_index=5,
     data=nueva_fila,
     start_column=3  # Empieza desde la columna C
@@ -232,7 +246,6 @@ for numero_fila, contenido_fila in filas_encontradas:
 ```python
 # Útil para encontrar dónde insertar el próximo registro
 fila, indice = conector.get_row_with_empty_in_column(
-    sheet=conector.sheet,
     column_letter='B'
 )
 
@@ -266,6 +279,101 @@ nueva_hoja = conector.connect_to_sheet(
 )
 ```
 
+### Gestión de Hojas
+
+```python
+# Crear una nueva pestaña (y opcionalmente activarla)
+conector.create_sheet('Reporte 2026', rows=500, cols=10)
+conector.create_sheet('Borrador', activate=True)
+
+# Eliminar una pestaña por nombre
+conector.delete_sheet('Borrador')
+
+# Limpiar rangos o toda la hoja
+conector.clear_range('A1:C10')
+conector.clear_range(['A1:A5', 'C1:C5'])
+conector.clear_range()  # limpia toda la hoja activa
+```
+
+### Búsqueda de celdas
+
+```python
+celda = conector.find_cell('Total')
+if celda:
+    print(f"'Total' está en fila {celda.row}, columna {celda.col}")
+```
+
+### Integración con pandas
+
+```python
+# Leer la hoja como DataFrame
+df = conector.from_gsheet()
+
+# Volcar un DataFrame a la hoja (limpia la hoja y escribe desde A1)
+conector.to_gsheet(df, tab_name='Resultados')
+
+# Sin encabezados y sin limpiar la hoja previamente
+conector.to_gsheet(df, include_header=False, clear=False)
+```
+
+> Requiere el extra pandas: `pip install "GSpreadManager[pandas]"`.
+
+### Formato de celdas
+
+Modelo de formato tipado **propio** (sin dependencias externas):
+
+```python
+from gspreadmanager import CellFormat, TextFormat, Color
+
+# Encabezado en negrita con fondo (atajo) + congelar fila
+conector.format_header()
+conector.freeze(rows=1)
+
+# Formato arbitrario
+fmt = CellFormat(
+    text_format=TextFormat(bold=True, foreground_color=Color.from_hex("#FFFFFF")),
+    background_color=Color.from_hex("#0B5394"),
+    horizontal_alignment="CENTER",
+)
+conector.format_range("A1:D1", fmt)
+
+# Atajos y formato numérico
+conector.set_background("A2:A100", Color.from_hex("#FFF2CC"))
+conector.set_number_format("C2:C100", "#,##0.00", number_type="CURRENCY")
+conector.merge("A1:D1")
+
+# Validación de datos
+conector.add_dropdown("E2:E100", ["Pendiente", "En curso", "Hecho"])
+conector.add_checkbox("F2:F100")
+
+# Formato condicional (valores negativos en rojo)
+rojo = CellFormat(background_color=Color.from_hex("#F4CCCC"))
+conector.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
+```
+
+### Operaciones a nivel documento y permisos
+
+```python
+# Documentos (vía Drive)
+nuevo = conector.create_spreadsheet('Reporte mensual')
+copia = conector.copy_spreadsheet(nuevo.id, title='Reporte (copia)')
+docs = conector.list_spreadsheets(title='Reporte')
+conector.delete_spreadsheet(copia.id)
+
+# Permisos
+conector.share('alguien@example.com', role='writer')
+conector.list_permissions()
+conector.remove_permission('alguien@example.com')
+```
+
+### Uso como context manager
+
+```python
+with GoogleSheetConector('Mi Hoja', 'creds.json', 'Hoja1') as conector:
+    datos = conector.read_sheet_data(output_format='dict')
+    conector.update_cell(2, 1, 'Actualizado')
+```
+
 ---
 
 ## 🏗️ Arquitectura
@@ -275,10 +383,14 @@ nueva_hoja = conector.connect_to_sheet(
 ```
 GSpreadManager/
 ├── gspreadmanager/
-│   ├── __init__.py          # Exporta GoogleSheetConector
+│   ├── __init__.py          # Exporta GoogleSheetConector y excepciones
 │   ├── connector.py         # Clase principal con toda la lógica
-│   └── config.py            # Configuraciones y constantes
-├── setup.py                 # Configuración de instalación
+│   ├── config.py            # Configuraciones y constantes
+│   ├── exceptions.py        # GSpreadManagerError, InsertError
+│   ├── formatting.py        # Modelo de formato propio (CellFormat, Color, …)
+│   ├── retry.py             # Reintentos con backoff ante límites de cuota
+│   └── py.typed             # Marcador PEP 561 (tipos exportados)
+├── pyproject.toml           # Metadata de packaging y tooling
 ├── README.md                # Este archivo
 └── LICENSE                  # Licencia MIT
 ```
@@ -316,13 +428,34 @@ GSpreadManager/
 #### Constructor
 
 ```python
-GoogleSheetConector(doc_name, json_google_file, sheet_name=None)
+GoogleSheetConector(
+    doc_name,
+    json_google_file=None,
+    sheet_name=None,
+    max_retries=3,
+    retry_backoff=1.0,
+    *,
+    credentials=None,
+    client=None,
+    service_account_info=None,
+    use_adc=False,
+)
 ```
 
 **Parámetros:**
 - `doc_name` (str): Nombre del documento de Google Sheets
-- `json_google_file` (str): Ruta al archivo JSON de credenciales
+- `json_google_file` (str, opcional): Ruta al archivo JSON de un service account
 - `sheet_name` (str, opcional): Nombre de la hoja específica (por defecto: primera hoja)
+- `max_retries` (int, opcional): Reintentos ante errores transitorios de la API (cuota/sobrecarga: HTTP 429/500/503). Por defecto `3`. Usar `0` para desactivar.
+- `retry_backoff` (float, opcional): Tiempo base en segundos para el backoff exponencial entre reintentos. Por defecto `1.0`.
+- `credentials` (opcional): Objeto de credenciales de `google-auth` ya construido (p. ej. OAuth de usuario).
+- `client` (opcional): Cliente de `gspread` ya autorizado.
+- `service_account_info` (dict, opcional): Credenciales de service account como diccionario.
+- `use_adc` (bool, opcional): Usa Application Default Credentials.
+
+> **Autenticación flexible (v1.1):** se usa el primer método provisto en este orden:
+> `client` → `credentials` → `service_account_info` → `json_google_file` → `use_adc`.
+> El cliente y el documento se **cachean**: cambiar de pestaña ya no re-autentica ni reabre el documento.
 
 **Atributos:**
 - `sheet_title`: Nombre del documento
@@ -330,6 +463,34 @@ GoogleSheetConector(doc_name, json_google_file, sheet_name=None)
 - `tab_name`: Nombre de la hoja actual
 - `sheet`: Objeto worksheet activo
 - `options`: Configuración para value_input_option
+
+---
+
+#### Manejo de errores y reintentos
+
+Las operaciones que llaman a la API reintentan automáticamente ante errores transitorios
+(HTTP 429/500/503) usando backoff exponencial, configurable vía `max_retries` y
+`retry_backoff` en el constructor. Los errores no transitorios se propagan de inmediato.
+
+La librería expone excepciones propias:
+
+- `GSpreadManagerError`: error base de la librería.
+- `InsertError`: se lanza cuando falla `spreadsheet_insert`.
+
+```python
+from gspreadmanager import GSpreadManagerError, InsertError
+
+try:
+    conector.spreadsheet_insert('Mi Hoja', 'Hoja1', datos)
+except InsertError as e:
+    print(f"No se pudo insertar: {e}")
+```
+
+> **⚠️ Cambio en v0.3.0 (breaking):** los métodos `update_cell`, `update_row`,
+> `spreadsheet_read_range` y `get_row_with_empty_in_column` ya **no** reciben el objeto
+> `sheet` como primer parámetro: usan la hoja activa del conector. El parámetro `sheet`
+> sigue aceptándose como argumento opcional al final por compatibilidad, pero emite
+> `DeprecationWarning` y se eliminará en una versión futura.
 
 ---
 
@@ -361,12 +522,11 @@ df = conector.read_sheet_data(output_format='pandas')
 
 ---
 
-##### `spreadsheet_read_range(sheet, tab_name, fila_start, fila_end, column_start, column_end)`
+##### `spreadsheet_read_range(tab_name, fila_start, fila_end, column_start, column_end)`
 
 Lee un rango específico de celdas.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `tab_name` (str): Nombre de la pestaña
 - `fila_start` (int): Fila inicial
 - `fila_end` (int): Fila final
@@ -411,12 +571,11 @@ Obtiene el número de la última fila con datos.
 
 ---
 
-##### `get_row_with_empty_in_column(sheet, column_letter)`
+##### `get_row_with_empty_in_column(column_letter)`
 
 Encuentra la primera fila con celda vacía en una columna.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `column_letter` (str): Letra de la columna (ej: 'B')
 
 **Returns:**
@@ -468,12 +627,11 @@ Inserta datos en una fila específica o al final.
 
 #### Métodos de Actualización
 
-##### `update_cell(sheet, row_index, col_index, value)`
+##### `update_cell(row_index, col_index, value)`
 
 Actualiza una celda específica.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `row_index` (int): Índice de fila (1-indexed)
 - `col_index` (int): Índice de columna (1-indexed)
 - `value`: Nuevo valor para la celda
@@ -481,17 +639,16 @@ Actualiza una celda específica.
 **Ejemplo:**
 ```python
 # Actualizar celda B3 (fila 3, columna 2)
-conector.update_cell(conector.sheet, 3, 2, 'Nuevo Valor')
+conector.update_cell(3, 2, 'Nuevo Valor')
 ```
 
 ---
 
-##### `update_row(sheet, row_index, data, start_column=None)`
+##### `update_row(row_index, data, start_column=None)`
 
 Actualiza una fila completa o parte de ella.
 
 **Parámetros:**
-- `sheet`: Objeto worksheet
 - `row_index` (int): Índice de fila
 - `data` (list): Valores a escribir
 - `start_column` (int, opcional): Columna inicial (por defecto: 1)
@@ -499,10 +656,10 @@ Actualiza una fila completa o parte de ella.
 **Ejemplo:**
 ```python
 # Actualizar fila 5 completa
-conector.update_row(conector.sheet, 5, ['A', 'B', 'C'])
+conector.update_row(5, ['A', 'B', 'C'])
 
 # Actualizar desde columna 3
-conector.update_row(conector.sheet, 5, ['X', 'Y'], start_column=3)
+conector.update_row(5, ['X', 'Y'], start_column=3)
 ```
 
 ---
@@ -528,6 +685,51 @@ updates = [
     ]}
 ]
 conector.batch_update(updates)
+```
+
+---
+
+#### Métodos de Gestión de Hojas
+
+##### `create_sheet(title, rows=100, cols=26, index=None, activate=False)`
+
+Crea una nueva pestaña. Devuelve el worksheet creado. Si `activate=True`, pasa a ser la hoja activa.
+
+##### `delete_sheet(title)`
+
+Elimina la pestaña con el nombre indicado.
+
+##### `clear_range(ranges=None, tab_name=None)`
+
+Limpia uno o varios rangos en notación A1 (str o list[str]). Si `ranges=None`, limpia toda la hoja activa.
+
+##### `find_cell(query, case_sensitive=True)`
+
+Devuelve la primera celda (`gspread.Cell` con `row`, `col`, `value`) cuyo valor coincide con `query`, o `None`.
+
+---
+
+#### Integración con pandas
+
+> Requiere el extra pandas: `pip install "GSpreadManager[pandas]"`.
+
+##### `from_gsheet(tab_name=None, skiprows=0)`
+
+Lee la hoja como un `pandas.DataFrame` (atajo de `read_sheet_data(output_format='pandas')`).
+
+##### `to_gsheet(df, tab_name=None, include_header=True, clear=True)`
+
+Vuelca un `DataFrame` en la hoja empezando en A1. Por defecto incluye encabezados y limpia la hoja antes de escribir.
+
+---
+
+#### Context manager
+
+`GoogleSheetConector` soporta el protocolo `with`. Como las operaciones se aplican de inmediato, `__exit__` no descarta cambios ni suprime excepciones.
+
+```python
+with GoogleSheetConector('Mi Hoja', 'creds.json') as conector:
+    df = conector.from_gsheet()
 ```
 
 ---

@@ -1,0 +1,47 @@
+site_name: GSpreadManager
+site_description: Un wrapper de Python para gestionar y automatizar tareas en Google Sheets.
+site_url: https://pabloalaniz.github.io/GSpreadManager/
+repo_url: https://github.com/PabloAlaniz/GSpreadManager
+repo_name: PabloAlaniz/GSpreadManager
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: green
+      toggle:
+        icon: material/weather-night
+        name: Modo oscuro
+    - scheme: slate
+      primary: green
+      toggle:
+        icon: material/weather-sunny
+        name: Modo claro
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+nav:
+  - Inicio: index.md
+  - Guía de uso: guide.md
+  - Referencia de API: api.md
+  - Análisis competitivo: competitive-analysis.md
+  - Changelog: changelog.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
