@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sprint 4 de purificación — request builders + cableado de los value objects de
+  validación:** `_grid` y los dicts crudos de `setDataValidation`/`addConditionalFormatRule`
+  se mueven a `gspreadmanager.infrastructure.request_builders`, que convierte A1 -> GridRange
+  (vía gspread) y arma las peticiones desde los VOs del dominio (`DataValidationRule`,
+  `ConditionalFormatRule`, `GridRange`). `set_data_validation` y `add_conditional_format` del
+  conector pasan a delegar en estos builders. Nuevos golden-tests del módulo. Sin cambios de
+  comportamiento (peticiones byte a byte idénticas).
 - **Sprint 3 de purificación — estrategias de autenticación + adaptador con caché:** la
   cadena `if-elif` de `GoogleSheetConector._build_client` se reemplaza por una estrategia
   por método (`PreauthorizedClientAuth`, `CredentialsAuth`, `ServiceAccountInfoAuth`,
