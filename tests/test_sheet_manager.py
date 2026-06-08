@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 from gspread.utils import ValueInputOption
 from gspreadmanager import CellFormat, Color, SheetManager, WorksheetContext
+from gspreadmanager.infrastructure.gspread_adapters import GspreadWorksheet
 
 
 @pytest.fixture
@@ -49,13 +50,15 @@ def test_worksheet_returns_context(gs):
     ws = mgr.worksheet("Hoja1")
     assert isinstance(ws, WorksheetContext)
     assert ws.title == "Hoja1"
-    assert ws.worksheet is gs["worksheets"]["Hoja1"]
+    assert isinstance(ws.worksheet, GspreadWorksheet)
+    assert ws.worksheet.raw is gs["worksheets"]["Hoja1"]
 
 
 def test_worksheet_default_uses_sheet1(gs):
     mgr = SheetManager("Doc", "fake.json")
     ws = mgr.worksheet()
-    assert ws.worksheet is gs["worksheets"]["Sheet1"]
+    assert isinstance(ws.worksheet, GspreadWorksheet)
+    assert ws.worksheet.raw is gs["worksheets"]["Sheet1"]
 
 
 def test_handles_are_independent_no_global_active_sheet(gs):
@@ -134,7 +137,8 @@ def test_create_sheet_returns_context_without_activating(gs):
     ctx = mgr.create_sheet("Nueva", rows=10, cols=5)
     gs["spreadsheet"].add_worksheet.assert_called_once_with("Nueva", rows=10, cols=5, index=None)
     assert isinstance(ctx, WorksheetContext)
-    assert ctx.worksheet is new_ws
+    assert isinstance(ctx.worksheet, GspreadWorksheet)
+    assert ctx.worksheet.raw is new_ws
 
 
 def test_document_ops(gs):

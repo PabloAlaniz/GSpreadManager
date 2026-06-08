@@ -1,8 +1,8 @@
 # ADR 0001 — Dependencia de gspread: mantener, adaptar o reemplazar
 
-- **Estado:** Propuesto (a decidir)
+- **Estado:** Aceptado — opción B implementada; opción C diferida con disparador explícito
 - **Fecha:** 2026-06-08
-- **Contexto del proyecto:** GSpreadManager 2.0 (refactor a Clean Architecture / DDD táctico en curso)
+- **Contexto del proyecto:** GSpreadManager 2.0 (refactor a Clean Architecture / DDD táctico)
 
 ## Contexto
 
@@ -93,7 +93,15 @@ Google), detrás de los mismos puertos de la Opción B.
 | Control / features | Bajo | Bajo | **Máximo** |
 | Mitiga el *bus factor* | No | Parcial (deja la puerta abierta) | **Sí** |
 
-## Recomendación
+## Decisión
+
+Se adopta **Opción B** (implementada) y se difiere **Opción C** con un **disparador
+explícito**: el reemplazo total de gspread por un cliente propio nativo se ejecuta si gspread
+es declarado **EOL** o su **repositorio queda inactivo** (sin releases ni actividad de
+mantenimiento por un período prolongado). Mientras tanto, los adaptadores de gspread siguen
+siendo el motor por defecto, detrás de los puertos ya definidos.
+
+## Recomendación (histórica)
 
 Adoptar **Opción B ahora** y dejar **Opción C como decisión diferida**:
 

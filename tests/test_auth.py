@@ -17,6 +17,7 @@ from gspreadmanager.infrastructure.auth import (
     ServiceAccountInfoAuth,
     build_auth_strategy,
 )
+from gspreadmanager.infrastructure.gspread_adapters import GspreadSpreadsheet
 from gspreadmanager.infrastructure.gspread_client import GspreadClientAdapter
 from gspreadmanager.ports.auth import AuthStrategy
 
@@ -93,9 +94,9 @@ class TestStrategies:
 
 
 class TestGspreadClientAdapter:
-    """El adaptador se prueba con un AuthStrategy falso: no necesita gspread real."""
+    """El adaptador (ClientPort) se prueba con un AuthStrategy falso: sin gspread real."""
 
-    def test_authorizes_lazily_and_caches_client(self):
+    def test_authorizes_lazily(self):
         auth = Mock()
         auth.authorize.return_value = Mock()
         adapter = GspreadClientAdapter(auth)
@@ -103,10 +104,7 @@ class TestGspreadClientAdapter:
         # No autoriza hasta el primer uso
         auth.authorize.assert_not_called()
 
-        first = adapter.client()
-        second = adapter.client()
-
-        assert first is second
+        adapter.open("Doc")
         auth.authorize.assert_called_once()
 
     def test_caches_spreadsheets_by_name(self):
@@ -118,6 +116,7 @@ class TestGspreadClientAdapter:
         adapter.open("Doc")
         adapter.open("Doc")
 
+        # El documento se abre una vez y la autorización ocurre una vez (caché)
         client.open.assert_called_once_with("Doc")
         auth.authorize.assert_called_once()
 
@@ -131,3 +130,14 @@ class TestGspreadClientAdapter:
         adapter.open("B")
 
         assert client.open.call_count == 2
+
+    def test_open_returns_spreadsheet_port_wrapping_raw(self):
+        client = Mock()
+        raw_ss = Mock()
+        client.open.return_value = raw_ss
+        auth = Mock()
+        auth.authorize.return_value = client
+
+        port = GspreadClientAdapter(auth).open("Doc")
+        assert isinstance(port, GspreadSpreadsheet)
+        assert port.raw is raw_ss

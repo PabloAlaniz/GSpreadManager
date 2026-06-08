@@ -28,14 +28,17 @@ estado mutable. **Sin usuarios previos, se hizo el corte limpio** (se eliminó e
 - [x] **API nuevo**: `SheetManager` + `WorksheetContext` (handles inmutables, sin "hoja activa"
       global ni efectos colaterales de `tab_name`). Eliminada `GoogleSheetConector`.
 
-## 🧭 En evaluación — Independencia de gspread
+## 🧭 Independencia de gspread
 
 Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado en
-`infrastructure/`, lo que habilita decidir sin re-arquitecturar:
+`infrastructure/` detrás de puertos nominales.
 
-- [ ] **Puertos nominales `WorksheetPort`/`SpreadsheetPort` + adaptadores** sobre gspread
-      (resuelve el tipado duck-typed actual y deja a gspread reemplazable).
-- [ ] **Cliente propio nativo** (REST directo con google-auth) detrás de los mismos puertos.
+- [x] **Puertos nominales `WorksheetPort`/`SpreadsheetPort`/`ClientPort` + adaptadores**
+      sobre gspread (opción B): resuelto el tipado y gspread queda 100% sustituible.
+- [ ] **Reemplazo total por cliente propio nativo** (REST directo con google-auth) detrás de
+      los mismos puertos. **Disparador (política):** se ejecuta si gspread es declarado EOL o
+      su repositorio queda inactivo (sin releases ni actividad de mantenimiento por un período
+      prolongado). Mientras tanto, gspread sigue como adaptador por defecto.
 
 ## 🔜 v2.1 — Productividad de datos
 

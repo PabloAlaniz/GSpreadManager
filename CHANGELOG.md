@@ -42,9 +42,14 @@ hace el corte limpio: se elimina el API 1.x en vez de deprecarlo.
   limpiar/buscar), `DocumentService` (Drive), `SharingService` (permisos) y `DataframeService`
   (integración pandas vía el puerto `DataFramePort` y `PandasDataFrameAdapter`). Los servicios
   no importan gspread (salvo utilidades puras) y son testeables con fakes. Sin cambios de
-  comportamiento. Nota: los objetos hoja/documento se pasan duck-typed (no se introdujeron
-  Protocols nominales `WorksheetPort`/`SpreadsheetPort`, ya que las firmas concretas de gspread
-  no los satisfacen sin acoplar el puerto a gspread o envolver cada objeto en adaptadores).
+  comportamiento.
+- **Puertos nominales de Sheets + adaptadores (ADR 0001, opción B):** se introducen
+  `WorksheetPort`/`SpreadsheetPort`/`ClientPort` (`gspreadmanager.ports.sheets`) con firmas
+  propias, y los adaptadores `GspreadWorksheet`/`GspreadSpreadsheet`/`GspreadClientAdapter`
+  (`gspreadmanager.infrastructure`) que los implementan envolviendo gspread. La capa de
+  aplicación pasa a depender de los puertos (no de `Any`); el enum `ValueInputOption` queda
+  confinado al adaptador. gspread queda 100% sustituible: un cliente nativo futuro implementa
+  los mismos puertos sin tocar dominio ni aplicación.
 - **Sprint 4 de purificación — request builders + cableado de los value objects de
   validación:** `_grid` y los dicts crudos de `setDataValidation`/`addConditionalFormatRule`
   se mueven a `gspreadmanager.infrastructure.request_builders`, que convierte A1 -> GridRange
