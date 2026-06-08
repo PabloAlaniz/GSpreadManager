@@ -1,11 +1,11 @@
-"""Excepciones propias de GSpreadManager."""
+"""Shim de compatibilidad: las excepciones viven ahora en ``domain.errors``.
+
+Re-exporta la jerarquía pública para mantener estable ``gspreadmanager.exceptions``.
+El código nuevo debería importar desde ``gspreadmanager.domain.errors``.
+"""
 
 from __future__ import annotations
 
+from .domain.errors import GSpreadManagerError, InsertError
 
-class GSpreadManagerError(Exception):
-    """Error base para todas las operaciones de GSpreadManager."""
-
-
-class InsertError(GSpreadManagerError):
-    """Se lanza cuando falla la inserción de datos en una hoja de cálculo."""
+__all__ = ["GSpreadManagerError", "InsertError"]

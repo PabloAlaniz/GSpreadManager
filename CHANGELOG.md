@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Sprint 1 de purificación — capa de dominio (`gspreadmanager.domain`):** nuevos value
+  objects inmutables (`@dataclass(frozen=True)`) que serializan a la forma JSON de la
+  Sheets API. Se mueven los modelos de formato (`Color`, `TextFormat`, `NumberFormat`,
+  `Border`, `Borders`, `CellFormat`) a `domain/values/` y se agregan `A1Range`,
+  `GridRange`, `SpreadsheetId`, `WorksheetRef`, `Condition`, `DataValidationRule` y
+  `ConditionalFormatRule`. Jerarquía de errores en `domain/errors.py` (nuevos
+  `InvalidColorError`, `InvalidRangeError`, `InvalidIdentifierError`, todos subclase de
+  `ValueError` por compatibilidad). `gspreadmanager.formatting` y
+  `gspreadmanager.exceptions` quedan como shims de re-export: los imports antiguos y la
+  identidad de las clases se mantienen. Sin cambios de comportamiento.
+
 ### Changed
 - **Sprint 0 de purificación (tooling, sin cambios de comportamiento):** ruff estricto
   (se suman `W`, `C4`, `SIM`, `TID`, `PTH`, `RET`, `ARG`, `PIE`, `PERF`, `PL`, `RUF`,
