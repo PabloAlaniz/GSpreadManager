@@ -119,7 +119,7 @@ ignore_missing_imports = true
 # se relajan SOLO aquí los avisos de Any; dominio, puertos y aplicación siguen estrictos.
 # connector.py se moverá a infrastructure.* al descomponerse en servicios (Sprint 5).
 [[tool.mypy.overrides]]
-module = ["gspreadmanager.connector", "gspreadmanager.infrastructure.*"]
+module = ["gspreadmanager.connector", "gspreadmanager.facade", "gspreadmanager.infrastructure.*"]
 warn_return_any = false
 disallow_untyped_calls = false
 

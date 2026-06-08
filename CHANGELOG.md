@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sprint 6 de purificación — API 2.0 `SheetManager` + `WorksheetContext`
+  (`gspreadmanager.facade`):** nuevo punto de entrada sin "hoja activa" mutable.
+  `mgr = SheetManager(doc); ws = mgr.worksheet("Hoja1")` devuelve un handle inmutable atado
+  a una pestaña; dos handles son independientes y ninguna operación tiene efectos colaterales
+  sobre otro. El `WorksheetContext` expone las operaciones de hoja sin parámetro `tab_name`
+  ni `sheet`; `SheetManager` expone las operaciones a nivel documento (Drive, permisos,
+  crear/eliminar hojas) y `create_sheet` devuelve un handle en vez de "activar" la hoja.
+  Ambos delegan en los 7 servicios de la capa de aplicación. Exportados desde el paquete raíz.
 - **Sprint 5 de purificación — capa de aplicación (`gspreadmanager.application`):** se
   extraen 7 servicios de casos de uso desde el god class `GoogleSheetConector`, que ahora
   delega en ellos: `DataService` (lectura/escritura/append/insert/consultas),
@@ -51,6 +59,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ValueError` por compatibilidad). `gspreadmanager.formatting` y
   `gspreadmanager.exceptions` quedan como shims de re-export: los imports antiguos y la
   identidad de las clases se mantienen. Sin cambios de comportamiento.
+
+### Deprecated
+- **`GoogleSheetConector` queda obsoleto** (emite `DeprecationWarning`); se mantiene con el
+  mismo comportamiento (incluido el cambio de pestaña por efecto colateral y el parámetro
+  `sheet`) por compatibilidad, y se eliminará en la 3.0. Migración: reemplazar
+  `conn.metodo(..., tab_name="X")` por `ws = mgr.worksheet("X"); ws.metodo(...)` y quitar
+  los argumentos `sheet=`.
 
 ### Changed
 - **Sprint 0 de purificación (tooling, sin cambios de comportamiento):** ruff estricto
