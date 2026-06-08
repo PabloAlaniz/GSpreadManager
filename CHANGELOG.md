@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sprint 2 de purificación — puerto `RetryPolicy` (`gspreadmanager.ports.retry`) e
+  implementación `ExponentialBackoffRetry` (`gspreadmanager.infrastructure.retry`):** el
+  reintento deja de leer `self.max_retries`/`self.retry_backoff` y pasa a ser una política
+  inyectable (`run(operation)`). El decorador `retry_on_rate_limit` se conserva como capa
+  de compatibilidad que delega en la política. Nuevos tests aíslan la política del conector.
+  Sin cambios de comportamiento (misma semántica: 429/500/503, backoff `b·2^intento`).
 - **Sprint 1 de purificación — capa de dominio (`gspreadmanager.domain`):** nuevos value
   objects inmutables (`@dataclass(frozen=True)`) que serializan a la forma JSON de la
   Sheets API. Se mueven los modelos de formato (`Color`, `TextFormat`, `NumberFormat`,

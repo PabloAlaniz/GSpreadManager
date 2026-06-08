@@ -492,7 +492,7 @@ class TestRetry:
             [["a"], ["b"]],
         ]
 
-        with patch("gspreadmanager.retry.time.sleep") as mock_sleep:
+        with patch("gspreadmanager.infrastructure.retry.time.sleep") as mock_sleep:
             result = conn.get_last_row()
 
         assert result == 2
@@ -503,7 +503,7 @@ class TestRetry:
         conn = GoogleSheetConector("TestDoc", "fake.json", max_retries=1, retry_backoff=0)
         mock_all["worksheet"].get_all_values.side_effect = make_api_error(429)
 
-        with patch("gspreadmanager.retry.time.sleep"), pytest.raises(APIError):
+        with patch("gspreadmanager.infrastructure.retry.time.sleep"), pytest.raises(APIError):
             conn.get_last_row()
 
     def test_non_retryable_error_not_retried(self, mock_all):
@@ -511,7 +511,10 @@ class TestRetry:
         conn = GoogleSheetConector("TestDoc", "fake.json", max_retries=3, retry_backoff=0)
         mock_all["worksheet"].get_all_values.side_effect = make_api_error(403)
 
-        with patch("gspreadmanager.retry.time.sleep") as mock_sleep, pytest.raises(APIError):
+        with (
+            patch("gspreadmanager.infrastructure.retry.time.sleep") as mock_sleep,
+            pytest.raises(APIError),
+        ):
             conn.get_last_row()
 
         mock_sleep.assert_not_called()
