@@ -1,0 +1,128 @@
+# ADR 0001 — Dependencia de gspread: mantener, adaptar o reemplazar
+
+- **Estado:** Propuesto (a decidir)
+- **Fecha:** 2026-06-08
+- **Contexto del proyecto:** GSpreadManager 2.0 (refactor a Clean Architecture / DDD táctico en curso)
+
+## Contexto
+
+GSpreadManager se apoya en [`gspread`](https://github.com/burnash/gspread) como cliente de
+Google Sheets / Drive. Durante la revisión arquitectónica surgió la duda de si conviene
+seguir dependiendo de gspread o construir un cliente propio, motivada por:
+
+1. **Señales de mantenimiento de gspread.** Último release **6.2.1 (mayo 2025)**, con
+   cadencia sana en 2024–2025 pero enfriándose, y señales públicas de **falta de capacidad
+   de mantenimiento** / búsqueda de nuevos mantenedores. La API que envuelve
+   (Google Sheets API v4 / Drive v3) es **estable**, por lo que "pocos commits" indica tanto
+   madurez como riesgo de *bus factor* — no que esté roto.
+2. **Fricción de tipado.** Al extraer la capa de aplicación (Sprint 5) se intentó tipar los
+   servicios contra Protocols nominales `WorksheetPort` / `SpreadsheetPort`. Las firmas
+   concretas de gspread (ej. `batch_update(data: Iterable[MutableMapping],
+   value_input_option: ValueInputOption | None, ...)`) **no satisfacen** Protocols limpios sin
+   acoplar el puerto a los tipos de gspread o envolver cada objeto en adaptadores. Como
+   solución provisional los servicios reciben la hoja/documento *duck-typed* (`Any`).
+
+**Hecho clave:** tras los Sprints 1–5, gspread ya está **aislado en `infrastructure/`**
+(`auth.py`, `gspread_client.py`, `request_builders.py`, `pandas_adapter.py` y las llamadas
+duck-typed de los servicios). El dominio, los puertos y la capa de aplicación **no lo
+importan**. Reemplazar gspread es hoy un cambio **contenido en infraestructura**, no un
+re-rewrite.
+
+> Observación que unifica el problema: **la fricción de tipado y la "reemplazabilidad" de
+> gspread tienen la misma solución** — definir puertos nominales *propios* + adaptadores. Si
+> el puerto lo define GSpreadManager (no las firmas de gspread), el tipado queda limpio y un
+> futuro cliente nativo que implemente los mismos puertos es un *drop-in*.
+
+## Decisión a tomar
+
+¿Cómo gestionamos la dependencia de gspread de cara a la 2.0?
+
+## Opciones
+
+### Opción A — Mantener gspread tal cual (duck-typed)
+
+Dejar los servicios con parámetros `Any` y seguir usando gspread directamente desde el
+conector/infraestructura.
+
+- **Esfuerzo:** nulo.
+- **Riesgo técnico:** bajo a corto plazo; el *bus factor* de gspread queda sin mitigar.
+- **Tipado:** el borde con gspread queda sin puerto nominal (parcialmente `Any`).
+- **Reemplazabilidad:** baja-media (habría que crear la costura cuando haga falta).
+
+### Opción B — Puertos nominales + adaptadores sobre gspread (recomendada)
+
+Definir `SheetsClientPort` / `WorksheetPort` / `SpreadsheetPort` con **nuestras** firmas, y
+adaptadores `GspreadWorksheet` / `GspreadSpreadsheet` (en `infrastructure/`) que los
+implementan envolviendo gspread y convirtiendo lo necesario (ej. `value_input_option`).
+
+- **Esfuerzo:** medio-bajo (un sprint; ~2–3 adaptadores + ajustar el cableado y los tipos).
+- **Riesgo técnico:** bajo (los tests siguen verdes; gspread sigue siendo el motor real).
+- **Tipado:** **se resuelve** — la capa de aplicación pasa a depender de puertos nominales.
+- **Reemplazabilidad:** **alta** — gspread queda como un detalle 100% sustituible.
+- **Mantenimiento:** seguimos delegando los quirks de la API a gspread.
+
+### Opción C — Cliente propio nativo (REST directo)
+
+Reemplazar gspread por un `SheetsApiClient` propio que llame a la Google Sheets API v4 /
+Drive v3 usando la sesión autorizada de `google-auth` (que **ya** usamos y es oficial de
+Google), detrás de los mismos puertos de la Opción B.
+
+- **Esfuerzo:** alto. Hay que reimplementar, para nuestro subconjunto (~35 operaciones):
+  sesión HTTP autorizada, llamadas a `values.get/update/append/batchUpdate`,
+  `spreadsheets.batchUpdate` (formato/validación/condicional), `spreadsheets.create`,
+  Drive `files.create/copy/delete/list` y `permissions.*`, **conversiones A1 ↔ GridRange**
+  (incluyendo > 26 columnas), parsing de errores, paginación y reintentos.
+- **Riesgo técnico:** medio-alto al inicio (heredamos como bugs nuevos el detalle que gspread
+  ya resolvió y tiene *battle-tested*). Disminuye con tests y uso.
+- **Tipado / control:** máximo — tipos nativos limpios, podemos exponer features que gspread
+  no expone, sin terceros en el camino.
+- **Mantenimiento:** pasamos a ser **los únicos mantenedores** del cliente HTTP. Mitigado por
+  lo estable que es la Sheets API v4 y por usar `google-auth` (oficial) para lo sensible.
+- **Valor para el usuario:** nulo de forma directa (es un *swap* like-for-like); el valor es
+  estratégico (independencia, control).
+
+## Criterios de comparación
+
+| Criterio | A: gspread tal cual | B: puertos + adaptadores | C: cliente propio |
+|---|---|---|---|
+| Esfuerzo | Nulo | Medio-bajo | Alto |
+| Riesgo a corto plazo | Bajo | Bajo | Medio-alto |
+| Resuelve el tipado | No | **Sí** | Sí |
+| Reemplazabilidad de gspread | Baja | **Alta** | Total |
+| Mantenimiento propio | Bajo | Bajo | **Alto** |
+| Control / features | Bajo | Bajo | **Máximo** |
+| Mitiga el *bus factor* | No | Parcial (deja la puerta abierta) | **Sí** |
+
+## Recomendación
+
+Adoptar **Opción B ahora** y dejar **Opción C como decisión diferida**:
+
+1. **Sprint próximo (B):** introducir los puertos nominales y los adaptadores sobre gspread.
+   Resuelve el tipado, crea la costura y convierte a gspread en un detalle sustituible — todo
+   con bajo riesgo y sin romper comportamiento.
+2. **Más adelante, opcional (C):** construir un `SheetsApiClient` nativo **detrás de los
+   mismos puertos** como *spike*, ejecutarlo en paralelo a gspread (A/B) y promoverlo a
+   default solo si demuestra robustez, dejando el adaptador de gspread como *fallback*.
+
+Racional: no bloquear la 2.0 en un *rewrite* grande sin valor de usuario directo, pero
+garantizar la **opción de salida** si el mantenimiento de gspread se deteriora. No
+necesitamos "superar a gspread" para la comunidad: solo **dueñar un cliente fino** para las
+operaciones que exponemos, y eso es mucho más acotado.
+
+## Consecuencias
+
+- **Si B:** la capa de aplicación queda 100% tipada contra puertos propios; el reemplazo
+  futuro de gspread no toca dominio ni aplicación. Coste: una capa fina de adaptadores a
+  mantener.
+- **Si más tarde C:** independencia total del tercero y control de features, a cambio de
+  asumir el mantenimiento del cliente HTTP y el *battle-testing* inicial.
+- **Si A (no hacer nada):** se mantiene el `Any` en el borde y el *bus factor* sin mitigar;
+  reabrir la costura costará más cuando urja.
+
+## Referencias
+
+- gspread — repositorio: <https://github.com/burnash/gspread>
+- gspread — PyPI (6.2.1, 2025-05): <https://pypi.org/project/gspread/>
+- Google Sheets API v4: <https://developers.google.com/sheets/api>
+- Google Drive API v3: <https://developers.google.com/drive/api>
+- Análisis competitivo del proyecto: [competitive-analysis.md](../competitive-analysis.md)
