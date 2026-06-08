@@ -7,9 +7,10 @@ import warnings
 from typing import Any
 from unittest.mock import Mock, patch
 
+import pandas as pd
 import pytest
 from gspread.utils import ValueInputOption
-from gspreadmanager import GoogleSheetConector, SheetManager, WorksheetContext
+from gspreadmanager import CellFormat, Color, SheetManager, WorksheetContext
 
 
 @pytest.fixture
@@ -150,12 +151,131 @@ def test_share_uses_managers_doc_by_default(gs):
     gs["spreadsheet"].share.assert_called_once()
 
 
-def test_legacy_connector_emits_deprecation_warning(gs):
-    with pytest.warns(DeprecationWarning, match="obsoleto"):
-        GoogleSheetConector("Doc", "fake.json")
-
-
 def test_sheet_manager_does_not_warn(gs):
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         SheetManager("Doc", "fake.json").worksheet("A")
+
+
+# --- Cobertura de las operaciones de WorksheetContext (wiring) ---
+
+
+def test_update_row(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    mgr.worksheet("A").update_row(5, ["a", "b"], start_column=2)
+    assert gs["worksheets"]["A"].update_cell.call_count == 2
+
+
+def test_read_list(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    gs["worksheets"]["A"].get_all_values.return_value = [["h"], ["1"]]
+    assert ws.read() == [["h"], ["1"]]
+
+
+def test_last_row(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    gs["worksheets"]["A"].get_all_values.return_value = [["h"], ["1"], ["2"]]
+    assert ws.last_row() == 3
+
+
+def test_rows_where_column_equals(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    gs["worksheets"]["A"].get_all_values.return_value = [["x", "ok"], ["y", "no"]]
+    assert ws.rows_where_column_equals(1, "ok") == [(1, ["x", "ok"])]
+
+
+def test_batch_update_uses_enum(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    mgr.worksheet("A").batch_update([{"range": "A1", "values": [["x"]]}])
+    _, kwargs = gs["worksheets"]["A"].batch_update.call_args
+    assert kwargs["value_input_option"] == ValueInputOption.user_entered
+
+
+def test_insert_delegates(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("Hoja1")
+    gs["worksheets"]["Hoja1"].get_all_values.return_value = []
+    ws.insert([["a", "b"]], fila=1)
+    args = gs["spreadsheet"].values_append.call_args[0]
+    assert args[0] == "Hoja1!A1:B1"
+
+
+def test_set_background_and_text_and_number(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    ws.set_background("A1", Color(red=1.0))
+    ws.set_text_format("A1", bold=True)
+    ws.set_number_format("A1", "0.00%", "PERCENT")
+    assert gs["worksheets"]["A"].format.call_count == 3
+
+
+def test_freeze_and_merge(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    ws.freeze(rows=1, cols=2)
+    ws.merge("A1:B2")
+    gs["worksheets"]["A"].freeze.assert_called_once_with(rows=1, cols=2)
+    gs["worksheets"]["A"].merge_cells.assert_called_once_with("A1:B2", merge_type="MERGE_ALL")
+
+
+def test_add_checkbox_and_conditional_format(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    gs["worksheets"]["A"].id = 0
+    ws.add_checkbox("A1:A3")
+    ws.add_conditional_format("B1:B3", "NUMBER_LESS", [0], CellFormat(background_color=Color()))
+    assert gs["spreadsheet"].batch_update.call_count == 2
+
+
+def test_find(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    mgr.worksheet("A").find("Total")
+    gs["worksheets"]["A"].find.assert_called_once_with("Total", case_sensitive=True)
+
+
+def test_read_dataframe(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    gs["worksheets"]["A"].get_all_values.return_value = [["a", "b"], ["1", "2"]]
+    df = ws.read_dataframe()
+    assert list(df.columns) == ["a", "b"]
+
+
+def test_write_dataframe_uses_enum(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    ws = mgr.worksheet("A")
+    ws.write_dataframe(pd.DataFrame([["x"]], columns=["c"]))
+    gs["worksheets"]["A"].clear.assert_called_once_with()
+    _, kwargs = gs["worksheets"]["A"].update.call_args
+    assert kwargs["value_input_option"] == ValueInputOption.user_entered
+
+
+# --- Cobertura de las operaciones a nivel documento de SheetManager ---
+
+
+def test_delete_sheet(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    mgr.delete_sheet("Vieja")
+    called_with = gs["spreadsheet"].del_worksheet.call_args[0][0]
+    assert called_with is gs["worksheets"]["Vieja"]
+
+
+def test_delete_and_copy_spreadsheet(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    mgr.delete_spreadsheet("file1")
+    gs["client"].del_spreadsheet.assert_called_once_with("file1")
+    mgr.copy_spreadsheet("file1", title="Copia")
+    gs["client"].copy.assert_called_once_with(
+        "file1", title="Copia", copy_permissions=False, folder_id=None
+    )
+
+
+def test_list_and_remove_permissions(gs):
+    mgr = SheetManager("Doc", "fake.json")
+    mgr.list_permissions()
+    gs["spreadsheet"].list_permissions.assert_called_once()
+    mgr.remove_permission("a@b.com", role="writer")
+    gs["spreadsheet"].remove_permissions.assert_called_once_with("a@b.com", role="writer")

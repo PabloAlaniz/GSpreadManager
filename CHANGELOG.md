@@ -5,10 +5,28 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.0] - 2026-06-08
+
+Reescritura interna a Clean Architecture / DDD táctico (capas dominio / aplicación /
+infraestructura / puertos) y un API nuevo sin estado mutable. Sin usuarios previos, se
+hace el corte limpio: se elimina el API 1.x en vez de deprecarlo.
+
+### Breaking changes
+- **Se elimina `GoogleSheetConector`.** El nuevo punto de entrada es `SheetManager` +
+  `WorksheetContext`: `mgr = SheetManager(doc); ws = mgr.worksheet("Hoja1"); ws.append(...)`.
+  Ya no existe una "hoja activa" mutable ni el parámetro `tab_name` con efecto colateral:
+  cada `worksheet(...)` devuelve un handle inmutable e independiente.
+- **Se elimina el parámetro `sheet`** (que estaba obsoleto en 1.x) de las operaciones de hoja.
+- **Se eliminan los módulos shim `gspreadmanager.formatting` y `gspreadmanager.exceptions`.**
+  Importar desde el paquete raíz (`from gspreadmanager import CellFormat, GSpreadManagerError`)
+  o desde `gspreadmanager.domain`.
+- Renombres de operaciones en el handle de hoja: `read_sheet_data`→`read`,
+  `spreadsheet_append`→`append`, `spreadsheet_read_range`→`read_range`,
+  `spreadsheet_insert`→`insert`, `clear_range`→`clear`, `find_cell`→`find`,
+  `from_gsheet`→`read_dataframe`, `to_gsheet`→`write_dataframe`.
 
 ### Added
-- **Sprint 6 de purificación — API 2.0 `SheetManager` + `WorksheetContext`
+- **API 2.0 `SheetManager` + `WorksheetContext`
   (`gspreadmanager.facade`):** nuevo punto de entrada sin "hoja activa" mutable.
   `mgr = SheetManager(doc); ws = mgr.worksheet("Hoja1")` devuelve un handle inmutable atado
   a una pestaña; dos handles son independientes y ninguna operación tiene efectos colaterales
@@ -59,13 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ValueError` por compatibilidad). `gspreadmanager.formatting` y
   `gspreadmanager.exceptions` quedan como shims de re-export: los imports antiguos y la
   identidad de las clases se mantienen. Sin cambios de comportamiento.
-
-### Deprecated
-- **`GoogleSheetConector` queda obsoleto** (emite `DeprecationWarning`); se mantiene con el
-  mismo comportamiento (incluido el cambio de pestaña por efecto colateral y el parámetro
-  `sheet`) por compatibilidad, y se eliminará en la 3.0. Migración: reemplazar
-  `conn.metodo(..., tab_name="X")` por `ws = mgr.worksheet("X"); ws.metodo(...)` y quitar
-  los argumentos `sheet=`.
 
 ### Changed
 - **Sprint 0 de purificación (tooling, sin cambios de comportamiento):** ruff estricto

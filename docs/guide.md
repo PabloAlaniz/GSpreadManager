@@ -1,43 +1,49 @@
 # Guía de uso
 
+El punto de entrada es `SheetManager` (un documento). `mgr.worksheet(nombre)` devuelve un
+`WorksheetContext`: un handle **inmutable** a una pestaña. No hay "hoja activa" global; cada
+handle es independiente.
+
 ## Conexión
 
 ```python
-from gspreadmanager import GoogleSheetConector
+from gspreadmanager import SheetManager
 
-conector = GoogleSheetConector(
-    doc_name="Mi Hoja de Cálculo",
+mgr = SheetManager(
+    "Mi Hoja de Cálculo",
     json_google_file="credenciales.json",
-    sheet_name="Hoja1",          # opcional: primera hoja por defecto
-    max_retries=3,               # reintentos ante 429/500/503
-    retry_backoff=1.0,           # backoff exponencial base (segundos)
+    max_retries=3,        # reintentos ante 429/500/503
+    retry_backoff=1.0,    # backoff exponencial base (segundos)
 )
+
+ws = mgr.worksheet("Hoja1")   # handle a la pestaña (la primera si se omite el nombre)
 ```
 
 ## Lectura
 
 ```python
 # Lista de listas
-datos = conector.read_sheet_data(output_format="list")
+datos = ws.read(output_format="list")
 
 # Lista de diccionarios (primera fila = encabezados)
-datos = conector.read_sheet_data(output_format="dict")
+datos = ws.read(output_format="dict")
 
 # pandas DataFrame (requiere el extra [pandas])
-df = conector.read_sheet_data(output_format="pandas")
+df = ws.read(output_format="pandas")   # o ws.read_dataframe()
 
-# Rango específico
-rango = conector.spreadsheet_read_range("Hoja1", 1, 10, "A", "D")
+# Rango específico por índices de fila/columna
+rango = ws.read_range(1, 10, "A", "D")
 ```
 
 ## Escritura y actualización
 
 ```python
-conector.spreadsheet_append([["Ana", "ana@example.com"]])
-conector.update_cell(row_index=3, col_index=2, value="Nuevo Valor")
-conector.update_row(row_index=5, data=["X", "Y", "Z"], start_column=3)
+ws.append([["Ana", "ana@example.com"]])
+ws.update_cell(3, 2, "Nuevo Valor")
+ws.update_row(5, ["X", "Y", "Z"], start_column=3)
+ws.insert([["A", "B"]], fila=10)        # inserta en una fila concreta (o al final)
 
-conector.batch_update([
+ws.batch_update([
     {"range": "Hoja1!A1:B1", "values": [["Mes", "Total"]]},
 ])
 ```
@@ -45,16 +51,16 @@ conector.batch_update([
 ## Gestión de hojas
 
 ```python
-conector.create_sheet("Reporte 2026", rows=500, cols=10)
-conector.delete_sheet("Borrador")
-conector.clear_range("A1:C10")        # un rango
-conector.clear_range()                # toda la hoja
+nueva = mgr.create_sheet("Reporte 2026", rows=500, cols=10)   # devuelve un WorksheetContext
+mgr.delete_sheet("Borrador")
+ws.clear("A1:C10")    # un rango
+ws.clear()            # toda la hoja
 ```
 
 ## Búsqueda
 
 ```python
-celda = conector.find_cell("Total")
+celda = ws.find("Total")
 if celda:
     print(celda.row, celda.col, celda.value)
 ```
@@ -62,8 +68,8 @@ if celda:
 ## Integración con pandas
 
 ```python
-df = conector.from_gsheet()
-conector.to_gsheet(df, tab_name="Resultados")
+df = ws.read_dataframe()
+ws.write_dataframe(df)
 ```
 
 ## Formato de celdas
@@ -71,10 +77,10 @@ conector.to_gsheet(df, tab_name="Resultados")
 Modelo tipado propio (sin dependencias externas):
 
 ```python
-from gspreadmanager import CellFormat, TextFormat, Color, NumberFormat
+from gspreadmanager import CellFormat, TextFormat, Color
 
-# Encabezado en negrita con fondo verde claro
-conector.format_header()  # primera fila, atajo
+# Encabezado en negrita con fondo verde claro (atajo, primera fila)
+ws.format_header()
 
 # Formato arbitrario sobre un rango
 fmt = CellFormat(
@@ -82,23 +88,23 @@ fmt = CellFormat(
     background_color=Color.from_hex("#0B5394"),
     horizontal_alignment="CENTER",
 )
-conector.format_range("A1:D1", fmt)
+ws.format_range("A1:D1", fmt)
 
 # Atajos
-conector.set_background("A2:A100", Color.from_hex("#FFF2CC"))
-conector.set_text_format("B2:B100", bold=True, font_size=11)
-conector.set_number_format("C2:C100", "#,##0.00", number_type="CURRENCY")
+ws.set_background("A2:A100", Color.from_hex("#FFF2CC"))
+ws.set_text_format("B2:B100", bold=True, font_size=11)
+ws.set_number_format("C2:C100", "#,##0.00", number_type="CURRENCY")
 
 # Estructura
-conector.freeze(rows=1)            # congelar encabezado
-conector.merge("A1:D1")            # combinar celdas
+ws.freeze(rows=1)        # congelar encabezado
+ws.merge("A1:D1")        # combinar celdas
 ```
 
 ## Validación de datos
 
 ```python
-conector.add_dropdown("E2:E100", ["Pendiente", "En curso", "Hecho"])
-conector.add_checkbox("F2:F100")
+ws.add_dropdown("E2:E100", ["Pendiente", "En curso", "Hecho"])
+ws.add_checkbox("F2:F100")
 ```
 
 ## Formato condicional
@@ -108,26 +114,26 @@ from gspreadmanager import CellFormat, Color
 
 # Pintar de rojo los valores negativos
 rojo = CellFormat(background_color=Color.from_hex("#F4CCCC"))
-conector.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
+ws.add_conditional_format("C2:C100", "NUMBER_LESS", [0], rojo)
 ```
 
 ## Operaciones a nivel documento
 
 ```python
 # Crear, copiar, listar y borrar documentos (vía Drive)
-nuevo = conector.create_spreadsheet("Reporte mensual")
-copia = conector.copy_spreadsheet(nuevo.id, title="Reporte (copia)")
-docs = conector.list_spreadsheets(title="Reporte")
-conector.delete_spreadsheet(copia.id)
+nuevo = mgr.create_spreadsheet("Reporte mensual")
+copia = mgr.copy_spreadsheet(nuevo.id, title="Reporte (copia)")
+docs = mgr.list_spreadsheets(title="Reporte")
+mgr.delete_spreadsheet(copia.id)
 ```
 
 ## Compartir y permisos
 
 ```python
-conector.share("alguien@example.com", role="writer")        # editor
-conector.share("", perm_type="anyone", role="reader")        # cualquiera con el enlace
-permisos = conector.list_permissions()
-conector.remove_permission("alguien@example.com")
+mgr.share("alguien@example.com", role="writer")         # editor
+mgr.share("", perm_type="anyone", role="reader")         # cualquiera con el enlace
+permisos = mgr.list_permissions()
+mgr.remove_permission("alguien@example.com")
 ```
 
 ## Manejo de errores
@@ -136,10 +142,10 @@ Las operaciones reintentan automáticamente ante errores transitorios (HTTP 429/
 La librería expone excepciones propias:
 
 ```python
-from gspreadmanager import GSpreadManagerError, InsertError
+from gspreadmanager import InsertError
 
 try:
-    conector.spreadsheet_insert("Mi Hoja", "Hoja1", [["A", "B"]])
+    ws.insert([["A", "B"]])
 except InsertError as e:
     print(f"No se pudo insertar: {e}")
 ```
@@ -147,12 +153,6 @@ except InsertError as e:
 ## Context manager
 
 ```python
-with GoogleSheetConector("Mi Hoja", "creds.json") as conector:
-    df = conector.from_gsheet()
+with SheetManager("Mi Hoja", "creds.json") as mgr:
+    df = mgr.worksheet("Hoja1").read_dataframe()
 ```
-
-!!! warning "Cambio en v0.3.0"
-    Los métodos `update_cell`, `update_row`, `spreadsheet_read_range` y
-    `get_row_with_empty_in_column` ya no reciben `sheet` como primer parámetro; usan la hoja
-    activa del conector. `sheet` sigue aceptándose como argumento opcional final, pero emite
-    `DeprecationWarning`.

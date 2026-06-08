@@ -117,9 +117,8 @@ ignore_missing_imports = true
 
 # El borde con gspread/google-auth (tipos parciales) queda acotado a estos módulos:
 # se relajan SOLO aquí los avisos de Any; dominio, puertos y aplicación siguen estrictos.
-# connector.py se moverá a infrastructure.* al descomponerse en servicios (Sprint 5).
 [[tool.mypy.overrides]]
-module = ["gspreadmanager.connector", "gspreadmanager.facade", "gspreadmanager.infrastructure.*"]
+module = ["gspreadmanager.facade", "gspreadmanager.infrastructure.*"]
 warn_return_any = false
 disallow_untyped_calls = false
 

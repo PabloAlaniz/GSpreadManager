@@ -1,8 +1,26 @@
 # Referencia de API
 
-## GoogleSheetConector
+## SheetManager
 
-::: gspreadmanager.GoogleSheetConector
+::: gspreadmanager.SheetManager
+
+## WorksheetContext
+
+::: gspreadmanager.WorksheetContext
+
+## Modelo de formato
+
+::: gspreadmanager.CellFormat
+
+::: gspreadmanager.Color
+
+::: gspreadmanager.TextFormat
+
+::: gspreadmanager.NumberFormat
+
+::: gspreadmanager.Border
+
+::: gspreadmanager.Borders
 
 ## Excepciones
 
