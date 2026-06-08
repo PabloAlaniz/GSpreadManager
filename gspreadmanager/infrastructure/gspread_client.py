@@ -1,7 +1,6 @@
 """Adaptador del cliente de gspread: autentica (vía ``AuthStrategy``) y cachea.
 
-Encapsula el caché de cliente y de documentos abiertos por nombre que antes vivía en
-``GoogleSheetConector._get_client`` / ``_get_spreadsheet``. Cambiar de pestaña no
+Encapsula el caché de cliente y de documentos abiertos por nombre. Pedir otra pestaña no
 vuelve a autenticar ni a reabrir el documento.
 """
 

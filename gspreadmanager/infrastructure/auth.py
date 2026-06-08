@@ -1,9 +1,9 @@
 """Estrategias de autenticación concretas (una por método) y su factory.
 
-Reemplazan la cadena ``if-elif`` que vivía en ``GoogleSheetConector._build_client``.
 Cada estrategia sabe construir un cliente de gspread a partir de un método de
 credenciales; ``build_auth_strategy`` selecciona la apropiada según los parámetros.
-Es el único módulo (junto con el conector) que conoce ``gspread`` y ``google-auth``.
+Es de los pocos módulos (con ``facade`` y el resto de ``infrastructure``) que conocen
+``gspread`` y ``google-auth``.
 """
 
 from __future__ import annotations

@@ -1,47 +1,53 @@
 # ROADMAP - GSpreadManager
 
-Roadmap posterior al release **1.0.0**, derivado del [análisis competitivo](docs/competitive-analysis.md).
-Prioridad por impacto/esfuerzo, reusando el ecosistema (`gspread-*`) donde conviene.
+Prioridad por impacto/esfuerzo. Ver también el [análisis competitivo](docs/competitive-analysis.md)
+y las [decisiones de arquitectura (ADR)](docs/adr/0001-dependencia-de-gspread.md).
 
-## ✅ Hecho (hasta 1.0.0)
+## ✅ Hecho (1.0 – 1.2)
 
-- Packaging moderno (`pyproject.toml`), versión única, `ruff` + `mypy` + `bandit`, CI 3.9–3.12.
-- Type hints completos + `py.typed`. `pandas` opcional.
-- Fix de bugs (`values_get`/`values_append`, rangos > columna Z), retry + backoff, excepciones propias.
-- Gestión de hojas (`create_sheet`/`delete_sheet`/`clear_range`/`find_cell`), integración pandas, context manager.
-- Documentación con MkDocs. Primer release estable.
+- Packaging moderno (`pyproject.toml`), `ruff` + `mypy` + `bandit`, CI 3.9–3.12, `py.typed`.
+- Retry + backoff, excepciones propias, fixes de rangos (> columna Z), `pandas` opcional.
+- Caché de cliente/documento y **autenticación flexible** (service account file/dict,
+  credenciales de google-auth, cliente autorizado, ADC).
+- **Formato propio** (modelo tipado: `format_range`/`format_header`/`set_*`/`freeze`/`merge`),
+  **validación** (`add_dropdown`/`add_checkbox`), **formato condicional**.
+- **Documento (Drive)**: crear/copiar/listar/borrar; **compartir/permisos**.
+- Documentación con MkDocs.
 
-## ✅ v1.1 - Eficiencia y autenticación (HECHO)
+## ✅ v2.0 — Refactor a Clean Architecture / DDD (HECHO)
 
-- [x] **Caché de cliente + documento** (no re-autenticar al cambiar de pestaña).
-- [x] **Autenticación flexible**: service account (file/dict), credenciales de google-auth, cliente ya autorizado, ADC.
-- [ ] **Caché opcional de lecturas** con invalidación al escribir.
+Reescritura interna a una arquitectura por capas, con tooling estricto y un API nuevo sin
+estado mutable. **Sin usuarios previos, se hizo el corte limpio** (se eliminó el API 1.x).
 
-## ✅ v1.2 - Formato y operaciones de documento (HECHO)
+- [x] **Tooling estricto**: ruff ampliado + `mypy --strict` (incluye tests).
+- [x] **Capa de dominio**: value objects inmutables (formato, rangos, reglas) + errores.
+- [x] **Puertos**: `AuthStrategy`, `RetryPolicy`, `DataFramePort`.
+- [x] **Infraestructura**: estrategias de auth, adaptador de cliente con caché, retry policy,
+      request builders, adaptador de pandas.
+- [x] **Capa de aplicación**: 7 servicios de casos de uso (sin gspread, testeables con fakes).
+- [x] **API nuevo**: `SheetManager` + `WorksheetContext` (handles inmutables, sin "hoja activa"
+      global ni efectos colaterales de `tab_name`). Eliminada `GoogleSheetConector`.
 
-- [x] **Formato de celdas (implementación propia)**: modelo tipado + `format_range`,
-      `format_header`, `set_background`, `set_text_format`, `set_number_format`, `freeze`, `merge`.
-- [x] **Validación de datos**: `add_dropdown`, `add_checkbox`, `set_data_validation`.
-- [x] **Formato condicional**: `add_conditional_format`.
-- [x] **Operaciones a nivel documento**: `create_spreadsheet`, `delete_spreadsheet`,
-      `copy_spreadsheet`, `list_spreadsheets` (vía Drive).
-- [x] **Compartir / permisos**: `share`, `list_permissions`, `remove_permission`.
+## 🧭 En evaluación — Independencia de gspread
 
-## v1.3 - Productividad de datos (paridad con gspread-pandas)
+Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado en
+`infrastructure/`, lo que habilita decidir sin re-arquitecturar:
+
+- [ ] **Puertos nominales `WorksheetPort`/`SpreadsheetPort` + adaptadores** sobre gspread
+      (resuelve el tipado duck-typed actual y deja a gspread reemplazable).
+- [ ] **Cliente propio nativo** (REST directo con google-auth) detrás de los mismos puertos.
+
+## 🔜 v2.1 — Productividad de datos
 
 - [ ] **Pandas avanzado**: anclar DataFrame en posición arbitraria, `drop_empty_rows/cols`,
       escribir el índice opcional, inferencia de tipos.
-- [ ] **Freeze rows/cols, merge cells, auto-filtros**.
-- [ ] **Data validation**: dropdowns y checkboxes.
+- [ ] **Caché opcional de lecturas** con invalidación al escribir.
+- [ ] Auto-filtros.
 
-## v2.0 - Async y escala
+## 🗂️ Backlog (sin priorizar)
 
-- [ ] **Soporte async** (wrapper con threadpool al estilo `gspread-asyncio`).
-- [ ] **Paginación/streaming** para hojas grandes.
-- [ ] **Rate limiting** proactivo (token bucket), además del retry reactivo.
-
-## Backlog (sin priorizar)
-
+- [ ] **Async** (wrapper con threadpool) y **rate limiting** proactivo (token bucket).
+- [ ] Paginación/streaming para hojas grandes.
 - [ ] **CLI** para operaciones comunes (`gspreadmanager read/append/export`).
 - [ ] Named ranges / protected ranges.
 - [ ] Export a CSV/Excel.

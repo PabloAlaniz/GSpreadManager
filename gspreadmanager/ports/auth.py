@@ -1,7 +1,7 @@
 """Puerto de autenticación.
 
-Abstrae cómo se obtiene un cliente de gspread autorizado. La construcción del conector
-depende de este puerto, no de los detalles de google-auth ni de los métodos concretos.
+Abstrae cómo se obtiene un cliente de gspread autorizado. El facade depende de este
+puerto, no de los detalles de google-auth ni de los métodos concretos.
 """
 
 from __future__ import annotations
