@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sprint 5 de purificación — capa de aplicación (`gspreadmanager.application`):** se
+  extraen 7 servicios de casos de uso desde el god class `GoogleSheetConector`, que ahora
+  delega en ellos: `DataService` (lectura/escritura/append/insert/consultas),
+  `FormattingService` (formato, freeze, merge + builders de `CellFormat`),
+  `ValidationService` (validación y formato condicional), `WorksheetService` (crear/eliminar/
+  limpiar/buscar), `DocumentService` (Drive), `SharingService` (permisos) y `DataframeService`
+  (integración pandas vía el puerto `DataFramePort` y `PandasDataFrameAdapter`). Los servicios
+  no importan gspread (salvo utilidades puras) y son testeables con fakes. Sin cambios de
+  comportamiento. Nota: los objetos hoja/documento se pasan duck-typed (no se introdujeron
+  Protocols nominales `WorksheetPort`/`SpreadsheetPort`, ya que las firmas concretas de gspread
+  no los satisfacen sin acoplar el puerto a gspread o envolver cada objeto en adaptadores).
 - **Sprint 4 de purificación — request builders + cableado de los value objects de
   validación:** `_grid` y los dicts crudos de `setDataValidation`/`addConditionalFormatRule`
   se mueven a `gspreadmanager.infrastructure.request_builders`, que convierte A1 -> GridRange
