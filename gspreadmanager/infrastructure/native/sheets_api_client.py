@@ -2,7 +2,9 @@
 
 Implementa ``ClientPort`` / ``SpreadsheetPort`` / ``WorksheetPort`` llamando a la Sheets API
 v4 y la Drive API v3 a través de una ``HttpSession`` (inyectable). **No está cableado** en el
-facade. Lo no cubierto por el spike lanza ``NotImplementedError`` con la etiqueta "spike".
+facade: gspread sigue siendo el adaptador por defecto. Cubre todas las operaciones de los
+puertos; quedan pendientes refinamientos menores (mover a carpeta en ``create``, semántica de
+``with_link``, mapeo de errores de la API a excepciones propias).
 """
 
 from __future__ import annotations
@@ -15,17 +17,12 @@ from gspreadmanager.config import DEFAULT_VALUE_INPUT_OPTION
 from gspreadmanager.domain.errors import GSpreadManagerError
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
-from ._a1 import rowcol_to_a1
+from ._a1 import a1_to_grid_range, rowcol_to_a1
 from .http import HttpSession
 
 SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets"
 DRIVE_FILES = "https://www.googleapis.com/drive/v3/files"
 _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
-
-
-def _spike(method: str) -> NotImplementedError:
-    """Marca una operación aún no cubierta por el spike del cliente nativo."""
-    return NotImplementedError(f"spike: '{method}' aún no implementado en el cliente nativo.")
 
 
 @dataclass(frozen=True)
@@ -100,16 +97,25 @@ class SheetsApiClient:
     def list_spreadsheet_files(
         self, title: str | None, folder_id: str | None
     ) -> list[dict[str, Any]]:
-        """Lista documentos accesibles (Drive)."""
+        """Lista documentos accesibles (Drive), siguiendo la paginación."""
         clauses = [f"mimeType = '{_SPREADSHEET_MIME}'", "trashed = false"]
         if title is not None:
             clauses.append(f"name = '{title}'")
         if folder_id is not None:
             clauses.append(f"'{folder_id}' in parents")
-        files: list[dict[str, Any]] = self._get(
-            DRIVE_FILES, params={"q": " and ".join(clauses), "fields": "files(id,name)"}
-        ).get("files", [])
-        return files
+        query = " and ".join(clauses)
+
+        files: list[dict[str, Any]] = []
+        page_token: str | None = None
+        while True:
+            params: dict[str, Any] = {"q": query, "fields": "nextPageToken,files(id,name)"}
+            if page_token:
+                params["pageToken"] = page_token
+            data = self._get(DRIVE_FILES, params=params)
+            files.extend(data.get("files", []))
+            page_token = data.get("nextPageToken")
+            if not page_token:
+                return files
 
 
 class NativeSpreadsheet:
@@ -132,6 +138,11 @@ class NativeSpreadsheet:
         self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
     ) -> Any:
         response = self._session.post(url, params=params, json=json)
+        response.raise_for_status()
+        return response.json()
+
+    def _get(self, url: str, params: dict[str, Any] | None = None) -> Any:
+        response = self._session.get(url, params=params)
         response.raise_for_status()
         return response.json()
 
@@ -199,16 +210,37 @@ class NativeSpreadsheet:
         email_message: str | None,
         with_link: bool,
     ) -> Any:
-        """Comparte el documento (Drive permissions)."""
-        raise _spike("spreadsheet.share")
+        """Comparte el documento (Drive ``permissions.create``)."""
+        body: dict[str, Any] = {"type": perm_type, "role": role}
+        if perm_type in ("user", "group"):
+            body["emailAddress"] = email_address
+        params: dict[str, Any] = {"sendNotificationEmail": notify}
+        if email_message:
+            params["emailMessage"] = email_message
+        return self._post(f"{DRIVE_FILES}/{self._id}/permissions", json=body, params=params)
 
     def list_permissions(self) -> list[dict[str, Any]]:
-        """Lista permisos (Drive permissions)."""
-        raise _spike("spreadsheet.list_permissions")
+        """Lista permisos (Drive ``permissions.list``)."""
+        data = self._get(
+            f"{DRIVE_FILES}/{self._id}/permissions",
+            params={"fields": "permissions(id,type,role,emailAddress,domain)"},
+        )
+        result: list[dict[str, Any]] = data.get("permissions", [])
+        return result
 
     def remove_permissions(self, value: str, role: str) -> list[str]:
-        """Quita permisos (Drive permissions)."""
-        raise _spike("spreadsheet.remove_permissions")
+        """Quita los permisos de ``value`` (email/dominio) que coincidan con ``role``."""
+        removed: list[str] = []
+        for perm in self.list_permissions():
+            matches_value = value in (perm.get("emailAddress"), perm.get("domain"))
+            matches_role = role == "any" or perm.get("role") == role
+            if matches_value and matches_role:
+                response = self._session.delete(
+                    f"{DRIVE_FILES}/{self._id}/permissions/{perm['id']}"
+                )
+                response.raise_for_status()
+                removed.append(perm["id"])
+        return removed
 
 
 class NativeWorksheet:
@@ -255,10 +287,15 @@ class NativeWorksheet:
         return response.json()
 
     def get_all_values(self) -> list[list[str]]:
-        """Lee toda la hoja (``values.get`` con el título como rango)."""
+        """Lee toda la hoja (``values.get``), rellenando filas a un ancho uniforme.
+
+        La API recorta celdas vacías al final de cada fila; se rellenan para devolver una
+        matriz rectangular (como ``gspread.Worksheet.get_all_values``).
+        """
         data = self._parent.values_get(self._title)
-        values: list[list[str]] = data.get("values", [])
-        return values
+        rows: list[list[str]] = data.get("values", [])
+        width = max((len(row) for row in rows), default=0)
+        return [row + [""] * (width - len(row)) for row in rows]
 
     def update_cell(self, row: int, col: int, value: Any) -> None:
         """Actualiza una celda (``values.update``)."""
@@ -324,17 +361,64 @@ class NativeWorksheet:
         return None
 
     def range(self, name: str) -> list[Any]:
-        """Celdas de un rango (devolvería objetos Cell)."""
-        raise _spike("worksheet.range")
+        """Devuelve las celdas con datos del rango como objetos ``Cell``.
+
+        Aproximación del spike: devuelve solo las celdas presentes (sin rellenar el rango
+        completo con celdas vacías como hace gspread).
+        """
+        grid = a1_to_grid_range(name, self._sheet_id)
+        a1 = name if "!" in name else f"{self._title}!{name}"
+        rows = self._parent.values_get(a1).get("values", [])
+        start_row = grid.get("startRowIndex", 0)
+        start_col = grid.get("startColumnIndex", 0)
+        return [
+            Cell(row=start_row + r + 1, col=start_col + c + 1, value=value)
+            for r, row in enumerate(rows)
+            for c, value in enumerate(row)
+        ]
 
     def format(self, ranges: str | list[str], cell_format: dict[str, Any]) -> Any:
-        """Aplica formato (requiere construir ``repeatCell`` en batchUpdate)."""
-        raise _spike("worksheet.format")
+        """Aplica formato a uno o más rangos (``repeatCell`` en batchUpdate)."""
+        targets = [ranges] if isinstance(ranges, str) else ranges
+        fields = (
+            f"userEnteredFormat({','.join(cell_format)})" if cell_format else "userEnteredFormat"
+        )
+        requests = [
+            {
+                "repeatCell": {
+                    "range": a1_to_grid_range(target, self._sheet_id),
+                    "cell": {"userEnteredFormat": cell_format},
+                    "fields": fields,
+                }
+            }
+            for target in targets
+        ]
+        return self._parent.batch_update({"requests": requests})
 
     def freeze(self, rows: int | None, cols: int | None) -> Any:
-        """Congela filas/columnas (``updateSheetProperties`` en batchUpdate)."""
-        raise _spike("worksheet.freeze")
+        """Congela filas y/o columnas (``updateSheetProperties`` en batchUpdate)."""
+        grid_properties: dict[str, Any] = {}
+        fields: list[str] = []
+        if rows is not None:
+            grid_properties["frozenRowCount"] = rows
+            fields.append("gridProperties.frozenRowCount")
+        if cols is not None:
+            grid_properties["frozenColumnCount"] = cols
+            fields.append("gridProperties.frozenColumnCount")
+        request = {
+            "updateSheetProperties": {
+                "properties": {"sheetId": self._sheet_id, "gridProperties": grid_properties},
+                "fields": ",".join(fields),
+            }
+        }
+        return self._parent.batch_update({"requests": [request]})
 
     def merge_cells(self, range_name: str, merge_type: str) -> Any:
-        """Combina celdas (``mergeCells`` en batchUpdate)."""
-        raise _spike("worksheet.merge_cells")
+        """Combina las celdas de un rango (``mergeCells`` en batchUpdate)."""
+        request = {
+            "mergeCells": {
+                "range": a1_to_grid_range(range_name, self._sheet_id),
+                "mergeType": merge_type,
+            }
+        }
+        return self._parent.batch_update({"requests": [request]})

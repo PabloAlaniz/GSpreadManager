@@ -129,32 +129,32 @@ operaciones que exponemos, y eso es mucho más acotado.
 
 ## Hallazgos del spike del cliente nativo (opción C)
 
-Se implementó un spike **no cableado** (`gspreadmanager.infrastructure.native`, ~300 LOC) que
+Se implementó un spike **no cableado** (`gspreadmanager.infrastructure.native`, ~400 LOC) que
 implementa los mismos puertos llamando a la Sheets API v4 / Drive API v3 vía una sesión
 autorizada de google-auth. Conclusiones:
 
 - **Factibilidad: confirmada.** Las partes "difíciles" quedan resueltas y son baratas: la
   autenticación reusa `google.auth.transport.requests.AuthorizedSession` (no agrega
-  dependencias más allá de google-auth) y las utilidades A1 (`rowcol_to_a1`,
-  `column_to_letter`) son ~20 LOC propias, sin gspread.
-- **Cubierto y testeado (sesión falsa):** apertura por nombre (Drive search + metadata),
-  lectura (`values.get`), escrituras (`values.update`/`append`/`values:batchUpdate`),
-  `spreadsheets:batchUpdate` (⇒ validación y formato condicional funcionarían tal cual, porque
-  los *request builders* ya producen los dicts crudos de la API), gestión de hojas
-  (`addSheet`/`deleteSheet`) y `col/row/find` client-side.
-- **Pendiente (marcado `NotImplementedError`):** `format`/`freeze`/`merge` de hoja (construir
-  `repeatCell`/`updateSheetProperties`/`mergeCells`), `range` (objetos Cell), permisos de Drive
-  (`share`/`list`/`remove`), `folder_id` en `create` (mover en Drive), paginación de `list`,
-  el *padding* de filas/columnas que hace `get_all_values` de gspread, y el mapeo de errores de
-  la API a excepciones propias.
-- **Esfuerzo para completar C:** estimado **1–2 sprints** (el grueso restante es mecánico:
-  builders de formato, permisos Drive, padding, errores y paginación). El `RetryPolicy` ya
-  existe y solo habría que envolver las llamadas.
-- **Riesgo principal:** heredar detalles sutiles que gspread ya resolvió (padding, *quoting* de
-  títulos con comillas, formatos de error, cuotas). Mitigable con tests de contrato.
+  dependencias más allá de google-auth) y las utilidades A1 propias (`rowcol_to_a1`,
+  `column_to_letter`, `a1_to_grid_range`) son ~50 LOC, con **paridad verificada por test**
+  contra `gspread.utils.a1_range_to_grid_range`.
+- **Cubierto y testeado (sesión HTTP falsa):** apertura por nombre (Drive search + metadata),
+  lectura con *padding* rectangular, escrituras (`values.update`/`append`/`values:batchUpdate`),
+  **formato/freeze/merge** (`repeatCell`/`updateSheetProperties`/`mergeCells`) y
+  **validación/condicional** (`spreadsheets:batchUpdate`; los *request builders* ya producen
+  los dicts crudos), gestión de hojas (`addSheet`/`deleteSheet`), **permisos de Drive**
+  (`share`/`list`/`remove`), `find`/`range`/`col`/`row` y **paginación** del listado.
+- **Pendientes menores:** mover a carpeta en `create` (Drive PATCH), semántica de `with_link`,
+  el padding exacto al rango usado de la hoja (el spike rellena al ancho máximo de los datos) y
+  el **mapeo de errores de la API** a excepciones propias (hoy se delega en `raise_for_status`).
+- **Esfuerzo para completar C:** lo grueso ya está; resta **~0,5–1 sprint** de pulido (errores,
+  carpeta en create, edge cases) + *battle-testing* contra la API real. El `RetryPolicy` ya
+  existe y solo habría que envolver las llamadas HTTP.
+- **Riesgo principal:** heredar detalles sutiles que gspread ya resolvió (padding exacto,
+  *quoting* de títulos con comillas, formatos de error, cuotas). Mitigable con tests de contrato.
 
-Conclusión: la opción C es viable y acotada; se mantiene **diferida** hasta el disparador
-(EOL/inactividad de gspread), con el spike como punto de partida.
+Conclusión: la opción C es **viable y mayormente construida** en el spike; se mantiene
+**diferida** hasta el disparador (EOL/inactividad de gspread), con el spike como base lista.
 
 ## Referencias
 

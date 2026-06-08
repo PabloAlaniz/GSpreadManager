@@ -7,8 +7,13 @@ Sheets API v4 / Drive API v3, sin red real. No prueban el wiring (el spike no es
 from typing import Any
 
 import pytest
+from gspread.utils import a1_range_to_grid_range
 from gspreadmanager.domain.errors import GSpreadManagerError
-from gspreadmanager.infrastructure.native._a1 import column_to_letter, rowcol_to_a1
+from gspreadmanager.infrastructure.native._a1 import (
+    a1_to_grid_range,
+    column_to_letter,
+    rowcol_to_a1,
+)
 from gspreadmanager.infrastructure.native.sheets_api_client import (
     Cell,
     NativeSpreadsheet,
@@ -175,9 +180,37 @@ class TestSpreadsheet:
         sent = session.calls[0][3]
         assert sent["requests"][0]["deleteSheet"]["sheetId"] == 0
 
-    def test_permissions_are_spike_pending(self):
-        with pytest.raises(NotImplementedError, match="spike"):
-            self._ss(FakeSession()).list_permissions()
+    def test_share(self):
+        session = FakeSession()
+        self._ss(session).share("a@b.com", "user", "writer", True, "hola", False)
+        method, url, params, body = session.calls[0]
+        assert method == "POST"
+        assert url.endswith("/drive/v3/files/doc123/permissions")
+        assert body == {"type": "user", "role": "writer", "emailAddress": "a@b.com"}
+        assert params == {"sendNotificationEmail": True, "emailMessage": "hola"}
+
+    def test_list_permissions(self):
+        session = FakeSession()
+        session.queue("get", {"permissions": [{"id": "p1", "role": "writer"}]})
+        assert self._ss(session).list_permissions() == [{"id": "p1", "role": "writer"}]
+
+    def test_remove_permissions_matching(self):
+        session = FakeSession()
+        session.queue(
+            "get",
+            {
+                "permissions": [
+                    {"id": "p1", "emailAddress": "a@b.com", "role": "writer"},
+                    {"id": "p2", "emailAddress": "c@d.com", "role": "reader"},
+                ]
+            },
+        )
+        removed = self._ss(session).remove_permissions("a@b.com", "any")
+        assert removed == ["p1"]
+        assert session.calls[-1][:2] == (
+            "DELETE",
+            "https://www.googleapis.com/drive/v3/files/doc123/permissions/p1",
+        )
 
 
 class TestWorksheet:
@@ -246,6 +279,63 @@ class TestWorksheet:
         session.queue("get", {"values": [["a"]]})
         assert self._ws(session).find("zzz", True) is None
 
-    def test_format_is_spike_pending(self):
-        with pytest.raises(NotImplementedError, match="spike"):
-            self._ws(FakeSession()).format("A1", {})
+    def test_get_all_values_pads_ragged_rows(self):
+        session = FakeSession()
+        session.queue("get", {"values": [["a", "b"], ["c"]]})
+        assert self._ws(session).get_all_values() == [["a", "b"], ["c", ""]]
+
+    def test_format_builds_repeat_cell(self):
+        session = FakeSession()
+        fmt = {"backgroundColor": {"red": 1.0}}
+        self._ws(session).format("A1:B2", fmt)
+        sent = session.calls[0][3]
+        request = sent["requests"][0]["repeatCell"]
+        assert request["range"] == {
+            "sheetId": 0,
+            "startRowIndex": 0,
+            "endRowIndex": 2,
+            "startColumnIndex": 0,
+            "endColumnIndex": 2,
+        }
+        assert request["cell"] == {"userEnteredFormat": fmt}
+        assert request["fields"] == "userEnteredFormat(backgroundColor)"
+
+    def test_freeze_builds_update_sheet_properties(self):
+        session = FakeSession()
+        self._ws(session).freeze(1, None)
+        request = session.calls[0][3]["requests"][0]["updateSheetProperties"]
+        assert request["properties"]["gridProperties"] == {"frozenRowCount": 1}
+        assert request["fields"] == "gridProperties.frozenRowCount"
+
+    def test_merge_builds_merge_cells(self):
+        session = FakeSession()
+        self._ws(session).merge_cells("A1:B2", "MERGE_ALL")
+        request = session.calls[0][3]["requests"][0]["mergeCells"]
+        assert request["mergeType"] == "MERGE_ALL"
+        assert request["range"]["sheetId"] == 0
+
+    def test_range_returns_cells(self):
+        session = FakeSession()
+        session.queue("get", {"values": [["x", "y"]]})
+        cells = self._ws(session).range("B2:C2")
+        assert cells == [Cell(row=2, col=2, value="x"), Cell(row=2, col=3, value="y")]
+
+
+class TestA1ToGridRange:
+    @pytest.mark.parametrize("a1", ["A1", "A1:C10", "A:A", "A:C", "1:1", "2:5", "AA1:AB2"])
+    def test_parity_with_gspread(self, a1):
+        assert a1_to_grid_range(a1, 0) == a1_range_to_grid_range(a1, 0)
+
+    def test_strips_sheet_prefix(self):
+        # La versión nativa acepta el prefijo de pestaña (gspread no).
+        assert a1_to_grid_range("Hoja1!B2:D4", 0) == a1_to_grid_range("B2:D4", 0)
+
+
+class TestPagination:
+    def test_list_follows_next_page_token(self):
+        session = FakeSession()
+        session.queue("get", {"files": [{"id": "1"}], "nextPageToken": "tok"})
+        session.queue("get", {"files": [{"id": "2"}]})
+        result = SheetsApiClient(session).list_spreadsheet_files(None, None)
+        assert [f["id"] for f in result] == ["1", "2"]
+        assert session.calls[1][2]["pageToken"] == "tok"

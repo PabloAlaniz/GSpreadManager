@@ -5,7 +5,9 @@ Implementa los mismos puertos que los adaptadores de gspread (``ports.sheets``) 
 Drive API v3. **No está cableado** en el facade: gspread sigue siendo el adaptador por
 defecto. Existe para validar factibilidad y medir esfuerzo (ver ADR 0001 / ROADMAP).
 
-Cobertura del spike: autenticación + apertura por nombre (Drive), lectura, escrituras
-(update/append/batch values), ``spreadsheets:batchUpdate`` (habilita validación/condicional)
-y gestión de hojas. Lo no cubierto lanza ``NotImplementedError`` con la etiqueta "spike".
+Cobertura del spike: autenticación, apertura por nombre (Drive), lectura (con padding),
+escrituras (update/append/batch values), formato/freeze/merge y validación/condicional
+(``spreadsheets:batchUpdate``), gestión de hojas, permisos de Drive (share/list/remove),
+``find``/``range`` y conversión A1 <-> GridRange propia. Pendientes menores: mover a carpeta
+en ``create``, semántica de ``with_link`` y mapeo de errores de la API a excepciones propias.
 """
