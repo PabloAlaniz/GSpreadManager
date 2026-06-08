@@ -127,6 +127,35 @@ operaciones que exponemos, y eso es mucho más acotado.
 - **Si A (no hacer nada):** se mantiene el `Any` en el borde y el *bus factor* sin mitigar;
   reabrir la costura costará más cuando urja.
 
+## Hallazgos del spike del cliente nativo (opción C)
+
+Se implementó un spike **no cableado** (`gspreadmanager.infrastructure.native`, ~300 LOC) que
+implementa los mismos puertos llamando a la Sheets API v4 / Drive API v3 vía una sesión
+autorizada de google-auth. Conclusiones:
+
+- **Factibilidad: confirmada.** Las partes "difíciles" quedan resueltas y son baratas: la
+  autenticación reusa `google.auth.transport.requests.AuthorizedSession` (no agrega
+  dependencias más allá de google-auth) y las utilidades A1 (`rowcol_to_a1`,
+  `column_to_letter`) son ~20 LOC propias, sin gspread.
+- **Cubierto y testeado (sesión falsa):** apertura por nombre (Drive search + metadata),
+  lectura (`values.get`), escrituras (`values.update`/`append`/`values:batchUpdate`),
+  `spreadsheets:batchUpdate` (⇒ validación y formato condicional funcionarían tal cual, porque
+  los *request builders* ya producen los dicts crudos de la API), gestión de hojas
+  (`addSheet`/`deleteSheet`) y `col/row/find` client-side.
+- **Pendiente (marcado `NotImplementedError`):** `format`/`freeze`/`merge` de hoja (construir
+  `repeatCell`/`updateSheetProperties`/`mergeCells`), `range` (objetos Cell), permisos de Drive
+  (`share`/`list`/`remove`), `folder_id` en `create` (mover en Drive), paginación de `list`,
+  el *padding* de filas/columnas que hace `get_all_values` de gspread, y el mapeo de errores de
+  la API a excepciones propias.
+- **Esfuerzo para completar C:** estimado **1–2 sprints** (el grueso restante es mecánico:
+  builders de formato, permisos Drive, padding, errores y paginación). El `RetryPolicy` ya
+  existe y solo habría que envolver las llamadas.
+- **Riesgo principal:** heredar detalles sutiles que gspread ya resolvió (padding, *quoting* de
+  títulos con comillas, formatos de error, cuotas). Mitigable con tests de contrato.
+
+Conclusión: la opción C es viable y acotada; se mantiene **diferida** hasta el disparador
+(EOL/inactividad de gspread), con el spike como punto de partida.
+
 ## Referencias
 
 - gspread — repositorio: <https://github.com/burnash/gspread>

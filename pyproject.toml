@@ -99,6 +99,8 @@ ban-relative-imports = "parents"
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ANN", "D", "PLR2004", "ARG", "S105", "S106"]
 "__init__.py" = ["F401"]
+# Spike del cliente nativo: métodos-stub con argumentos de interfaz aún sin usar.
+"gspreadmanager/infrastructure/native/sheets_api_client.py" = ["ARG002"]
 
 [tool.mypy]
 # Sin python_version explícito: mypy infiere del intérprete del job de lint.
