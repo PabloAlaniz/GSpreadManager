@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Sprint 3 de purificación — estrategias de autenticación + adaptador con caché:** la
+  cadena `if-elif` de `GoogleSheetConector._build_client` se reemplaza por una estrategia
+  por método (`PreauthorizedClientAuth`, `CredentialsAuth`, `ServiceAccountInfoAuth`,
+  `ServiceAccountFileAuth`, `ADCAuth`) detrás del puerto `AuthStrategy`
+  (`gspreadmanager.ports.auth`) y una factory `build_auth_strategy`
+  (`gspreadmanager.infrastructure.auth`). El caché de cliente y documentos se encapsula en
+  `GspreadClientAdapter` (`gspreadmanager.infrastructure.gspread_client`). Nuevos tests
+  aíslan auth y caché del conector. Sin cambios de comportamiento (misma precedencia y
+  mismos mensajes de error).
 - **Sprint 2 de purificación — puerto `RetryPolicy` (`gspreadmanager.ports.retry`) e
   implementación `ExponentialBackoffRetry` (`gspreadmanager.infrastructure.retry`):** el
   reintento deja de leer `self.max_retries`/`self.retry_backoff` y pasa a ser una política

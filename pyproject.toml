@@ -115,12 +115,11 @@ pretty = true
 module = ["gspread.*", "google.*", "pandas.*"]
 ignore_missing_imports = true
 
-# connector.py es hoy el borde con gspread (todavía no extraído a infrastructure/).
-# gspread expone tipos parciales, por lo que llamadas y retornos quedan como Any.
-# Se relajan SOLO aquí los avisos de Any; el resto de capas siguen estrictas.
-# Este override se moverá a "gspreadmanager.infrastructure.*" en el Sprint 5.
+# El borde con gspread/google-auth (tipos parciales) queda acotado a estos módulos:
+# se relajan SOLO aquí los avisos de Any; dominio, puertos y aplicación siguen estrictos.
+# connector.py se moverá a infrastructure.* al descomponerse en servicios (Sprint 5).
 [[tool.mypy.overrides]]
-module = ["gspreadmanager.connector"]
+module = ["gspreadmanager.connector", "gspreadmanager.infrastructure.*"]
 warn_return_any = false
 disallow_untyped_calls = false
 

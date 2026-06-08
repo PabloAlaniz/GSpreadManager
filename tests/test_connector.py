@@ -37,14 +37,14 @@ class TestGoogleSheetConector:
     @pytest.fixture
     def mock_credentials(self):
         """Mock Google credentials."""
-        with patch("gspreadmanager.connector.service_account.Credentials") as mock_creds:
+        with patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds:
             mock_creds.from_service_account_file.return_value = Mock()
             yield mock_creds
 
     @pytest.fixture
     def mock_gspread(self):
         """Mock gspread client and worksheet."""
-        with patch("gspreadmanager.connector.gspread") as mock_gs:
+        with patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs:
             mock_client = Mock()
             mock_spreadsheet = Mock()
             mock_worksheet = Mock()
@@ -214,8 +214,8 @@ class TestEdgeCases:
     def mock_all(self):
         """Mock all external dependencies."""
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_client = Mock()
@@ -468,8 +468,8 @@ class TestRetry:
     @pytest.fixture
     def mock_all(self):
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_client = Mock()
@@ -526,8 +526,8 @@ class TestDeprecation:
     @pytest.fixture
     def mock_all(self):
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_client = Mock()
@@ -558,8 +558,8 @@ class TestFeatures:
     @pytest.fixture
     def mock_all(self):
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_client = Mock()
@@ -695,8 +695,8 @@ class TestAuthAndCache:
     @pytest.fixture
     def mock_all(self):
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_creds.from_service_account_info.return_value = Mock()
@@ -813,8 +813,8 @@ class TestFormatting:
     @pytest.fixture
     def mock_all(self):
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_client = Mock()
@@ -905,8 +905,8 @@ class TestDocumentOps:
     @pytest.fixture
     def mock_all(self):
         with (
-            patch("gspreadmanager.connector.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.connector.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
+            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
         ):
             mock_creds.from_service_account_file.return_value = Mock()
             mock_client = Mock()
