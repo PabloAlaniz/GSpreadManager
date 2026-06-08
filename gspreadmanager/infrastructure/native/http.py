@@ -12,14 +12,25 @@ from typing import Any, Protocol
 
 
 class HttpResponse(Protocol):
-    """Respuesta HTTP mínima."""
+    """Respuesta HTTP mínima (la satisface ``requests.Response``)."""
+
+    @property
+    def ok(self) -> bool:
+        """True si el status HTTP es exitoso (< 400)."""
+        ...
+
+    @property
+    def status_code(self) -> int:
+        """Código de estado HTTP."""
+        ...
+
+    @property
+    def text(self) -> str:
+        """Cuerpo de la respuesta como texto."""
+        ...
 
     def json(self) -> Any:
         """Cuerpo deserializado como JSON."""
-        ...
-
-    def raise_for_status(self) -> Any:
-        """Lanza si el status es de error."""
         ...
 
 

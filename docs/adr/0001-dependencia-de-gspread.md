@@ -144,12 +144,16 @@ autorizada de google-auth. Conclusiones:
   **validación/condicional** (`spreadsheets:batchUpdate`; los *request builders* ya producen
   los dicts crudos), gestión de hojas (`addSheet`/`deleteSheet`), **permisos de Drive**
   (`share`/`list`/`remove`), `find`/`range`/`col`/`row` y **paginación** del listado.
-- **Pendientes menores:** mover a carpeta en `create` (Drive PATCH), semántica de `with_link`,
-  el padding exacto al rango usado de la hoja (el spike rellena al ancho máximo de los datos) y
-  el **mapeo de errores de la API** a excepciones propias (hoy se delega en `raise_for_status`).
-- **Esfuerzo para completar C:** lo grueso ya está; resta **~0,5–1 sprint** de pulido (errores,
-  carpeta en create, edge cases) + *battle-testing* contra la API real. El `RetryPolicy` ya
-  existe y solo habría que envolver las llamadas HTTP.
+- **Mapeo de errores:** un único punto (`_ensure_ok`, al estilo de `gspread.HTTPClient.request`)
+  convierte los status HTTP no exitosos en `SheetsApiError` (parsea `{"error": {...}}` con
+  fallback al texto), integrado a la jerarquía `GSpreadManagerError`.
+- **Test de contrato:** `tests/test_port_contract.py` verifica que **ambos** adaptadores
+  (gspread y nativo) exponen la superficie completa de cada puerto ⇒ son intercambiables.
+- **Pendientes menores:** mover a carpeta en `create` (Drive PATCH), semántica de `with_link` y
+  el padding exacto al rango usado de la hoja (el spike rellena al ancho máximo de los datos).
+- **Esfuerzo para completar C:** lo grueso ya está; resta **~0,5 sprint** de pulido (carpeta en
+  create, edge cases) + *battle-testing* contra la API real. El `RetryPolicy` ya existe y solo
+  habría que envolver las llamadas HTTP.
 - **Riesgo principal:** heredar detalles sutiles que gspread ya resolvió (padding exacto,
   *quoting* de títulos con comillas, formatos de error, cuotas). Mitigable con tests de contrato.
 

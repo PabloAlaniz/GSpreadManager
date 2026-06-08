@@ -14,6 +14,7 @@ from gspreadmanager.infrastructure.native._a1 import (
     column_to_letter,
     rowcol_to_a1,
 )
+from gspreadmanager.infrastructure.native.errors import SheetsApiError
 from gspreadmanager.infrastructure.native.sheets_api_client import (
     Cell,
     NativeSpreadsheet,
@@ -24,15 +25,16 @@ from gspreadmanager.ports.sheets import ClientPort, SpreadsheetPort, WorksheetPo
 
 
 class FakeResponse:
-    def __init__(self, data: Any = None) -> None:
+    def __init__(
+        self, data: Any = None, ok: bool = True, status_code: int = 200, text: str = ""
+    ) -> None:
         self._data = data if data is not None else {}
-        self.raised = False
+        self.ok = ok
+        self.status_code = status_code
+        self.text = text
 
     def json(self) -> Any:
         return self._data
-
-    def raise_for_status(self) -> None:
-        self.raised = True
 
 
 class FakeSession:
@@ -42,8 +44,12 @@ class FakeSession:
         self.calls: list[tuple[str, str, Any, Any]] = []
         self._queue: dict[str, list[FakeResponse]] = {}
 
-    def queue(self, method: str, data: Any) -> None:
-        self._queue.setdefault(method, []).append(FakeResponse(data))
+    def queue(
+        self, method: str, data: Any, *, ok: bool = True, status_code: int = 200, text: str = ""
+    ) -> None:
+        self._queue.setdefault(method, []).append(
+            FakeResponse(data, ok=ok, status_code=status_code, text=text)
+        )
 
     def _resp(self, method: str) -> FakeResponse:
         q = self._queue.get(method)
@@ -339,3 +345,27 @@ class TestPagination:
         result = SheetsApiClient(session).list_spreadsheet_files(None, None)
         assert [f["id"] for f in result] == ["1", "2"]
         assert session.calls[1][2]["pageToken"] == "tok"
+
+
+class TestErrorMapping:
+    def test_api_error_is_parsed(self):
+        session = FakeSession()
+        session.queue(
+            "get",
+            {"error": {"code": 403, "status": "PERMISSION_DENIED", "message": "nope"}},
+            ok=False,
+            status_code=403,
+        )
+        ss = NativeSpreadsheet(session, "doc", [])
+        with pytest.raises(SheetsApiError, match="PERMISSION_DENIED") as exc:
+            ss.values_get("A1")
+        assert exc.value.code == 403
+        assert exc.value.message == "nope"
+
+    def test_non_json_error_falls_back_to_text(self):
+        session = FakeSession()
+        session.queue("post", None, ok=False, status_code=500, text="boom")
+        with pytest.raises(SheetsApiError, match="boom") as exc:
+            NativeSpreadsheet(session, "doc", []).batch_update({})
+        assert exc.value.code == 500
+        assert exc.value.status == "UNKNOWN"

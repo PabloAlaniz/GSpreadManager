@@ -3,8 +3,8 @@
 Implementa ``ClientPort`` / ``SpreadsheetPort`` / ``WorksheetPort`` llamando a la Sheets API
 v4 y la Drive API v3 a través de una ``HttpSession`` (inyectable). **No está cableado** en el
 facade: gspread sigue siendo el adaptador por defecto. Cubre todas las operaciones de los
-puertos; quedan pendientes refinamientos menores (mover a carpeta en ``create``, semántica de
-``with_link``, mapeo de errores de la API a excepciones propias).
+puertos, con mapeo de errores de la API a ``SheetsApiError``; quedan pendientes refinamientos
+menores (mover a carpeta en ``create``, semántica de ``with_link``).
 """
 
 from __future__ import annotations
@@ -18,11 +18,56 @@ from gspreadmanager.domain.errors import GSpreadManagerError
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
 from ._a1 import a1_to_grid_range, rowcol_to_a1
-from .http import HttpSession
+from .errors import SheetsApiError
+from .http import HttpResponse, HttpSession
 
 SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets"
 DRIVE_FILES = "https://www.googleapis.com/drive/v3/files"
 _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
+
+
+def _ensure_ok(response: HttpResponse) -> None:
+    """Lanza ``SheetsApiError`` si la respuesta no es exitosa (al estilo de gspread.APIError)."""
+    if response.ok:
+        return
+    code, status, message = response.status_code, "UNKNOWN", response.text
+    try:
+        error = response.json()["error"]
+        code = error.get("code", code)
+        status = error.get("status", status)
+        message = error.get("message", message)
+    except (ValueError, KeyError, TypeError):
+        pass
+    raise SheetsApiError(code, status, message)
+
+
+class _ApiCaller:
+    """Helpers HTTP con un único punto de chequeo de errores (mapeo a ``SheetsApiError``)."""
+
+    _session: HttpSession
+
+    def _get(self, url: str, params: dict[str, Any] | None = None) -> Any:
+        response = self._session.get(url, params=params)
+        _ensure_ok(response)
+        return response.json()
+
+    def _post(
+        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
+    ) -> Any:
+        response = self._session.post(url, params=params, json=json)
+        _ensure_ok(response)
+        return response.json()
+
+    def _put(
+        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
+    ) -> Any:
+        response = self._session.put(url, params=params, json=json)
+        _ensure_ok(response)
+        return response.json()
+
+    def _delete(self, url: str) -> None:
+        response = self._session.delete(url)
+        _ensure_ok(response)
 
 
 @dataclass(frozen=True)
@@ -34,24 +79,12 @@ class Cell:
     value: str
 
 
-class SheetsApiClient:
+class SheetsApiClient(_ApiCaller):
     """``ClientPort`` nativo: abre documentos (Drive) y opera a nivel Drive/Sheets."""
 
     def __init__(self, session: HttpSession) -> None:
         """Recibe una sesión HTTP autorizada (ver ``build_authorized_session``)."""
         self._session = session
-
-    def _get(self, url: str, params: dict[str, Any] | None = None) -> Any:
-        response = self._session.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
-
-    def _post(
-        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
-    ) -> Any:
-        response = self._session.post(url, params=params, json=json)
-        response.raise_for_status()
-        return response.json()
 
     def open(self, doc_name: str) -> SpreadsheetPort:
         """Resuelve el documento por nombre (Drive) y carga sus hojas (Sheets)."""
@@ -80,8 +113,7 @@ class SheetsApiClient:
 
     def del_spreadsheet(self, file_id: str) -> None:
         """Elimina un documento (Drive)."""
-        response = self._session.delete(f"{DRIVE_FILES}/{file_id}")
-        response.raise_for_status()
+        self._delete(f"{DRIVE_FILES}/{file_id}")
 
     def copy(
         self, file_id: str, title: str | None, copy_permissions: bool, folder_id: str | None
@@ -118,7 +150,7 @@ class SheetsApiClient:
                 return files
 
 
-class NativeSpreadsheet:
+class NativeSpreadsheet(_ApiCaller):
     """``SpreadsheetPort`` nativo: opera sobre un documento por su id."""
 
     def __init__(
@@ -133,18 +165,6 @@ class NativeSpreadsheet:
     def raw_id(self) -> str:
         """Id del documento (escape hatch del spike)."""
         return self._id
-
-    def _post(
-        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
-    ) -> Any:
-        response = self._session.post(url, params=params, json=json)
-        response.raise_for_status()
-        return response.json()
-
-    def _get(self, url: str, params: dict[str, Any] | None = None) -> Any:
-        response = self._session.get(url, params=params)
-        response.raise_for_status()
-        return response.json()
 
     def _sheet_id(self, title: str) -> int:
         for name, sheet_id in self._sheets:
@@ -185,9 +205,7 @@ class NativeSpreadsheet:
 
     def values_get(self, a1_range: str) -> Any:
         """``spreadsheets.values.get``."""
-        response = self._session.get(f"{SHEETS_BASE}/{self._id}/values/{quote(a1_range, safe='')}")
-        response.raise_for_status()
-        return response.json()
+        return self._get(f"{SHEETS_BASE}/{self._id}/values/{quote(a1_range, safe='')}")
 
     def values_append(self, a1_range: str, params: dict[str, Any], body: dict[str, Any]) -> Any:
         """``spreadsheets.values.append``."""
@@ -235,15 +253,12 @@ class NativeSpreadsheet:
             matches_value = value in (perm.get("emailAddress"), perm.get("domain"))
             matches_role = role == "any" or perm.get("role") == role
             if matches_value and matches_role:
-                response = self._session.delete(
-                    f"{DRIVE_FILES}/{self._id}/permissions/{perm['id']}"
-                )
-                response.raise_for_status()
+                self._delete(f"{DRIVE_FILES}/{self._id}/permissions/{perm['id']}")
                 removed.append(perm["id"])
         return removed
 
 
-class NativeWorksheet:
+class NativeWorksheet(_ApiCaller):
     """``WorksheetPort`` nativo: opera sobre una hoja por su título/sheetId."""
 
     def __init__(
@@ -279,13 +294,6 @@ class NativeWorksheet:
     def _values_url(self, a1_range: str) -> str:
         return f"{SHEETS_BASE}/{self._ss_id}/values/{quote(a1_range, safe='')}"
 
-    def _post(
-        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
-    ) -> Any:
-        response = self._session.post(url, params=params, json=json)
-        response.raise_for_status()
-        return response.json()
-
     def get_all_values(self) -> list[list[str]]:
         """Lee toda la hoja (``values.get``), rellenando filas a un ancho uniforme.
 
@@ -300,12 +308,11 @@ class NativeWorksheet:
     def update_cell(self, row: int, col: int, value: Any) -> None:
         """Actualiza una celda (``values.update``)."""
         a1 = f"{self._title}!{rowcol_to_a1(row, col)}"
-        response = self._session.put(
+        self._put(
             self._values_url(a1),
             params={"valueInputOption": DEFAULT_VALUE_INPUT_OPTION},
             json={"values": [[value]]},
         )
-        response.raise_for_status()
 
     def append_rows(self, data: list[list[Any]], value_input_option: str) -> Any:
         """Añade filas al final (``values.append``)."""
@@ -324,18 +331,15 @@ class NativeWorksheet:
 
     def update(self, values: list[list[Any]], value_input_option: str) -> Any:
         """Escribe ``values`` desde A1 (``values.update``)."""
-        response = self._session.put(
+        return self._put(
             self._values_url(self._title),
             params={"valueInputOption": value_input_option},
             json={"values": values},
         )
-        response.raise_for_status()
-        return response.json()
 
     def clear(self) -> None:
         """Limpia toda la hoja (``values.clear``)."""
-        response = self._session.post(f"{self._values_url(self._title)}:clear")
-        response.raise_for_status()
+        self._post(f"{self._values_url(self._title)}:clear")
 
     def batch_clear(self, ranges: list[str]) -> None:
         """Limpia varios rangos (``values:batchClear``)."""
