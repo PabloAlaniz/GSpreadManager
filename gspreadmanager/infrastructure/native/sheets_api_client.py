@@ -230,6 +230,14 @@ class NativeSpreadsheet(_ApiCaller):
         result: dict[str, Any] = self._get(f"{SHEETS_BASE}/{self._id}", params=params)
         return result
 
+    def export(self, mime_type: str) -> bytes:
+        """Exporta el documento (Drive ``files.export``) y devuelve los bytes."""
+        response = self._session.get(
+            f"{DRIVE_FILES}/{self._id}/export", params={"mimeType": mime_type}
+        )
+        _ensure_ok(response)
+        return response.content
+
     def share(
         self,
         email_address: str,

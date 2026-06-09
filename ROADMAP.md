@@ -48,7 +48,8 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 - [x] **Type inference** opcional al leer (`numericise`): `read(numericise=True)`.
 - [x] **Filas/columnas estructurales**: insertar/eliminar/redimensionar/ocultar.
 - [x] **Notas de celda**, **named ranges** y **protected ranges**.
-- [ ] **Sort / basic filter**, **unmerge**, tab color, export (xlsx/csv/pdf) / import CSV.
+- [x] **Sort / basic filter**, **unmerge**, **tab color**, **export** (xlsx/csv/pdf/tsv/ods/html).
+- [ ] **Import CSV** (volcar un CSV/archivo a la hoja) — pendiente, fuera del Sprint 4.
 - [ ] **Pandas avanzado**: anclaje en posición arbitraria, `drop_empty_rows/cols`, índice opcional.
 
 ## 🌟 Diferenciación (donde el ecosistema es débil)

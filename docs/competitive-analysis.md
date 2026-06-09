@@ -53,11 +53,13 @@ oficial `google-api-python-client`.
 | **Notas de celda** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Named ranges** | ✅ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
 | **Protected ranges** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Sort / basic filter** | ❌ | ✅ | ✅ | ⚠️ | ❌ | ❌ |
+| **Sort / basic filter** | ✅ | ✅ | ✅ | ⚠️ | ❌ | ❌ |
+| **Unmerge / color de pestaña** | ✅ | ⚠️/ext | ✅ | ❌ | ❌ | ❌ |
 | **Insert/delete/resize/hide filas y columnas** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
 | **Type inference de valores** (`numericise`) | ✅ | ✅ | ✅ | ✅ (DF) | ⚠️ | ⚠️ |
 | **Abrir por key / URL** | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
-| **Export (xlsx/csv/pdf) / import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **Export (xlsx/csv/pdf)** | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **Import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ❌ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 
@@ -65,12 +67,12 @@ Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
 ## Features de gspread que (todavía) no tenemos
 
-Candidatas a sumar, ordenadas por valor percibido. (✅ ya hechas: abrir por key/URL, type inference, filas/columnas, notas, named/protected ranges).
+Candidatas a sumar, ordenadas por valor percibido. (✅ ya hechas: abrir por key/URL, type
+inference, filas/columnas, notas, named/protected ranges, sort/basic filter, unmerge, tab
+color, export xlsx/csv/pdf).
 
-1. **Sort y basic filter** (ordenar un rango; filtro básico).
-2. **Export / import**: exportar a xlsx/csv/pdf; `import_csv`.
-3. **Unmerge** (tenemos `merge`, falta `unmerge_cells`).
-4. **Tab color**, **update_title/locale/timezone**, **listar worksheets** y abrir por índice/id.
+1. **Import CSV** (`import_csv`): volcar un CSV/archivo a la hoja (pendiente del Sprint 4).
+2. **update_title/locale/timezone** del documento, **listar worksheets** y abrir por índice/id.
 
 ## Oportunidades (lo que casi nadie tiene y podríamos diferenciar)
 

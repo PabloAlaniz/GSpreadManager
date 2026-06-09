@@ -22,6 +22,10 @@
 
 ::: gspreadmanager.Borders
 
+## Exportación
+
+::: gspreadmanager.ExportFormat
+
 ## Excepciones
 
 ::: gspreadmanager.GSpreadManagerError

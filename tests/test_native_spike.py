@@ -26,12 +26,18 @@ from gspreadmanager.ports.sheets import ClientPort, SpreadsheetPort, WorksheetPo
 
 class FakeResponse:
     def __init__(
-        self, data: Any = None, ok: bool = True, status_code: int = 200, text: str = ""
+        self,
+        data: Any = None,
+        ok: bool = True,
+        status_code: int = 200,
+        text: str = "",
+        content: bytes = b"",
     ) -> None:
         self._data = data if data is not None else {}
         self.ok = ok
         self.status_code = status_code
         self.text = text
+        self.content = content
 
     def json(self) -> Any:
         return self._data
@@ -45,10 +51,17 @@ class FakeSession:
         self._queue: dict[str, list[FakeResponse]] = {}
 
     def queue(
-        self, method: str, data: Any, *, ok: bool = True, status_code: int = 200, text: str = ""
+        self,
+        method: str,
+        data: Any,
+        *,
+        ok: bool = True,
+        status_code: int = 200,
+        text: str = "",
+        content: bytes = b"",
     ) -> None:
         self._queue.setdefault(method, []).append(
-            FakeResponse(data, ok=ok, status_code=status_code, text=text)
+            FakeResponse(data, ok=ok, status_code=status_code, text=text, content=content)
         )
 
     def _resp(self, method: str) -> FakeResponse:
@@ -393,3 +406,14 @@ def test_native_get_metadata():
     assert method == "GET"
     assert url.endswith("/v4/spreadsheets/doc123")
     assert params == {"fields": "namedRanges"}
+
+
+def test_native_export():
+    session = FakeSession()
+    session.queue("get", None, content=b"%PDF-1.7")
+    ss = NativeSpreadsheet(session, "doc123", [])
+    assert ss.export("application/pdf") == b"%PDF-1.7"
+    method, url, params, _ = session.calls[0]
+    assert method == "GET"
+    assert url.endswith("/drive/v3/files/doc123/export")
+    assert params == {"mimeType": "application/pdf"}

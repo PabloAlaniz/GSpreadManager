@@ -29,6 +29,11 @@ class HttpResponse(Protocol):
         """Cuerpo de la respuesta como texto."""
         ...
 
+    @property
+    def content(self) -> bytes:
+        """Cuerpo de la respuesta como bytes (para descargas/export)."""
+        ...
+
     def json(self) -> Any:
         """Cuerpo deserializado como JSON."""
         ...

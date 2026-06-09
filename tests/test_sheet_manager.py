@@ -10,7 +10,14 @@ from unittest.mock import Mock, patch
 import pandas as pd
 import pytest
 from gspread.utils import ValueInputOption
-from gspreadmanager import CellFormat, Color, GSpreadManagerError, SheetManager, WorksheetContext
+from gspreadmanager import (
+    CellFormat,
+    Color,
+    ExportFormat,
+    GSpreadManagerError,
+    SheetManager,
+    WorksheetContext,
+)
 from gspreadmanager.infrastructure.gspread_adapters import GspreadWorksheet
 
 
@@ -409,3 +416,69 @@ class TestNotesAndRanges:
         mgr.delete_named_range("nr1")
         body = gs["spreadsheet"].batch_update.call_args[0][0]
         assert body["requests"][0] == {"deleteNamedRange": {"namedRangeId": "nr1"}}
+
+
+class TestSortFilterMergeTab:
+    def _request(self, gs: Any) -> Any:
+        return gs["spreadsheet"].batch_update.call_args[0][0]["requests"][0]
+
+    def test_sort_range_translates_specs(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.sort_range("A1:C10", (1, "asc"), (3, "desc"))
+        req = self._request(gs)["sortRange"]
+        assert req["sortSpecs"] == [
+            {"dimensionIndex": 0, "sortOrder": "ASCENDING"},
+            {"dimensionIndex": 2, "sortOrder": "DESCENDING"},
+        ]
+
+    def test_set_basic_filter_with_range(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.set_basic_filter("A1:C10")
+        assert "setBasicFilter" in self._request(gs)
+
+    def test_set_basic_filter_whole_sheet(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.set_basic_filter()
+        assert self._request(gs)["setBasicFilter"]["filter"]["range"] == {"sheetId": 0}
+
+    def test_clear_basic_filter(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.clear_basic_filter()
+        assert self._request(gs) == {"clearBasicFilter": {"sheetId": 0}}
+
+    def test_unmerge(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.unmerge("A1:B2")
+        assert "unmergeCells" in self._request(gs)
+
+    def test_set_and_clear_tab_color(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.set_tab_color(Color(red=1.0))
+        req = self._request(gs)["updateSheetProperties"]
+        assert req["properties"]["tabColor"]["red"] == 1.0
+        assert req["fields"] == "tabColor"
+        ws.clear_tab_color()
+        cleared = self._request(gs)["updateSheetProperties"]
+        assert "tabColor" not in cleared["properties"]
+
+
+class TestExport:
+    def test_export_default_pdf(self, gs):
+        mgr = SheetManager("Doc", "fake.json")
+        gs["spreadsheet"].export.return_value = b"%PDF-1.7"
+        data = mgr.export()
+        assert data == b"%PDF-1.7"
+        gs["spreadsheet"].export.assert_called_once_with(format="application/pdf")
+
+    def test_export_explicit_format(self, gs):
+        mgr = SheetManager("Doc", "fake.json")
+        gs["spreadsheet"].export.return_value = b"col1,col2"
+        data = mgr.export(ExportFormat.CSV)
+        assert data == b"col1,col2"
+        gs["spreadsheet"].export.assert_called_once_with(format="text/csv")

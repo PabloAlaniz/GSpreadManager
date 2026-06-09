@@ -107,6 +107,36 @@ ws.list_protected_ranges()
 ws.delete_protected_range(protected_range_id)
 ```
 
+## Orden, filtro, merge y color de pestaña
+
+```python
+# Ordenar un rango por una o más columnas (1-based): (columna, "asc"|"desc")
+ws.sort_range("A2:C100", (1, "asc"), (3, "desc"))
+
+# Filtro básico sobre un rango (o toda la hoja si se omite)
+ws.set_basic_filter("A1:C100")
+ws.clear_basic_filter()
+
+# Deshacer una combinación de celdas
+ws.unmerge("A1:B2")
+
+# Color de la pestaña
+from gspreadmanager import Color
+ws.set_tab_color(Color.from_hex("#D9EAD3"))
+ws.clear_tab_color()
+```
+
+## Exportación
+
+```python
+from gspreadmanager import ExportFormat
+
+pdf = mgr.export()                     # PDF por defecto; devuelve bytes
+csv = mgr.export(ExportFormat.CSV)     # también TSV, EXCEL, ODS, HTML
+with open("doc.pdf", "wb") as f:
+    f.write(pdf)
+```
+
 ## Integración con pandas
 
 ```python

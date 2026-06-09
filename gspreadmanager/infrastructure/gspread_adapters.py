@@ -148,6 +148,11 @@ class GspreadSpreadsheet:
         result: dict[str, Any] = self._ss.fetch_sheet_metadata(params)
         return result
 
+    def export(self, mime_type: str) -> bytes:
+        """Exporta el documento (gspread ``Spreadsheet.export``)."""
+        data: bytes = self._ss.export(format=mime_type)
+        return data
+
     def share(
         self,
         email_address: str,

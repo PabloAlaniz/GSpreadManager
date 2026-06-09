@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Sprint 4 (orden/filtro, unmerge, color de pestaña, exportación):**
+  `WorksheetContext` gana `sort_range(rango, (columna, "asc"|"desc"), ...)`,
+  `set_basic_filter`/`clear_basic_filter`, `unmerge` y `set_tab_color`/`clear_tab_color`
+  (requests `sortRange`/`setBasicFilter`/`clearBasicFilter`/`unmergeCells`/
+  `updateSheetProperties` en `WorksheetService`, sin nueva superficie de puerto).
+  `SheetManager.export(export_format=ExportFormat.PDF)` descarga el documento como bytes
+  (PDF/CSV/TSV/Excel/ODS/HTML); nuevo enum `ExportFormat` exportado desde el paquete raíz,
+  un único método de puerto `SpreadsheetPort.export` (vía `files.export` de Drive)
+  implementado en ambos adaptadores, y `HttpResponse.content` para el cliente nativo.
+  La importación desde CSV queda pendiente (ver ROADMAP).
 - **v2.1 — Sprint 3 (notas + named/protected ranges):** `WorksheetContext` gana
   `update_note`/`clear_note`/`get_note`, `define_named_range`, `add_protected_range`/
   `list_protected_ranges`/`delete_protected_range`; `SheetManager` gana `list_named_ranges`/
