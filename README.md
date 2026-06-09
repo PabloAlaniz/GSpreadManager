@@ -19,22 +19,27 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 ## ✨ Características
 
 - 🔐 **Autenticación flexible**: service account (archivo o dict), credenciales de `google-auth`, cliente ya autorizado o ADC
-- 📖 **Lectura flexible**: listas, diccionarios o `pandas.DataFrame`
+- 📖 **Lectura flexible**: listas, diccionarios, `pandas`/`polars` o **modelos de fila tipados** (`@dataclass`)
 - ✏️ **Escritura y actualización**: celdas, filas, rangos, append, insert y lotes
-- 🗂️ **Gestión de hojas y documentos** (Drive): crear, copiar, listar, borrar y **compartir/permisos**
-- 🎨 **Formato propio** (sin dependencias): colores, fuentes, números, freeze, merge, validación y formato condicional
-- 🐼 **Integración con pandas** (`read_dataframe` / `write_dataframe`)
-- ♻️ **Reintentos automáticos** con backoff ante límites de cuota (429/500/503)
-- 🧱 **Arquitectura por capas** (dominio / aplicación / infraestructura / puertos) con type hints (PEP 561)
-- 📦 **Dependencias mínimas**: solo `gspread` y `google-auth` (`pandas` opcional)
+- 📐 **Estructura de la hoja**: insertar/eliminar/redimensionar/ocultar filas y columnas, **orden y filtro**, merge/unmerge, color de pestaña
+- 🗂️ **Gestión de hojas y documentos** (Drive): crear, copiar, listar, borrar, **compartir/permisos** y **exportar** (PDF/CSV/XLSX/...)
+- 🏷️ **Metadata**: notas de celda, **named ranges** y **protected ranges**
+- 🎨 **Formato propio** (sin dependencias): colores, fuentes, números, freeze, validación y formato condicional
+- 🐼 **DataFrames pluggable**: `pandas` **o** `polars`, con lectura avanzada (`drop_empty_*`, `index_col`) y escritura anclada
+- ⚡ **Robustez de cuota**: reintentos con backoff (429/500/503) + **rate limiting proactivo** (token bucket) + **caché de lecturas**
+- 🧪 **Testeable sin red**: backend en memoria (`gspreadmanager.testing`) que implementa los mismos puertos
+- ⌨️ **CLI**: `gspreadmanager read/append/export/share`
+- 🧱 **Arquitectura hexagonal** (dominio / aplicación / infraestructura / puertos) con type hints (PEP 561)
+- 📦 **Dependencias mínimas**: solo `gspread` y `google-auth` (`pandas`/`polars` opcionales)
 
 ## 🚀 Instalación
 
 ```bash
 pip install GSpreadManager
 
-# Con soporte pandas (opcional)
+# Con soporte de DataFrames (opcional)
 pip install "GSpreadManager[pandas]"
+pip install "GSpreadManager[polars]"
 ```
 
 ### Configuración en Google Cloud
@@ -114,12 +119,72 @@ ws.add_conditional_format("C2:C100", "NUMBER_LESS", [0],
                           CellFormat(background_color=Color.from_hex("#F4CCCC")))
 ```
 
-### pandas
+### DataFrames (pandas o polars)
 
 ```python
-df = ws.read_dataframe()
-ws.write_dataframe(df)                        # limpia la hoja y escribe desde A1
-ws.write_dataframe(df, include_header=False, clear=False)
+df = ws.read_dataframe()                      # backend por defecto: pandas
+ws.write_dataframe(df)                         # limpia la hoja y escribe desde A1
+ws.write_dataframe(df, start_cell="B2", include_index=True, clear=False)
+ws.read_dataframe(drop_empty_rows=True, drop_empty_cols=True, index_col="id")
+
+mgr = SheetManager("Mi Hoja", "creds.json", dataframe_backend="polars")
+```
+
+### Estructura, orden, exportación
+
+```python
+ws.insert_rows(2, number=3); ws.delete_cols(5)        # filas/columnas (1-based)
+ws.sort_range("A2:C100", (1, "asc"), (3, "desc"))     # ordenar por columnas
+ws.set_basic_filter("A1:C100")                         # filtro básico
+ws.set_tab_color(Color.from_hex("#D9EAD3"))
+
+ws.update_note("B2", "revisar"); ws.define_named_range("Datos", "A1:B100")
+
+from gspreadmanager import ExportFormat
+pdf = mgr.export()                                     # bytes (PDF por defecto)
+xlsx = mgr.export(ExportFormat.EXCEL)
+```
+
+### Modelos de fila tipados (dataclasses)
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Persona:
+    nombre: str
+    edad: int
+    activo: bool
+
+personas = ws.read_as(Persona)                # -> list[Persona], con tipos convertidos
+ws.append_models([Persona("Ana", 30, True)])
+```
+
+### Caché y rate limiting
+
+```python
+mgr = SheetManager("Mi Hoja", "creds.json",
+                   cache=True,        # memoiza lecturas, se invalida al escribir
+                   rate_limit=1)      # token bucket: ~1 operación/seg (no choca la cuota)
+mgr.clear_cache()                     # refresco manual ante cambios externos
+```
+
+### Testear sin red
+
+```python
+from gspreadmanager.testing import InMemoryBackend
+
+backend = InMemoryBackend()
+backend.add_spreadsheet("MiDoc", {"Hoja1": [["nombre", "email"], ["Ana", "ana@x.com"]]})
+mgr = backend.manager("MiDoc")        # un SheetManager que no toca la red
+```
+
+### CLI
+
+```bash
+gspreadmanager read   "Mi Doc" Hoja1 --format json --json-file creds.json
+gspreadmanager append "Mi Doc" Hoja1 Ana ana@example.com --json-file creds.json
+gspreadmanager export "Mi Doc" --format xlsx -o reporte.xlsx --json-file creds.json
 ```
 
 ### Hojas, documentos y permisos
@@ -168,18 +233,25 @@ cliente subyacente.
 
 ```
 gspreadmanager/
-├── domain/          # value objects (formato, rangos, reglas) + errores — sin I/O
-├── ports/           # Protocols: AuthStrategy, RetryPolicy, DataFramePort
-├── application/     # 7 servicios de casos de uso (data, formatting, validation,
-│                    #   worksheet, document, sharing, dataframe) — sin gspread
-├── infrastructure/  # auth (estrategias), gspread_client (caché), retry,
-│                    #   request_builders, pandas_adapter
+├── domain/          # value objects (formato, rangos, reglas), schema, numericise, export, errores — sin I/O
+├── ports/           # Protocols: sheets (client/spreadsheet/worksheet), auth, retry, rate_limit, dataframe
+├── application/     # servicios de casos de uso (data, formatting, validation, worksheet,
+│                    #   document, sharing, metadata, dataframe, row_model) — sin gspread
+├── infrastructure/  # gspread adapters/client, auth, retry, rate_limit, cache, request_builders,
+│                    #   pandas/polars adapters, native/ (spike de cliente REST)
+├── testing/         # backend en memoria (InMemoryBackend) que implementa los puertos
 ├── facade.py        # SheetManager + WorksheetContext (API público)
+├── cli.py           # CLI `gspreadmanager`
 ├── config.py
 └── retry.py
 ```
 
-**Dependencias:** `gspread` (>=3.0), `google-auth` (>=2.0) y `pandas` (>=1.2.4, opcional).
+Los puertos nominales (`ClientPort`/`SpreadsheetPort`/`WorksheetPort`) tienen **cuatro**
+implementaciones intercambiables, verificadas por un test de contrato: adaptador de gspread
+(por defecto), cliente REST nativo (spike), backend en memoria y wrappers de caché.
+
+**Dependencias:** `gspread` (>=3.0), `google-auth` (>=2.0); `pandas` (>=1.2.4) y `polars`
+(>=0.20) opcionales.
 
 ## 🧪 Desarrollo
 

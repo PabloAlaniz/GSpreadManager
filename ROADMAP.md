@@ -40,22 +40,21 @@ Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado 
       su repositorio queda inactivo (sin releases ni actividad de mantenimiento por un período
       prolongado). Mientras tanto, gspread sigue como adaptador por defecto.
 
-## 🔜 v2.1 — Paridad con gspread/pygsheets
+## ✅ v2.1 — Paridad con gspread/pygsheets + diferenciación (RELEASED)
 
-Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-analysis.md)):
+Cerró lo que nos separaba y sumó capacidades que el ecosistema no ofrece, todo sobre la
+arquitectura hexagonal de la 2.0 (ver [análisis competitivo](docs/competitive-analysis.md)):
 
 - [x] **Abrir por key / URL** (`open_by_key`, `open_by_url`), además de por nombre.
 - [x] **Type inference** opcional al leer (`numericise`): `read(numericise=True)`.
 - [x] **Filas/columnas estructurales**: insertar/eliminar/redimensionar/ocultar.
 - [x] **Notas de celda**, **named ranges** y **protected ranges**.
 - [x] **Sort / basic filter**, **unmerge**, **tab color**, **export** (xlsx/csv/pdf/tsv/ods/html).
-- [ ] **Import CSV** (volcar un CSV/archivo a la hoja) — pendiente, fuera del Sprint 4.
 - [x] **Pandas avanzado**: anclaje en posición arbitraria (`start_cell`), `drop_empty_rows/cols`,
       índice opcional (`index_col`/`include_index`).
 
-## 🌟 Diferenciación (donde el ecosistema es débil)
+### Diferenciación incluida en v2.1 (donde el ecosistema es débil)
 
-- [ ] **Async nativo** (`asyncio` sobre `httpx`, no threadpool) detrás de los puertos.
 - [x] **Modelos de fila tipados** (dataclasses) con coerción y validación
       (`read_as`/`append_models`/`write_models`). Pydantic: pendiente.
 - [x] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`
@@ -63,11 +62,16 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 - [x] **Caché de lecturas con invalidación** al escribir (`SheetManager(cache=True)`).
 - [x] **Fake in-memory** del backend para que los usuarios testeen sin red
       (`gspreadmanager.testing.InMemoryBackend`).
-
-## 🗂️ Backlog (sin priorizar)
-
 - [x] **Rate limiting** proactivo (token bucket) además del retry reactivo
       (`SheetManager(rate_limit=...)`).
-- [ ] Paginación/streaming para hojas grandes; operaciones de alto nivel (`upsert`, find-or-create).
 - [x] **CLI** (`gspreadmanager read/append/export/share`).
+
+## 🔜 Próximo (v2.2+)
+
+- [ ] **Async nativo** (`asyncio` sobre `httpx`, no threadpool) detrás de los puertos — el ítem
+      más grande; merece una iteración dedicada.
+- [ ] **Import CSV** (volcar un CSV/archivo a la hoja).
+- [ ] Operaciones de alto nivel (`upsert` por clave, find-or-create); paginación/streaming
+      para hojas grandes.
+- [ ] Modelos de fila con **Pydantic** (además de dataclasses).
 - [ ] Documentación bilingüe (es/en).

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-06-09
+
+Paridad con gspread/pygsheets y un conjunto de capacidades de diferenciación, todo sobre la
+arquitectura hexagonal de la 2.0 (sin reemplazar gspread, que sigue como adaptador por defecto).
+
 ### Added
 - **v2.1 — Diferenciación: CLI (`gspreadmanager`):** comando de terminal (solo `argparse`, sin
   dependencias extra) con `read` (CSV/TSV/JSON), `append`, `export` (a archivo o stdout) y
