@@ -50,9 +50,9 @@ oficial `google-api-python-client`.
 | Handles inmutables sin "hoja activa" global | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | Backend reemplazable (puertos / hexagonal) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Docs en español | ✅ único | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Notas de celda** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **Named ranges** | ❌ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
-| **Protected ranges** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Notas de celda** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Named ranges** | ✅ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
+| **Protected ranges** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Sort / basic filter** | ❌ | ✅ | ✅ | ⚠️ | ❌ | ❌ |
 | **Insert/delete/resize/hide filas y columnas** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
 | **Type inference de valores** (`numericise`) | ✅ | ✅ | ✅ | ✅ (DF) | ⚠️ | ⚠️ |
@@ -65,14 +65,12 @@ Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
 ## Features de gspread que (todavía) no tenemos
 
-Candidatas a sumar, ordenadas por valor percibido. (✅ ya hechas: abrir por key/URL, type inference, filas/columnas estructurales).
+Candidatas a sumar, ordenadas por valor percibido. (✅ ya hechas: abrir por key/URL, type inference, filas/columnas, notas, named/protected ranges).
 
-1. **Notas de celda** (get/insert/update/clear note).
-2. **Named ranges** (definir/listar/eliminar) y **protected ranges**.
-3. **Sort y basic filter** (ordenar un rango; filtro básico).
-4. **Export / import**: exportar a xlsx/csv/pdf; `import_csv`.
-5. **Unmerge** (tenemos `merge`, falta `unmerge_cells`).
-6. **Tab color**, **update_title/locale/timezone**, **listar worksheets** y abrir por índice/id.
+1. **Sort y basic filter** (ordenar un rango; filtro básico).
+2. **Export / import**: exportar a xlsx/csv/pdf; `import_csv`.
+3. **Unmerge** (tenemos `merge`, falta `unmerge_cells`).
+4. **Tab color**, **update_title/locale/timezone**, **listar worksheets** y abrir por índice/id.
 
 ## Oportunidades (lo que casi nadie tiene y podríamos diferenciar)
 

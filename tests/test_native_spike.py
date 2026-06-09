@@ -382,3 +382,14 @@ class TestNativeOpenByKey:
         assert len(session.calls) == 1
         assert session.calls[0][1].endswith("/v4/spreadsheets/KEY123")
         assert ss.worksheet("Hoja1").id == 9
+
+
+def test_native_get_metadata():
+    session = FakeSession()
+    session.queue("get", {"namedRanges": [{"name": "X"}]})
+    ss = NativeSpreadsheet(session, "doc123", [])
+    assert ss.get_metadata(None, "namedRanges") == {"namedRanges": [{"name": "X"}]}
+    method, url, params, _ = session.calls[0]
+    assert method == "GET"
+    assert url.endswith("/v4/spreadsheets/doc123")
+    assert params == {"fields": "namedRanges"}

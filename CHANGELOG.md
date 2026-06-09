@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Sprint 3 (notas + named/protected ranges):** `WorksheetContext` gana
+  `update_note`/`clear_note`/`get_note`, `define_named_range`, `add_protected_range`/
+  `list_protected_ranges`/`delete_protected_range`; `SheetManager` gana `list_named_ranges`/
+  `delete_named_range`. Nuevo `MetadataService` y un único método de puerto
+  `SpreadsheetPort.get_metadata` (lecturas vía `spreadsheets.get`), implementado en ambos
+  adaptadores. El resto son requests de `batchUpdate` (sin más superficie de puerto).
 - **v2.1 — Sprint 2 (filas/columnas estructurales):** `WorksheetContext` gana
   `insert_rows`/`insert_cols`, `delete_rows`/`delete_cols`, `add_rows`/`add_cols`,
   `resize_rows`/`resize_cols` y `hide_rows`/`unhide_rows`/`hide_cols`/`unhide_cols`

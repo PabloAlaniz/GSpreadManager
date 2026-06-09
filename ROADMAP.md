@@ -47,7 +47,7 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 - [x] **Abrir por key / URL** (`open_by_key`, `open_by_url`), además de por nombre.
 - [x] **Type inference** opcional al leer (`numericise`): `read(numericise=True)`.
 - [x] **Filas/columnas estructurales**: insertar/eliminar/redimensionar/ocultar.
-- [ ] **Notas de celda**, **named ranges** y **protected ranges**.
+- [x] **Notas de celda**, **named ranges** y **protected ranges**.
 - [ ] **Sort / basic filter**, **unmerge**, tab color, export (xlsx/csv/pdf) / import CSV.
 - [ ] **Pandas avanzado**: anclaje en posición arbitraria, `drop_empty_rows/cols`, índice opcional.
 

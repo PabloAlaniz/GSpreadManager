@@ -91,6 +91,22 @@ if celda:
     print(celda.row, celda.col, celda.value)
 ```
 
+## Notas, named ranges y protected ranges
+
+```python
+ws.update_note("B2", "revisar")
+ws.get_note("B2")            # "revisar"
+ws.clear_note("B2")
+
+ws.define_named_range("Ventas", "A1:B100")
+mgr.list_named_ranges()      # a nivel documento
+mgr.delete_named_range(named_range_id)
+
+ws.add_protected_range("A1:A10", description="solo lectura")
+ws.list_protected_ranges()
+ws.delete_protected_range(protected_range_id)
+```
+
 ## Integración con pandas
 
 ```python

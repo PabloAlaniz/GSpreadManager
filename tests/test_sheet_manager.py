@@ -356,3 +356,56 @@ class TestDimensions:
         upd = self._request(gs)["updateDimensionProperties"]
         assert upd["properties"] == {"pixelSize": 120}
         assert upd["fields"] == "pixelSize"
+
+
+class TestNotesAndRanges:
+    def _request(self, gs: Any) -> Any:
+        return gs["spreadsheet"].batch_update.call_args[0][0]["requests"][0]
+
+    def test_update_note(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.update_note("B2", "revisar")
+        req = self._request(gs)["updateCells"]
+        assert req["rows"] == [{"values": [{"note": "revisar"}]}]
+        assert req["fields"] == "note"
+
+    def test_get_note(self, gs):
+        # El adaptador gspread lee metadata vía fetch_sheet_metadata.
+        ws = SheetManager("Doc", "fake.json").worksheet("Hoja1")
+        gs["spreadsheet"].fetch_sheet_metadata.return_value = {
+            "sheets": [{"data": [{"rowData": [{"values": [{"note": "hola"}]}]}]}]
+        }
+        assert ws.get_note("B2") == "hola"
+        gs["spreadsheet"].fetch_sheet_metadata.assert_called_once_with(
+            {"fields": "sheets(data(rowData(values(note))))", "ranges": ["Hoja1!B2"]}
+        )
+
+    def test_define_named_range(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.define_named_range("Ventas", "A1:B10")
+        assert self._request(gs)["addNamedRange"]["namedRange"]["name"] == "Ventas"
+
+    def test_add_and_list_protected_ranges(self, gs):
+        mgr = SheetManager("Doc", "fake.json")
+        ws = mgr.worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.add_protected_range("A1:A5", description="solo lectura")
+        assert "addProtectedRange" in self._request(gs)
+        gs["spreadsheet"].fetch_sheet_metadata.return_value = {
+            "sheets": [
+                {"properties": {"sheetId": 0}, "protectedRanges": [{"protectedRangeId": "p1"}]}
+            ]
+        }
+        assert ws.list_protected_ranges() == [{"protectedRangeId": "p1"}]
+
+    def test_manager_named_ranges(self, gs):
+        mgr = SheetManager("Doc", "fake.json")
+        gs["spreadsheet"].fetch_sheet_metadata.return_value = {
+            "namedRanges": [{"namedRangeId": "nr1"}]
+        }
+        assert mgr.list_named_ranges() == [{"namedRangeId": "nr1"}]
+        mgr.delete_named_range("nr1")
+        body = gs["spreadsheet"].batch_update.call_args[0][0]
+        assert body["requests"][0] == {"deleteNamedRange": {"namedRangeId": "nr1"}}

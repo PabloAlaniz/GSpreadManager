@@ -222,6 +222,14 @@ class NativeSpreadsheet(_ApiCaller):
         """``spreadsheets:batchUpdate`` (formato, validación, gestión de hojas)."""
         return self._post(f"{SHEETS_BASE}/{self._id}:batchUpdate", json=body)
 
+    def get_metadata(self, ranges: list[str] | None, fields: str) -> dict[str, Any]:
+        """``spreadsheets.get`` filtrando por ranges/fields."""
+        params: dict[str, Any] = {"fields": fields}
+        if ranges is not None:
+            params["ranges"] = ranges
+        result: dict[str, Any] = self._get(f"{SHEETS_BASE}/{self._id}", params=params)
+        return result
+
     def share(
         self,
         email_address: str,

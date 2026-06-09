@@ -157,3 +157,11 @@ def test_client_adapter_open_by_key():
     # cacheado: segunda vez no reabre
     adapter.open_by_key("KEY123")
     client.open_by_key.assert_called_once()
+
+
+def test_gspread_spreadsheet_get_metadata():
+    raw = Mock()
+    raw.fetch_sheet_metadata.return_value = {"namedRanges": []}
+    ss = GspreadSpreadsheet(raw)
+    assert ss.get_metadata(["A1:B2"], "namedRanges") == {"namedRanges": []}
+    raw.fetch_sheet_metadata.assert_called_once_with({"fields": "namedRanges", "ranges": ["A1:B2"]})

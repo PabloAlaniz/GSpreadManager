@@ -140,6 +140,14 @@ class GspreadSpreadsheet:
         """Envía una petición ``spreadsheets.batchUpdate``."""
         return self._ss.batch_update(body)
 
+    def get_metadata(self, ranges: list[str] | None, fields: str) -> dict[str, Any]:
+        """Lee metadata del documento (``spreadsheets.get``) vía gspread."""
+        params: dict[str, Any] = {"fields": fields}
+        if ranges is not None:
+            params["ranges"] = ranges
+        result: dict[str, Any] = self._ss.fetch_sheet_metadata(params)
+        return result
+
     def share(
         self,
         email_address: str,
