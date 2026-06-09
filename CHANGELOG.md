@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Diferenciación: caché de lecturas con invalidación:** `SheetManager(..., cache=True)`
+  activa una caché transparente que memoiza las lecturas (`get_all_values`, `values_get`,
+  `get_metadata`) por documento y se invalida con cada escritura propia (a nivel hoja o
+  documento). Implementada como wrappers de los puertos (`CachingClient`/`CachingSpreadsheet`/
+  `CachingWorksheet`), opt-in (no detecta cambios de otros procesos); `mgr.clear_cache()` fuerza
+  el refresco. El test de contrato cubre también los wrappers.
 - **v2.1 — Diferenciación: modelos de fila tipados (dataclasses):** `WorksheetContext` gana
   `read_as(Model)` (devuelve `list[Model]`), `append_models(...)` y `write_models(...)`. El
   encabezado mapea a los campos del dataclass por nombre o por `field(metadata={"column": ...})`,

@@ -64,7 +64,7 @@ oficial `google-api-python-client`.
 | **Import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
 | **DataFrame pluggable (pandas + polars)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
-| Caché de lecturas con invalidación | ❌ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
+| Caché de lecturas con invalidación | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 
 Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
@@ -88,7 +88,8 @@ Más allá de la paridad, dónde podemos liderar:
   A futuro, el cliente nativo REST se enchufa por el mismo `sheets_client` (ver ADR 0001).
 - ✅ **Mapeo de filas a modelos tipados** (hecho, dataclasses): `read_as`/`append_models`/
   `write_models` con coerción de tipos y validación (`SchemaError`). Pydantic queda pendiente.
-- **Caché de lecturas con invalidación al escribir** (opcional): clave para apps que releen.
+- ✅ **Caché de lecturas con invalidación al escribir** (hecho, opt-in `cache=True`): clave
+  para apps que releen; implementada como wrappers de los puertos.
 - ✅ **Backend de DataFrame pluggable** (hecho): pandas **y polars** vía el `DataFramePort`
   (`SheetManager(dataframe_backend=...)`), con lectura avanzada (`drop_empty_rows/cols`,
   `index_col`) y escritura anclada (`start_cell`, `include_index`).

@@ -11,6 +11,12 @@ from typing import Any
 from unittest.mock import Mock
 
 import pytest
+from gspreadmanager.infrastructure.cache import (
+    CachingClient,
+    CachingSpreadsheet,
+    CachingWorksheet,
+    _Cache,
+)
 from gspreadmanager.infrastructure.gspread_adapters import GspreadSpreadsheet, GspreadWorksheet
 from gspreadmanager.infrastructure.gspread_client import GspreadClientAdapter
 from gspreadmanager.infrastructure.native.sheets_api_client import (
@@ -45,17 +51,20 @@ def _memory_worksheet() -> InMemoryWorksheet:
     return InMemoryWorksheet(_memory_spreadsheet(), "Hoja1", 0)
 
 
-# (puerto, [implementación gspread, implementación nativa, in-memory])
+# (puerto, [implementación gspread, implementación nativa, in-memory, caching])
 CONTRACT_CASES = [
     (WorksheetPort, GspreadWorksheet(Mock())),
     (WorksheetPort, _native_worksheet()),
     (WorksheetPort, _memory_worksheet()),
+    (WorksheetPort, CachingWorksheet(_memory_worksheet(), _Cache())),
     (SpreadsheetPort, GspreadSpreadsheet(Mock())),
     (SpreadsheetPort, _native_spreadsheet()),
     (SpreadsheetPort, _memory_spreadsheet()),
+    (SpreadsheetPort, CachingSpreadsheet(_memory_spreadsheet(), _Cache())),
     (ClientPort, GspreadClientAdapter(Mock())),
     (ClientPort, SheetsApiClient(Mock())),
     (ClientPort, InMemoryClient()),
+    (ClientPort, CachingClient(InMemoryClient())),
 ]
 
 

@@ -60,7 +60,7 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
       (`read_as`/`append_models`/`write_models`). Pydantic: pendiente.
 - [x] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`
       (`SheetManager(dataframe_backend=...)`).
-- [ ] **Caché de lecturas con invalidación** al escribir.
+- [x] **Caché de lecturas con invalidación** al escribir (`SheetManager(cache=True)`).
 - [x] **Fake in-memory** del backend para que los usuarios testeen sin red
       (`gspreadmanager.testing.InMemoryBackend`).
 

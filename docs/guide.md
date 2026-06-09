@@ -250,6 +250,24 @@ with SheetManager("Mi Hoja", "creds.json") as mgr:
     df = mgr.worksheet("Hoja1").read_dataframe()
 ```
 
+## Caché de lecturas
+
+Para apps que releen mucho, activá una caché de lecturas con `cache=True`. Memoiza las
+lecturas (`read`, `read_dataframe`, `read_as`, `read_range`, metadata) y **se invalida sola con
+cada escritura propia**, así que nunca ves un valor obsoleto respecto de tus cambios:
+
+```python
+mgr = SheetManager("Mi Hoja", "creds.json", cache=True)
+ws = mgr.worksheet("Hoja1")
+ws.read()        # lee de la API
+ws.read()        # sirve de la caché (sin llamada)
+ws.append([["x"]])  # invalida la caché del documento
+ws.read()        # vuelve a leer de la API
+```
+
+No detecta cambios hechos por **otros** procesos: si otra persona edita la hoja, forzá el
+refresco con `mgr.clear_cache()`. Por eso la caché es opt-in (por defecto está apagada).
+
 ## Modelos de fila tipados (dataclasses)
 
 Leé y escribí filas como objetos tipados, con coerción de tipos (int/float/bool/date) y
