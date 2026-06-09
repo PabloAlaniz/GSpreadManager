@@ -19,6 +19,7 @@ from gspreadmanager.infrastructure.native.sheets_api_client import (
     SheetsApiClient,
 )
 from gspreadmanager.ports.sheets import ClientPort, SpreadsheetPort, WorksheetPort
+from gspreadmanager.testing import InMemoryClient, InMemorySpreadsheet, InMemoryWorksheet
 
 
 def _port_members(protocol: type) -> list[str]:
@@ -34,14 +35,27 @@ def _native_worksheet() -> NativeWorksheet:
     return NativeWorksheet(_native_spreadsheet(), Mock(), "doc", "Hoja1", 0)
 
 
-# (puerto, [implementación gspread, implementación nativa])
+def _memory_spreadsheet() -> InMemorySpreadsheet:
+    ss = InMemorySpreadsheet("doc", "doc0")
+    ss.seed("Hoja1", [["a"]])
+    return ss
+
+
+def _memory_worksheet() -> InMemoryWorksheet:
+    return InMemoryWorksheet(_memory_spreadsheet(), "Hoja1", 0)
+
+
+# (puerto, [implementación gspread, implementación nativa, in-memory])
 CONTRACT_CASES = [
     (WorksheetPort, GspreadWorksheet(Mock())),
     (WorksheetPort, _native_worksheet()),
+    (WorksheetPort, _memory_worksheet()),
     (SpreadsheetPort, GspreadSpreadsheet(Mock())),
     (SpreadsheetPort, _native_spreadsheet()),
+    (SpreadsheetPort, _memory_spreadsheet()),
     (ClientPort, GspreadClientAdapter(Mock())),
     (ClientPort, SheetsApiClient(Mock())),
+    (ClientPort, InMemoryClient()),
 ]
 
 
@@ -70,5 +84,18 @@ def test_implementations_are_assignable_to_ports() -> None:
     native_ss: SpreadsheetPort = _native_spreadsheet()
     gspread_client: ClientPort = GspreadClientAdapter(Mock())
     native_client: ClientPort = SheetsApiClient(Mock())
-    for impl in (gspread_ws, native_ws, gspread_ss, native_ss, gspread_client, native_client):
+    memory_ws: WorksheetPort = _memory_worksheet()
+    memory_ss: SpreadsheetPort = _memory_spreadsheet()
+    memory_client: ClientPort = InMemoryClient()
+    for impl in (
+        gspread_ws,
+        native_ws,
+        gspread_ss,
+        native_ss,
+        gspread_client,
+        native_client,
+        memory_ws,
+        memory_ss,
+        memory_client,
+    ):
         assert impl is not None

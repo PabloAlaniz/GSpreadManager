@@ -105,6 +105,8 @@ ban-relative-imports = "parents"
 "gspreadmanager/infrastructure/native/sheets_api_client.py" = ["ARG002"]
 # polars no tiene índice: index_col/include_index son parte del puerto pero aquí no aplican.
 "gspreadmanager/infrastructure/polars_adapter.py" = ["ARG002"]
+# Backend en memoria: implementa la firma de los puertos pero ignora args sin efecto in-memory.
+"gspreadmanager/testing/in_memory.py" = ["ARG002"]
 
 [tool.mypy]
 # Sin python_version explícito: mypy infiere del intérprete del job de lint.

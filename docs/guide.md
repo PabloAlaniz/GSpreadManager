@@ -249,3 +249,30 @@ except InsertError as e:
 with SheetManager("Mi Hoja", "creds.json") as mgr:
     df = mgr.worksheet("Hoja1").read_dataframe()
 ```
+
+## Testear sin red (backend en memoria)
+
+`gspreadmanager.testing` trae un backend en memoria que implementa los mismos puertos que el
+adaptador de gspread. Tu código usa `SheetManager` igual que en producción, pero sin tocar la
+API de Google:
+
+```python
+from gspreadmanager.testing import InMemoryBackend
+
+backend = InMemoryBackend()
+backend.add_spreadsheet("MiDoc", {"Hoja1": [["nombre", "email"], ["Ana", "ana@x.com"]]})
+
+mgr = backend.manager("MiDoc")          # un SheetManager cableado al fake
+ws = mgr.worksheet("Hoja1")
+ws.append([["Bob", "bob@x.com"]])
+assert ws.read(output_format="dict")[-1] == {"nombre": "Bob", "email": "bob@x.com"}
+```
+
+Los valores hacen round-trip y las operaciones estructurales (insertar/eliminar filas, notas,
+named/protected ranges) se aplican sobre la grilla. El formato, la validación y el orden/filtro
+se **registran** en `spreadsheet.requests` para poder afirmarlos en los tests, pero no alteran la
+grilla. Para inyectar el fake en tu propia construcción del gestor, pasá el cliente directamente:
+
+```python
+mgr = SheetManager("MiDoc", sheets_client=backend.client)
+```

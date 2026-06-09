@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Diferenciación: backend en memoria para tests (`gspreadmanager.testing`):**
+  nuevo `InMemoryBackend`/`InMemoryClient`/`InMemorySpreadsheet`/`InMemoryWorksheet` que
+  implementan los puertos `ClientPort`/`SpreadsheetPort`/`WorksheetPort`, para que los usuarios
+  prueben su código sin red. Los valores hacen round-trip y las operaciones estructurales
+  (insertar/eliminar filas, notas, named/protected ranges) se aplican sobre la grilla; el
+  formato/validación/orden/filtro se registran en `spreadsheet.requests` sin alterarla.
+  `SheetManager` acepta `sheets_client=...` para inyectar cualquier `ClientPort`. El test de
+  contrato ahora cubre también el fake (mismo set de métodos que gspread y el cliente nativo).
 - **v2.1 — Sprint 5 (pandas avanzado + backend polars):** el motor de DataFrame es
   pluggable vía `SheetManager(dataframe_backend="pandas"|"polars")` (nuevo
   `PolarsDataFrameAdapter` detrás del `DataFramePort`, factory `build_dataframe_adapter`,

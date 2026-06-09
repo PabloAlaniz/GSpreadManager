@@ -60,7 +60,8 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 - [x] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`
       (`SheetManager(dataframe_backend=...)`).
 - [ ] **Caché de lecturas con invalidación** al escribir.
-- [ ] **Fake in-memory** del backend para que los usuarios testeen sin red.
+- [x] **Fake in-memory** del backend para que los usuarios testeen sin red
+      (`gspreadmanager.testing.InMemoryBackend`).
 
 ## 🗂️ Backlog (sin priorizar)
 

@@ -31,3 +31,13 @@
 ::: gspreadmanager.GSpreadManagerError
 
 ::: gspreadmanager.InsertError
+
+## Testing (backend en memoria)
+
+::: gspreadmanager.testing.InMemoryBackend
+
+::: gspreadmanager.testing.InMemoryClient
+
+::: gspreadmanager.testing.InMemorySpreadsheet
+
+::: gspreadmanager.testing.InMemoryWorksheet
