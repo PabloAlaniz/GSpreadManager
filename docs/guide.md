@@ -68,6 +68,21 @@ ws.clear("A1:C10")    # un rango
 ws.clear()            # toda la hoja
 ```
 
+## Filas y columnas
+
+Posiciones 1-based; los rangos en `delete_*`/`hide_*` son inclusivos.
+
+```python
+ws.insert_rows(3, number=2)   # inserta 2 filas antes de la fila 3
+ws.insert_cols(2)             # inserta 1 columna antes de la columna 2
+ws.delete_rows(5, 8)          # elimina filas 5..8
+ws.delete_cols(3)             # elimina la columna 3
+ws.add_rows(100)             # agrega 100 filas al final
+ws.resize_cols(1, 3, 120)     # ancho 120px para columnas 1..3
+ws.hide_rows(2, 4)            # oculta filas 2..4
+ws.unhide_rows(2, 4)
+```
+
 ## Búsqueda
 
 ```python

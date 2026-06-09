@@ -315,3 +315,44 @@ class TestReadNumericise:
         ws = mgr.worksheet("A")
         gs["worksheets"]["A"].get_all_values.return_value = [["n", "edad"], ["Ana", "30"]]
         assert ws.read(output_format="dict", numericise=True) == [{"n": "Ana", "edad": 30}]
+
+
+class TestDimensions:
+    def _request(self, gs: Any) -> Any:
+        return gs["spreadsheet"].batch_update.call_args[0][0]["requests"][0]
+
+    def test_insert_rows_translates_index(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.insert_rows(3, number=2)
+        rng = self._request(gs)["insertDimension"]["range"]
+        assert rng == {"sheetId": 0, "dimension": "ROWS", "startIndex": 2, "endIndex": 4}
+
+    def test_delete_cols_inclusive(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.delete_cols(2, 4)
+        rng = self._request(gs)["deleteDimension"]["range"]
+        assert rng == {"sheetId": 0, "dimension": "COLUMNS", "startIndex": 1, "endIndex": 4}
+
+    def test_add_rows(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.add_rows(5)
+        assert self._request(gs)["appendDimension"] == {
+            "sheetId": 0,
+            "dimension": "ROWS",
+            "length": 5,
+        }
+
+    def test_hide_and_resize(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].id = 0
+        ws.hide_rows(2)
+        assert self._request(gs)["updateDimensionProperties"]["properties"] == {
+            "hiddenByUser": True
+        }
+        ws.resize_cols(1, 3, 120)
+        upd = self._request(gs)["updateDimensionProperties"]
+        assert upd["properties"] == {"pixelSize": 120}
+        assert upd["fields"] == "pixelSize"

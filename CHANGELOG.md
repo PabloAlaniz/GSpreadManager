@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Sprint 2 (filas/columnas estructurales):** `WorksheetContext` gana
+  `insert_rows`/`insert_cols`, `delete_rows`/`delete_cols`, `add_rows`/`add_cols`,
+  `resize_rows`/`resize_cols` y `hide_rows`/`unhide_rows`/`hide_cols`/`unhide_cols`
+  (posiciones 1-based). Implementado como requests `insertDimension`/`deleteDimension`/
+  `appendDimension`/`updateDimensionProperties` en `WorksheetService`; no agrega métodos de
+  puerto (usa `worksheet.spreadsheet.batch_update`), así que funciona en ambos backends.
 - **v2.1 — Sprint 1 (direccionamiento + lectura tipada):**
   - **Abrir por key / URL:** `SheetManager.open_by_key(key)` y `SheetManager.open_by_url(url)`
     (además del nombre). Nuevo `ClientPort.open_by_key` implementado en ambos adaptadores
