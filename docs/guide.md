@@ -137,12 +137,33 @@ with open("doc.pdf", "wb") as f:
     f.write(pdf)
 ```
 
-## Integración con pandas
+## Integración con DataFrames (pandas o polars)
 
 ```python
 df = ws.read_dataframe()
 ws.write_dataframe(df)
+
+# Opciones de lectura
+df = ws.read_dataframe(
+    drop_empty_rows=True,    # descarta filas totalmente vacías
+    drop_empty_cols=True,    # descarta columnas totalmente vacías
+    index_col="id",          # usa una columna como índice (solo pandas)
+)
+
+# Opciones de escritura
+ws.write_dataframe(df, start_cell="B2", include_index=True, clear=False)
 ```
+
+El motor de DataFrame es elegible al crear el gestor (por defecto **pandas**):
+
+```python
+mgr = SheetManager("MiDoc", "creds.json", dataframe_backend="polars")
+df = mgr.worksheet("Hoja1").read_dataframe()   # devuelve un polars.DataFrame
+```
+
+Instalá el backend que uses: `pip install GSpreadManager[pandas]` o
+`pip install GSpreadManager[polars]`. polars no tiene índice de filas, así que `index_col` /
+`include_index` se ignoran con ese backend.
 
 ## Formato de celdas
 

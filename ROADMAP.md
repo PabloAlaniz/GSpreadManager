@@ -50,13 +50,15 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 - [x] **Notas de celda**, **named ranges** y **protected ranges**.
 - [x] **Sort / basic filter**, **unmerge**, **tab color**, **export** (xlsx/csv/pdf/tsv/ods/html).
 - [ ] **Import CSV** (volcar un CSV/archivo a la hoja) — pendiente, fuera del Sprint 4.
-- [ ] **Pandas avanzado**: anclaje en posición arbitraria, `drop_empty_rows/cols`, índice opcional.
+- [x] **Pandas avanzado**: anclaje en posición arbitraria (`start_cell`), `drop_empty_rows/cols`,
+      índice opcional (`index_col`/`include_index`).
 
 ## 🌟 Diferenciación (donde el ecosistema es débil)
 
 - [ ] **Async nativo** (`asyncio` sobre `httpx`, no threadpool) detrás de los puertos.
 - [ ] **Modelos de fila tipados** (dataclasses/Pydantic) con esquema y validación.
-- [ ] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`.
+- [x] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`
+      (`SheetManager(dataframe_backend=...)`).
 - [ ] **Caché de lecturas con invalidación** al escribir.
 - [ ] **Fake in-memory** del backend para que los usuarios testeen sin red.
 

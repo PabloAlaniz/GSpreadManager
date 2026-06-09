@@ -60,6 +60,7 @@ oficial `google-api-python-client`.
 | **Abrir por key / URL** | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
 | **Export (xlsx/csv/pdf)** | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
 | **Import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **DataFrame pluggable (pandas + polars)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ❌ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 
@@ -85,8 +86,9 @@ Más allá de la paridad, dónde podemos liderar:
 - **Mapeo de filas a modelos tipados** (dataclasses/Pydantic): leer/escribir filas como objetos
   con esquema y validación — muy "tech actual", nadie lo ofrece de fábrica.
 - **Caché de lecturas con invalidación al escribir** (opcional): clave para apps que releen.
-- **Backend de DataFrame pluggable**: además de pandas, soportar **polars** vía el
-  `DataFramePort` (ya existe el puerto).
+- ✅ **Backend de DataFrame pluggable** (hecho): pandas **y polars** vía el `DataFramePort`
+  (`SheetManager(dataframe_backend=...)`), con lectura avanzada (`drop_empty_rows/cols`,
+  `index_col`) y escritura anclada (`start_cell`, `include_index`).
 - **Rate limiting proactivo** (token bucket) además del retry reactivo, para no chocar la cuota.
 - **Operaciones de alto nivel**: `upsert` por clave, *find-or-create* de pestaña, *bulk* con
   control de batch automático, *paginación/streaming* para hojas grandes.

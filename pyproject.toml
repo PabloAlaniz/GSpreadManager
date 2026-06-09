@@ -38,6 +38,7 @@ Changelog = "https://github.com/PabloAlaniz/GSpreadManager/blob/main/CHANGELOG.m
 
 [project.optional-dependencies]
 pandas = ["pandas>=1.2.4"]
+polars = ["polars>=0.20"]
 docs = [
     "mkdocs-material>=9.0",
     "mkdocstrings[python]>=0.24",
@@ -49,6 +50,7 @@ dev = [
     "mypy>=1.0",
     "bandit>=1.7",
     "pandas>=1.2.4",
+    "polars>=0.20",
 ]
 
 [tool.setuptools.dynamic]
@@ -101,6 +103,8 @@ ban-relative-imports = "parents"
 "__init__.py" = ["F401"]
 # Spike del cliente nativo: métodos-stub con argumentos de interfaz aún sin usar.
 "gspreadmanager/infrastructure/native/sheets_api_client.py" = ["ARG002"]
+# polars no tiene índice: index_col/include_index son parte del puerto pero aquí no aplican.
+"gspreadmanager/infrastructure/polars_adapter.py" = ["ARG002"]
 
 [tool.mypy]
 # Sin python_version explícito: mypy infiere del intérprete del job de lint.
@@ -114,7 +118,7 @@ show_error_codes = true
 pretty = true
 
 [[tool.mypy.overrides]]
-module = ["gspread.*", "google.*", "pandas.*"]
+module = ["gspread.*", "google.*", "pandas.*", "polars.*"]
 ignore_missing_imports = true
 
 # El borde con gspread/google-auth (tipos parciales) queda acotado a estos módulos:

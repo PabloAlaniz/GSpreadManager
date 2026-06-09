@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Sprint 5 (pandas avanzado + backend polars):** el motor de DataFrame es
+  pluggable vía `SheetManager(dataframe_backend="pandas"|"polars")` (nuevo
+  `PolarsDataFrameAdapter` detrás del `DataFramePort`, factory `build_dataframe_adapter`,
+  extra `pip install GSpreadManager[polars]`). `read_dataframe` gana `drop_empty_rows`,
+  `drop_empty_cols` e `index_col` (índice solo pandas); el limpiado de filas/columnas vacías
+  es una función pura del dominio (`domain/dataframe.prune_empty`). `write_dataframe` gana
+  `start_cell` (anclar la escritura en una celda arbitraria) e `include_index`. El puerto
+  `WorksheetPort.update` acepta un `range_name` opcional, implementado en ambos adaptadores.
 - **v2.1 — Sprint 4 (orden/filtro, unmerge, color de pestaña, exportación):**
   `WorksheetContext` gana `sort_range(rango, (columna, "asc"|"desc"), ...)`,
   `set_basic_filter`/`clear_basic_filter`, `unmerge` y `set_tab_color`/`clear_tab_color`

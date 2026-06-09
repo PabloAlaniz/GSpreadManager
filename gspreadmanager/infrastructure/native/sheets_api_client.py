@@ -348,13 +348,20 @@ class NativeWorksheet(_ApiCaller):
             json={"valueInputOption": value_input_option, "data": range_data},
         )
 
-    def update(self, values: list[list[Any]], value_input_option: str) -> Any:
-        """Escribe ``values`` desde A1 (``values.update``)."""
+    def update(
+        self, values: list[list[Any]], value_input_option: str, range_name: str | None = None
+    ) -> Any:
+        """Escribe ``values`` desde A1, o desde ``range_name`` (ancla), vía ``values.update``."""
+        target = self._title if range_name is None else self._qualify(range_name)
         return self._put(
-            self._values_url(self._title),
+            self._values_url(target),
             params={"valueInputOption": value_input_option},
             json={"values": values},
         )
+
+    def _qualify(self, a1_range: str) -> str:
+        """Antepone el nombre de la pestaña al rango A1 si no lo trae ya."""
+        return a1_range if "!" in a1_range else f"{self._title}!{a1_range}"
 
     def clear(self) -> None:
         """Limpia toda la hoja (``values.clear``)."""

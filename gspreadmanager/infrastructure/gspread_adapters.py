@@ -94,9 +94,14 @@ class GspreadWorksheet:
         """Busca la primera celda coincidente."""
         return self._ws.find(query, case_sensitive=case_sensitive)
 
-    def update(self, values: list[list[Any]], value_input_option: str) -> Any:
-        """Escribe ``values`` desde A1."""
-        return self._ws.update(values, value_input_option=ValueInputOption(value_input_option))
+    def update(
+        self, values: list[list[Any]], value_input_option: str, range_name: str | None = None
+    ) -> Any:
+        """Escribe ``values`` desde A1, o desde ``range_name`` (ancla) si se indica."""
+        option = ValueInputOption(value_input_option)
+        if range_name is not None:
+            return self._ws.update(values=values, range_name=range_name, value_input_option=option)
+        return self._ws.update(values, value_input_option=option)
 
 
 class GspreadSpreadsheet:

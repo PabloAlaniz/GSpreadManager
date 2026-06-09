@@ -482,3 +482,43 @@ class TestExport:
         data = mgr.export(ExportFormat.CSV)
         assert data == b"col1,col2"
         gs["spreadsheet"].export.assert_called_once_with(format="text/csv")
+
+
+class TestDataframeAdvanced:
+    def test_read_dataframe_drop_empty(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].get_all_values.return_value = [
+            ["name", "extra"],
+            ["Ana", ""],
+            ["", ""],
+        ]
+        df = ws.read_dataframe(drop_empty_rows=True, drop_empty_cols=True)
+        assert list(df.columns) == ["name"]
+        assert df.values.tolist() == [["Ana"]]
+
+    def test_read_dataframe_index_col(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        gs["worksheets"]["A"].get_all_values.return_value = [["id", "name"], ["1", "Ana"]]
+        df = ws.read_dataframe(index_col="id")
+        assert df.index.name == "id"
+        assert list(df.columns) == ["name"]
+
+    def test_write_dataframe_anchor_and_index(self, gs):
+        ws = SheetManager("Doc", "fake.json").worksheet("A")
+        df = pd.DataFrame([["Ana"]], columns=["name"], index=pd.Index(["1"], name="id"))
+        ws.write_dataframe(df, clear=False, start_cell="B2", include_index=True)
+        kwargs = gs["worksheets"]["A"].update.call_args.kwargs
+        assert kwargs["range_name"] == "B2"
+        assert kwargs["values"] == [["id", "name"], ["1", "Ana"]]
+
+    def test_polars_backend(self, gs):
+        pytest.importorskip("polars")
+        ws = SheetManager("Doc", "fake.json", dataframe_backend="polars").worksheet("A")
+        gs["worksheets"]["A"].get_all_values.return_value = [["name", "age"], ["Ana", "3"]]
+        df = ws.read_dataframe()
+        assert df.columns == ["name", "age"]
+        assert df.rows() == [("Ana", "3")]
+
+    def test_unknown_backend_raises(self, gs):
+        with pytest.raises(GSpreadManagerError, match="desconocido"):
+            SheetManager("Doc", "fake.json", dataframe_backend="dask")
