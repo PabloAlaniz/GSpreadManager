@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import pandas as pd
 import pytest
 from gspread.utils import ValueInputOption
-from gspreadmanager import CellFormat, Color, SheetManager, WorksheetContext
+from gspreadmanager import CellFormat, Color, GSpreadManagerError, SheetManager, WorksheetContext
 from gspreadmanager.infrastructure.gspread_adapters import GspreadWorksheet
 
 
@@ -283,3 +283,35 @@ def test_list_and_remove_permissions(gs):
     gs["spreadsheet"].list_permissions.assert_called_once()
     mgr.remove_permission("a@b.com", role="writer")
     gs["spreadsheet"].remove_permissions.assert_called_once_with("a@b.com", role="writer")
+
+
+class TestOpenByKeyAndUrl:
+    def test_open_by_key(self, gs):
+        mgr = SheetManager.open_by_key("KEY123", "fake.json")
+        mgr.worksheet("A")
+        gs["client"].open_by_key.assert_called_once_with("KEY123")
+        gs["client"].open.assert_not_called()
+
+    def test_open_by_url(self, gs):
+        url = "https://docs.google.com/spreadsheets/d/KEY999/edit"
+        mgr = SheetManager.open_by_url(url, "fake.json")
+        mgr.worksheet("A")
+        gs["client"].open_by_key.assert_called_once_with("KEY999")
+
+    def test_requires_name_or_key(self):
+        with pytest.raises(GSpreadManagerError, match="doc_name"):
+            SheetManager()
+
+
+class TestReadNumericise:
+    def test_read_list_numericise(self, gs):
+        mgr = SheetManager("Doc", "fake.json")
+        ws = mgr.worksheet("A")
+        gs["worksheets"]["A"].get_all_values.return_value = [["edad"], ["30"], ["x"]]
+        assert ws.read(numericise=True) == [["edad"], [30], ["x"]]
+
+    def test_read_dict_numericise(self, gs):
+        mgr = SheetManager("Doc", "fake.json")
+        ws = mgr.worksheet("A")
+        gs["worksheets"]["A"].get_all_values.return_value = [["n", "edad"], ["Ana", "30"]]
+        assert ws.read(output_format="dict", numericise=True) == [{"n": "Ana", "edad": 30}]

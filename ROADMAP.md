@@ -44,8 +44,8 @@ Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado 
 
 Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-analysis.md)):
 
-- [ ] **Abrir por key / URL** (`open_by_key`, `open_by_url`), además de por nombre.
-- [ ] **Type inference** opcional al leer (`numericise`): `"3"`/`"TRUE"` → tipos Python.
+- [x] **Abrir por key / URL** (`open_by_key`, `open_by_url`), además de por nombre.
+- [x] **Type inference** opcional al leer (`numericise`): `read(numericise=True)`.
 - [ ] **Filas/columnas estructurales**: insertar/eliminar/redimensionar/ocultar.
 - [ ] **Notas de celda**, **named ranges** y **protected ranges**.
 - [ ] **Sort / basic filter**, **unmerge**, tab color, export (xlsx/csv/pdf) / import CSV.

@@ -141,3 +141,19 @@ class TestGspreadClientAdapter:
         port = GspreadClientAdapter(auth).open("Doc")
         assert isinstance(port, GspreadSpreadsheet)
         assert port.raw is raw_ss
+
+
+def test_client_adapter_open_by_key():
+    client = Mock()
+    raw_ss = Mock()
+    client.open_by_key.return_value = raw_ss
+    auth = Mock()
+    auth.authorize.return_value = client
+
+    adapter = GspreadClientAdapter(auth)
+    port = adapter.open_by_key("KEY123")
+    client.open_by_key.assert_called_once_with("KEY123")
+    assert isinstance(port, GspreadSpreadsheet)
+    # cacheado: segunda vez no reabre
+    adapter.open_by_key("KEY123")
+    client.open_by_key.assert_called_once()

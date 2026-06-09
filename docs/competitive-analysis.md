@@ -55,8 +55,8 @@ oficial `google-api-python-client`.
 | **Protected ranges** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Sort / basic filter** | ❌ | ✅ | ✅ | ⚠️ | ❌ | ❌ |
 | **Insert/delete/resize/hide filas y columnas** | ❌ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| **Type inference de valores** (`numericise`) | ❌ | ✅ | ✅ | ✅ (DF) | ⚠️ | ⚠️ |
-| **Abrir por key / URL** | ❌ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
+| **Type inference de valores** (`numericise`) | ✅ | ✅ | ✅ | ✅ (DF) | ⚠️ | ⚠️ |
+| **Abrir por key / URL** | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
 | **Export (xlsx/csv/pdf) / import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ❌ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
@@ -65,21 +65,17 @@ Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
 ## Features de gspread que (todavía) no tenemos
 
-Candidatas a sumar, ordenadas por valor percibido:
+Candidatas a sumar, ordenadas por valor percibido. (✅ ya hechas en v2.1 Sprint 1:
+abrir por key/URL y type inference).
 
-1. **Abrir por key / URL** (`open_by_key`, `open_by_url`): hoy solo abrimos por nombre (Drive
-   search). Es barato y muy usado.
-2. **Type inference de valores** (`numericise`): convertir `"3"`/`"1,5"`/`"TRUE"` a tipos
-   Python al leer (opcional). pygsheets/gspread lo ofrecen; mejora `read(output_format="dict")`.
-3. **Insertar/eliminar/redimensionar/ocultar filas y columnas**: tenemos `clear`/append/insert
+1. **Insertar/eliminar/redimensionar/ocultar filas y columnas**: tenemos `clear`/append/insert
    de datos, pero no manipulación estructural de dimensiones.
-4. **Notas de celda** (get/insert/update/clear note).
-5. **Named ranges** (definir/listar/eliminar) y **protected ranges**.
-6. **Sort y basic filter** (ordenar un rango; filtro básico).
-7. **Export / import**: exportar a xlsx/csv/pdf; `import_csv`.
-8. **Unmerge** (tenemos `merge`, falta `unmerge_cells`).
-9. **Tab color**, **update_title/locale/timezone**, **listar worksheets** y abrir por índice/id.
-10. **Records tipados con inferencia** (`get_all_records` equivalente).
+2. **Notas de celda** (get/insert/update/clear note).
+3. **Named ranges** (definir/listar/eliminar) y **protected ranges**.
+4. **Sort y basic filter** (ordenar un rango; filtro básico).
+5. **Export / import**: exportar a xlsx/csv/pdf; `import_csv`.
+6. **Unmerge** (tenemos `merge`, falta `unmerge_cells`).
+7. **Tab color**, **update_title/locale/timezone**, **listar worksheets** y abrir por índice/id.
 
 ## Oportunidades (lo que casi nadie tiene y podríamos diferenciar)
 

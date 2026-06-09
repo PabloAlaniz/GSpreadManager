@@ -369,3 +369,16 @@ class TestErrorMapping:
             NativeSpreadsheet(session, "doc", []).batch_update({})
         assert exc.value.code == 500
         assert exc.value.status == "UNKNOWN"
+
+
+class TestNativeOpenByKey:
+    def test_open_by_key_loads_sheets_without_drive_search(self):
+        session = FakeSession()
+        session.queue("get", {"sheets": [{"properties": {"title": "Hoja1", "sheetId": 9}}]})
+        ss = SheetsApiClient(session).open_by_key("KEY123")
+        assert isinstance(ss, NativeSpreadsheet)
+        assert ss.raw_id == "KEY123"
+        # Una sola llamada: metadata por id (sin búsqueda en Drive)
+        assert len(session.calls) == 1
+        assert session.calls[0][1].endswith("/v4/spreadsheets/KEY123")
+        assert ss.worksheet("Hoja1").id == 9

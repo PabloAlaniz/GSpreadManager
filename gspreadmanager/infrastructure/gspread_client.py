@@ -36,6 +36,12 @@ class GspreadClientAdapter:
             self._spreadsheets[doc_name] = self._raw_client().open(doc_name)
         return GspreadSpreadsheet(self._spreadsheets[doc_name])
 
+    def open_by_key(self, key: str) -> SpreadsheetPort:
+        """Devuelve el documento por su key (id de Drive), cacheándolo."""
+        if key not in self._spreadsheets:
+            self._spreadsheets[key] = self._raw_client().open_by_key(key)
+        return GspreadSpreadsheet(self._spreadsheets[key])
+
     def create(self, title: str, folder_id: str | None) -> Any:
         """Crea un nuevo documento."""
         return self._raw_client().create(title, folder_id=folder_id)

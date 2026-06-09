@@ -19,6 +19,14 @@ mgr = SheetManager(
 ws = mgr.worksheet("Hoja1")   # handle a la pestaña (la primera si se omite el nombre)
 ```
 
+También se puede abrir por **key** (id de Drive) o por **URL**:
+
+```python
+mgr = SheetManager.open_by_key("1AbC...xyz", json_google_file="credenciales.json")
+mgr = SheetManager.open_by_url("https://docs.google.com/spreadsheets/d/1AbC...xyz/edit",
+                               json_google_file="credenciales.json")
+```
+
 ## Lectura
 
 ```python
@@ -33,6 +41,9 @@ df = ws.read(output_format="pandas")   # o ws.read_dataframe()
 
 # Rango específico por índices de fila/columna
 rango = ws.read_range(1, 10, "A", "D")
+
+# Con inferencia de tipos ("3" -> 3, "1.5" -> 1.5; preserva "007")
+ws.read(output_format="dict", numericise=True)
 ```
 
 ## Escritura y actualización

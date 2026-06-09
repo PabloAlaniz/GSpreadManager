@@ -5,6 +5,17 @@ All notable changes to GSpreadManager will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **v2.1 — Sprint 1 (direccionamiento + lectura tipada):**
+  - **Abrir por key / URL:** `SheetManager.open_by_key(key)` y `SheetManager.open_by_url(url)`
+    (además del nombre). Nuevo `ClientPort.open_by_key` implementado en ambos adaptadores
+    (gspread y nativo) y `SpreadsheetId.from_url`. El `__init__` acepta `key=...`.
+  - **Type inference al leer:** `WorksheetContext.read(..., numericise=True)` convierte los
+    valores a int/float cuando corresponde (preserva ceros a la izquierda). Módulo
+    `gspreadmanager.domain.numericise`.
+
 ## [2.0.0] - 2026-06-08
 
 Reescritura interna a Clean Architecture / DDD táctico (capas dominio / aplicación /

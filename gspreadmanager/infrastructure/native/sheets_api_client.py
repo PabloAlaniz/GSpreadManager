@@ -97,15 +97,18 @@ class SheetsApiClient(_ApiCaller):
         ).get("files", [])
         if not files:
             raise GSpreadManagerError(f"No se encontró el documento '{doc_name}'.")
-        spreadsheet_id = files[0]["id"]
+        return self.open_by_key(files[0]["id"])
+
+    def open_by_key(self, key: str) -> SpreadsheetPort:
+        """Carga las hojas del documento por su key (id) y lo devuelve."""
         meta = self._get(
-            f"{SHEETS_BASE}/{spreadsheet_id}",
+            f"{SHEETS_BASE}/{key}",
             params={"fields": "sheets.properties(sheetId,title)"},
         )
         sheets = [
             (s["properties"]["title"], s["properties"]["sheetId"]) for s in meta.get("sheets", [])
         ]
-        return NativeSpreadsheet(self._session, spreadsheet_id, sheets)
+        return NativeSpreadsheet(self._session, key, sheets)
 
     def create(self, title: str, folder_id: str | None) -> Any:
         """Crea un documento (Sheets API). ``folder_id`` aún no se mueve (spike)."""
