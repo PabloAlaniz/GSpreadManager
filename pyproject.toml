@@ -30,6 +30,9 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.scripts]
+gspreadmanager = "gspreadmanager.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/PabloAlaniz/GSpreadManager"
 Repository = "https://github.com/PabloAlaniz/GSpreadManager"

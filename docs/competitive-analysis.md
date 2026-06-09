@@ -66,6 +66,7 @@ oficial `google-api-python-client`.
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 | **Rate limiting proactivo (token bucket)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **CLI** (`gspreadmanager ...`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
@@ -98,7 +99,7 @@ Más allá de la paridad, dónde podemos liderar:
   *antes* de chocar la cuota, además del retry reactivo.
 - **Operaciones de alto nivel**: `upsert` por clave, *find-or-create* de pestaña, *bulk* con
   control de batch automático, *paginación/streaming* para hojas grandes.
-- **CLI** (`gspreadmanager read/append/export ...`).
+- ✅ **CLI** (hecho): `gspreadmanager read/append/export/share`, sin dependencias extra.
 - **Documentación bilingüe (es/en)**: ya somos únicos en español; sumar inglés amplía alcance.
 
 ## Conclusiones

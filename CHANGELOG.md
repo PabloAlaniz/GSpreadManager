@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Diferenciación: CLI (`gspreadmanager`):** comando de terminal (solo `argparse`, sin
+  dependencias extra) con `read` (CSV/TSV/JSON), `append`, `export` (a archivo o stdout) y
+  `share`. El documento se indica por nombre, key (`--key`) o URL; autenticación con
+  `--json-file` o `--use-adc`. Entry point `gspreadmanager = "gspreadmanager.cli:main"`; la
+  construcción del gestor es inyectable (`manager_factory`) para testear sin red.
 - **v2.1 — Diferenciación: rate limiting proactivo (token bucket):**
   `SheetManager(..., rate_limit=<ops/seg>, rate_limit_burst=<ráfaga>)` frena las operaciones
   *antes* de pegarle a la cuota (a diferencia del retry, que reacciona a un 429). Nuevo puerto

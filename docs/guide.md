@@ -340,3 +340,26 @@ grilla. Para inyectar el fake en tu propia construcción del gestor, pasá el cl
 ```python
 mgr = SheetManager("MiDoc", sheets_client=backend.client)
 ```
+
+## Línea de comandos (CLI)
+
+Al instalar el paquete queda disponible el comando `gspreadmanager` para las operaciones más
+comunes desde la terminal:
+
+```bash
+# Leer una hoja (CSV por defecto; también --format tsv|json)
+gspreadmanager read "Mi Doc" Hoja1 --json-file creds.json
+
+# Añadir una fila
+gspreadmanager append "Mi Doc" Hoja1 Ana ana@example.com --json-file creds.json
+
+# Exportar el documento (pdf por defecto) a un archivo
+gspreadmanager export "Mi Doc" --format xlsx -o reporte.xlsx --json-file creds.json
+
+# Compartir
+gspreadmanager share "Mi Doc" alguien@example.com --role writer --json-file creds.json
+```
+
+El documento se indica por **nombre**, por **key** (`--key`) o por **URL** (se detecta sola).
+La autenticación se pasa con `--json-file <creds.json>` o `--use-adc` (Application Default
+Credentials).
