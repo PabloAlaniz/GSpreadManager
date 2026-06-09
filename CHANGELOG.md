@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Diferenciación: rate limiting proactivo (token bucket):**
+  `SheetManager(..., rate_limit=<ops/seg>, rate_limit_burst=<ráfaga>)` frena las operaciones
+  *antes* de pegarle a la cuota (a diferencia del retry, que reacciona a un 429). Nuevo puerto
+  `RateLimiter` e implementación `TokenBucketRateLimiter` (con reloj/sleep inyectables,
+  thread-safe); el decorador `retry_on_rate_limit` pide un permiso antes de cada operación.
+  Opt-in (apagado por defecto). El bucket es global por gestor (compartido entre handles).
 - **v2.1 — Diferenciación: caché de lecturas con invalidación:** `SheetManager(..., cache=True)`
   activa una caché transparente que memoiza las lecturas (`get_all_values`, `values_get`,
   `get_metadata`) por documento y se invalida con cada escritura propia (a nivel hoja o

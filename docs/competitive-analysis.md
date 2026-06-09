@@ -65,6 +65,7 @@ oficial `google-api-python-client`.
 | **DataFrame pluggable (pandas + polars)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
+| **Rate limiting proactivo (token bucket)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
@@ -93,7 +94,8 @@ Más allá de la paridad, dónde podemos liderar:
 - ✅ **Backend de DataFrame pluggable** (hecho): pandas **y polars** vía el `DataFramePort`
   (`SheetManager(dataframe_backend=...)`), con lectura avanzada (`drop_empty_rows/cols`,
   `index_col`) y escritura anclada (`start_cell`, `include_index`).
-- **Rate limiting proactivo** (token bucket) además del retry reactivo, para no chocar la cuota.
+- ✅ **Rate limiting proactivo** (hecho, opt-in `rate_limit=...`): token bucket que frena
+  *antes* de chocar la cuota, además del retry reactivo.
 - **Operaciones de alto nivel**: `upsert` por clave, *find-or-create* de pestaña, *bulk* con
   control de batch automático, *paginación/streaming* para hojas grandes.
 - **CLI** (`gspreadmanager read/append/export ...`).

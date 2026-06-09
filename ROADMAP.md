@@ -66,7 +66,8 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 
 ## 🗂️ Backlog (sin priorizar)
 
-- [ ] **Rate limiting** proactivo (token bucket) además del retry reactivo.
+- [x] **Rate limiting** proactivo (token bucket) además del retry reactivo
+      (`SheetManager(rate_limit=...)`).
 - [ ] Paginación/streaming para hojas grandes; operaciones de alto nivel (`upsert`, find-or-create).
 - [ ] **CLI** (`gspreadmanager read/append/export`).
 - [ ] Documentación bilingüe (es/en).

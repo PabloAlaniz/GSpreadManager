@@ -250,6 +250,23 @@ with SheetManager("Mi Hoja", "creds.json") as mgr:
     df = mgr.worksheet("Hoja1").read_dataframe()
 ```
 
+## Límite de tasa (rate limiting)
+
+Para no chocar la cuota de la API de Google (que limita las peticiones por minuto), activá un
+freno **proactivo** con `rate_limit` (operaciones por segundo). Es un *token bucket*: espera
+*antes* de operar si te pasarías del ritmo, en vez de reaccionar a un 429 ya ocurrido (eso lo
+cubre el retry):
+
+```python
+mgr = SheetManager("Mi Hoja", "creds.json", rate_limit=1)        # ~1 op/seg sostenida
+mgr = SheetManager("Mi Hoja", "creds.json",
+                   rate_limit=1, rate_limit_burst=10)            # permite ráfagas de 10
+```
+
+El bucket arranca lleno (admite una ráfaga inicial de `rate_limit_burst`, por defecto
+`max(1, rate_limit)`) y se recarga a `rate_limit` por segundo. El cupo se consume por
+operación del facade (no por llamada HTTP), y se combina con el retry y la caché.
+
 ## Caché de lecturas
 
 Para apps que releen mucho, activá una caché de lecturas con `cache=True`. Memoiza las
