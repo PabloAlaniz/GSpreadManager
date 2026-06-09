@@ -1,65 +1,124 @@
 # Análisis competitivo
 
-Comparación de **GSpreadManager** con las principales librerías del ecosistema Python para
-Google Sheets, y derivación del roadmap (ver
-[ROADMAP.md](https://github.com/PabloAlaniz/GSpreadManager/blob/main/ROADMAP.md)).
+Comparación de **GSpreadManager** con las librerías del ecosistema Python para Google Sheets,
+y derivación del [ROADMAP](https://github.com/PabloAlaniz/GSpreadManager/blob/main/ROADMAP.md).
 
-_Última actualización: junio 2026._
+_Última actualización: junio 2026 (post 2.0)._
 
 ## Posicionamiento
 
-GSpreadManager compite en la capa de **wrapper amigable sobre la Google Sheets API**.
-Sus rivales directos son `gspread` (la base que ya usa) y su ecosistema de extensiones,
-más `pygsheets` y `EZSheets`.
+GSpreadManager es un **wrapper amigable y tipado** sobre la Google Sheets API con arquitectura
+por capas (dominio / aplicación / infraestructura / puertos) y gspread aislado y reemplazable
+(ver [ADR 0001](adr/0001-dependencia-de-gspread.md)). Compite con `gspread` y su ecosistema de
+extensiones, `pygsheets`, `sheetfu` y `EZSheets`. La referencia de bajo nivel es el cliente
+oficial `google-api-python-client`.
 
-| Capacidad | **GSpreadManager** | gspread | pygsheets | gspread-pandas | EZSheets |
-|---|:--:|:--:|:--:|:--:|:--:|
-| Leer/escribir celdas, filas, rangos | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Salida list / dict / pandas | ✅ | parcial | ✅ | ✅ (DF) | parcial |
-| Crear/eliminar pestañas | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Batch update | ✅ | ✅ | ✅ | ✅ | ⚠️ |
-| Retry + backoff ante cuota | ✅ | ⚠️ manual | ✅ | hereda | ⚠️ |
-| Type hints + `py.typed` | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
-| Caché de cliente/documento | ✅ (v1.1) | ✅ | ✅ | ✅ | ✅ |
-| Autenticación flexible (SA, OAuth, ADC) | ✅ (v1.1) | ✅ | ✅ | ✅ | ✅ (OAuth) |
-| **Formato de celdas** | ❌ | vía `gspread-formatting` | ✅ nativo | parcial | ❌ |
-| **Crear/copiar/borrar documento** | ❌ | ✅ | ✅ | ✅ | ✅ |
-| **Compartir / permisos** | ❌ | ✅ | ✅ | ⚠️ | ⚠️ |
-| **Listar archivos (Drive)** | ❌ | ⚠️ | ✅ | ❌ | ✅ |
-| **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ |
-| Data validation (dropdowns/checkbox) | ❌ | ⚠️ | ✅ | ❌ | ❌ |
-| Freeze / merge / filtros | ❌ | ⚠️ | ✅ | ✅ | parcial |
-| Named / protected ranges | ❌ | ⚠️ | ✅ | ❌ | ❌ |
-| Caché de lecturas | ❌ | ❌ | ⚠️ | ❌ | ❌ |
-| Docs en español | ✅ único | ❌ | ❌ | ❌ | ❌ |
+## Competidores
+
+| Librería | Enfoque | Estado |
+|---|---|---|
+| **gspread** | El wrapper de facto sobre Sheets API. | Maduro; mantenimiento desacelerado (último release may-2025) |
+| **pygsheets** | Wrapper rico (formato, named ranges, pandas). | Maduro; baja actividad |
+| **gspread-pandas** | DataFrames sobre gspread. | Activo (capa fina) |
+| **gspread-dataframe** | `get_as_dataframe` / `set_with_dataframe`. | Mantenido |
+| **gspread-formatting** | Formato + validación + condicional sobre gspread. | Mantenido |
+| **gspread-asyncio** | Wrapper async (threadpool) sobre gspread. | Mantenido |
+| **sheetfu** | Estilo ORM, orientado a batch. | Baja actividad |
+| **EZSheets** | Mínimo y didáctico (Al Sweigart). | Mantenido |
+| **df2gspread** | Subida de DataFrames (legado). | Obsoleto |
+| **google-api-python-client** | Cliente oficial de bajo nivel (todo, verboso). | Oficial, activo |
+
+## Tabla comparativa
+
+| Capacidad | **GSpreadManager 2.0** | gspread (+ext) | pygsheets | gspread-pandas | sheetfu | EZSheets |
+|---|:--:|:--:|:--:|:--:|:--:|:--:|
+| Leer/escribir celdas, filas, rangos | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Salida list / dict / pandas | ✅ | parcial | ✅ | ✅ (DF) | ⚠️ | parcial |
+| Crear/eliminar/limpiar pestañas | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Batch update | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ |
+| Retry + backoff ante cuota | ✅ | ⚠️ manual | ✅ | hereda | ⚠️ | ⚠️ |
+| Type hints + `py.typed` | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| Caché de cliente/documento | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Auth flexible (SA file/dict, OAuth, ADC, cliente) | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ (OAuth) |
+| **Formato de celdas** (color/fuente/número) | ✅ nativo | vía `gspread-formatting` | ✅ | parcial | ⚠️ | ❌ |
+| **Formato condicional** | ✅ | vía ext | ✅ | ❌ | ❌ | ❌ |
+| **Data validation** (dropdown/checkbox) | ✅ | vía ext | ✅ | ❌ | ❌ | ❌ |
+| **Freeze / merge** | ✅ | ⚠️/ext | ✅ | parcial | ⚠️ | parcial |
+| **Crear/copiar/borrar documento (Drive)** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ✅ |
+| **Compartir / permisos** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
+| **Listar archivos (Drive)** | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Handles inmutables sin "hoja activa" global | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
+| Backend reemplazable (puertos / hexagonal) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Docs en español | ✅ único | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Notas de celda** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Named ranges** | ❌ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
+| **Protected ranges** | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Sort / basic filter** | ❌ | ✅ | ✅ | ⚠️ | ❌ | ❌ |
+| **Insert/delete/resize/hide filas y columnas** | ❌ | ✅ | ✅ | ⚠️ | ⚠️ | ⚠️ |
+| **Type inference de valores** (`numericise`) | ❌ | ✅ | ✅ | ✅ (DF) | ⚠️ | ⚠️ |
+| **Abrir por key / URL** | ❌ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
+| **Export (xlsx/csv/pdf) / import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
+| Caché de lecturas con invalidación | ❌ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 
 Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
+## Features de gspread que (todavía) no tenemos
+
+Candidatas a sumar, ordenadas por valor percibido:
+
+1. **Abrir por key / URL** (`open_by_key`, `open_by_url`): hoy solo abrimos por nombre (Drive
+   search). Es barato y muy usado.
+2. **Type inference de valores** (`numericise`): convertir `"3"`/`"1,5"`/`"TRUE"` a tipos
+   Python al leer (opcional). pygsheets/gspread lo ofrecen; mejora `read(output_format="dict")`.
+3. **Insertar/eliminar/redimensionar/ocultar filas y columnas**: tenemos `clear`/append/insert
+   de datos, pero no manipulación estructural de dimensiones.
+4. **Notas de celda** (get/insert/update/clear note).
+5. **Named ranges** (definir/listar/eliminar) y **protected ranges**.
+6. **Sort y basic filter** (ordenar un rango; filtro básico).
+7. **Export / import**: exportar a xlsx/csv/pdf; `import_csv`.
+8. **Unmerge** (tenemos `merge`, falta `unmerge_cells`).
+9. **Tab color**, **update_title/locale/timezone**, **listar worksheets** y abrir por índice/id.
+10. **Records tipados con inferencia** (`get_all_records` equivalente).
+
+## Oportunidades (lo que casi nadie tiene y podríamos diferenciar)
+
+Más allá de la paridad, dónde podemos liderar:
+
+- **Async de verdad** (no threadpool): cliente `asyncio`-native sobre `httpx`, detrás de los
+  mismos puertos. gspread depende de `gspread-asyncio` (threadpool).
+- **Backend reemplazable / testeable sin red**: gracias a los puertos, exponer un *fake*
+  in-memory para tests de usuarios y, a futuro, el cliente nativo REST (ver ADR 0001).
+- **Mapeo de filas a modelos tipados** (dataclasses/Pydantic): leer/escribir filas como objetos
+  con esquema y validación — muy "tech actual", nadie lo ofrece de fábrica.
+- **Caché de lecturas con invalidación al escribir** (opcional): clave para apps que releen.
+- **Backend de DataFrame pluggable**: además de pandas, soportar **polars** vía el
+  `DataFramePort` (ya existe el puerto).
+- **Rate limiting proactivo** (token bucket) además del retry reactivo, para no chocar la cuota.
+- **Operaciones de alto nivel**: `upsert` por clave, *find-or-create* de pestaña, *bulk* con
+  control de batch automático, *paginación/streaming* para hojas grandes.
+- **CLI** (`gspreadmanager read/append/export ...`).
+- **Documentación bilingüe (es/en)**: ya somos únicos en español; sumar inglés amplía alcance.
+
 ## Conclusiones
 
-**Diferenciales de GSpreadManager**
-
-- Simplicidad y API pythónica con **documentación en español** (único en el segmento).
-- Tipado completo (PEP 561), reintentos con backoff y excepciones propias **de fábrica**.
-- A partir de v1.1: caché de cliente/documento y autenticación flexible, cerrando la brecha
-  de eficiencia y auth frente a la competencia.
-
-**Brechas principales a cerrar (origen del roadmap)**
-
-1. **Formato de celdas** (color, negrita, formato numérico, condicional) — lo tienen
-   `pygsheets` y `gspread-formatting`.
-2. **Operaciones a nivel documento/Drive**: crear, copiar, borrar y listar spreadsheets.
-3. **Compartir / gestión de permisos**.
-4. **Async** para aplicaciones modernas (referencia: `gspread-asyncio`).
-5. **Productividad de datos**: pandas avanzado (anclaje, `drop_empty`), freeze/merge/filtros,
-   data validation.
+- **Brecha cerrada:** con la 2.0, formato, validación, condicional, Drive y permisos ya están a
+  la par de pygsheets/gspread+ext (eran las grandes ausencias de la 1.x).
+- **Próxima paridad (v2.1):** abrir por key/URL, type inference, manipulación de filas/columnas,
+  notas y named/protected ranges — lo que aún nos separa de gspread/pygsheets.
+- **Diferenciación:** arquitectura hexagonal (backend reemplazable, testeable sin red), tipado
+  estricto, retry de fábrica, modelos de fila tipados y async nativo — terreno donde el
+  ecosistema actual es débil.
 
 ## Fuentes
 
-- [gspread](https://docs.gspread.org/en/latest/) y [extensiones de la comunidad](https://docs.gspread.org/en/latest/community.html)
-- [pygsheets](https://github.com/nithinmurali/pygsheets)
-- [gspread-pandas](https://github.com/aiguofer/gspread-pandas)
-- [gspread-dataframe](https://github.com/robin900/gspread-dataframe)
-- [gspread-formatting](https://pypi.org/project/gspread-formatting/)
-- [gspread-asyncio](https://gspread-asyncio.readthedocs.io/)
-- [EZSheets](https://pypi.org/project/EZSheets/)
+- [gspread](https://docs.gspread.org/) y [extensiones de la comunidad](https://docs.gspread.org/en/latest/community.html)
+- [pygsheets](https://github.com/nithinmurali/pygsheets) ·
+  [gspread-pandas](https://github.com/aiguofer/gspread-pandas) ·
+  [gspread-dataframe](https://github.com/robin900/gspread-dataframe)
+- [gspread-formatting](https://pypi.org/project/gspread-formatting/) ·
+  [gspread-asyncio](https://gspread-asyncio.readthedocs.io/)
+- [sheetfu](https://github.com/socialpoint-labs/sheetfu) ·
+  [EZSheets](https://pypi.org/project/EZSheets/) ·
+  [df2gspread](https://pypi.org/project/df2gspread/)
+- [google-api-python-client](https://github.com/googleapis/google-api-python-client) (oficial)

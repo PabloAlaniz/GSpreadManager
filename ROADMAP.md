@@ -40,18 +40,28 @@ Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado 
       su repositorio queda inactivo (sin releases ni actividad de mantenimiento por un período
       prolongado). Mientras tanto, gspread sigue como adaptador por defecto.
 
-## 🔜 v2.1 — Productividad de datos
+## 🔜 v2.1 — Paridad con gspread/pygsheets
 
-- [ ] **Pandas avanzado**: anclar DataFrame en posición arbitraria, `drop_empty_rows/cols`,
-      escribir el índice opcional, inferencia de tipos.
-- [ ] **Caché opcional de lecturas** con invalidación al escribir.
-- [ ] Auto-filtros.
+Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-analysis.md)):
+
+- [ ] **Abrir por key / URL** (`open_by_key`, `open_by_url`), además de por nombre.
+- [ ] **Type inference** opcional al leer (`numericise`): `"3"`/`"TRUE"` → tipos Python.
+- [ ] **Filas/columnas estructurales**: insertar/eliminar/redimensionar/ocultar.
+- [ ] **Notas de celda**, **named ranges** y **protected ranges**.
+- [ ] **Sort / basic filter**, **unmerge**, tab color, export (xlsx/csv/pdf) / import CSV.
+- [ ] **Pandas avanzado**: anclaje en posición arbitraria, `drop_empty_rows/cols`, índice opcional.
+
+## 🌟 Diferenciación (donde el ecosistema es débil)
+
+- [ ] **Async nativo** (`asyncio` sobre `httpx`, no threadpool) detrás de los puertos.
+- [ ] **Modelos de fila tipados** (dataclasses/Pydantic) con esquema y validación.
+- [ ] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`.
+- [ ] **Caché de lecturas con invalidación** al escribir.
+- [ ] **Fake in-memory** del backend para que los usuarios testeen sin red.
 
 ## 🗂️ Backlog (sin priorizar)
 
-- [ ] **Async** (wrapper con threadpool) y **rate limiting** proactivo (token bucket).
-- [ ] Paginación/streaming para hojas grandes.
-- [ ] **CLI** para operaciones comunes (`gspreadmanager read/append/export`).
-- [ ] Named ranges / protected ranges.
-- [ ] Export a CSV/Excel.
+- [ ] **Rate limiting** proactivo (token bucket) además del retry reactivo.
+- [ ] Paginación/streaming para hojas grandes; operaciones de alto nivel (`upsert`, find-or-create).
+- [ ] **CLI** (`gspreadmanager read/append/export`).
 - [ ] Documentación bilingüe (es/en).
