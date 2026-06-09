@@ -50,6 +50,7 @@ oficial `google-api-python-client`.
 | Handles inmutables sin "hoja activa" global | ✅ | ⚠️ | ⚠️ | ⚠️ | ⚠️ | ⚠️ |
 | Backend reemplazable (puertos / hexagonal) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Fake in-memory (testear sin red)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Modelos de fila tipados (dataclasses)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Docs en español | ✅ único | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Notas de celda** | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **Named ranges** | ✅ | ✅ | ✅ | ❌ | ⚠️ | ❌ |
@@ -85,8 +86,8 @@ Más allá de la paridad, dónde podemos liderar:
 - ✅ **Backend testeable sin red** (hecho): `gspreadmanager.testing.InMemoryBackend`, un fake
   in-memory que implementa los puertos para que los usuarios testeen sin tocar la API.
   A futuro, el cliente nativo REST se enchufa por el mismo `sheets_client` (ver ADR 0001).
-- **Mapeo de filas a modelos tipados** (dataclasses/Pydantic): leer/escribir filas como objetos
-  con esquema y validación — muy "tech actual", nadie lo ofrece de fábrica.
+- ✅ **Mapeo de filas a modelos tipados** (hecho, dataclasses): `read_as`/`append_models`/
+  `write_models` con coerción de tipos y validación (`SchemaError`). Pydantic queda pendiente.
 - **Caché de lecturas con invalidación al escribir** (opcional): clave para apps que releen.
 - ✅ **Backend de DataFrame pluggable** (hecho): pandas **y polars** vía el `DataFramePort`
   (`SheetManager(dataframe_backend=...)`), con lectura avanzada (`drop_empty_rows/cols`,

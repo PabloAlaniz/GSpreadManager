@@ -250,6 +250,35 @@ with SheetManager("Mi Hoja", "creds.json") as mgr:
     df = mgr.worksheet("Hoja1").read_dataframe()
 ```
 
+## Modelos de fila tipados (dataclasses)
+
+Leé y escribí filas como objetos tipados, con coerción de tipos (int/float/bool/date) y
+validación. El encabezado de la hoja mapea a los campos del modelo por nombre (o por
+`field(metadata={"column": ...})`):
+
+```python
+from dataclasses import dataclass, field
+from datetime import date
+from typing import Optional
+
+@dataclass
+class Persona:
+    nombre: str
+    edad: int
+    activo: bool
+    email: Optional[str] = None       # columna opcional: "" -> None
+    alta: date = field(metadata={"column": "Fecha de alta"})
+
+ws = mgr.worksheet("Personas")
+personas = ws.read_as(Persona)               # -> list[Persona], con tipos convertidos
+ws.append_models([Persona("Ana", 30, True)]) # agrega filas al final
+ws.write_models(personas)                     # reescribe la hoja desde A1 (con encabezado)
+```
+
+Los booleanos se parsean de `TRUE`/`FALSE`/`1`/`0`/`sí`/`no`; las fechas con
+`fromisoformat`. Un valor que no encaja con el tipo del campo lanza `SchemaError`. Los campos
+con valor por defecto toleran que falte su columna en la hoja.
+
 ## Testear sin red (backend en memoria)
 
 `gspreadmanager.testing` trae un backend en memoria que implementa los mismos puertos que el

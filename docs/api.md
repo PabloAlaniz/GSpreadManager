@@ -32,6 +32,8 @@
 
 ::: gspreadmanager.InsertError
 
+::: gspreadmanager.SchemaError
+
 ## Testing (backend en memoria)
 
 ::: gspreadmanager.testing.InMemoryBackend

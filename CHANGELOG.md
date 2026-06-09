@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **v2.1 — Diferenciación: modelos de fila tipados (dataclasses):** `WorksheetContext` gana
+  `read_as(Model)` (devuelve `list[Model]`), `append_models(...)` y `write_models(...)`. El
+  encabezado mapea a los campos del dataclass por nombre o por `field(metadata={"column": ...})`,
+  con coerción de tipos (int/float/bool/date/datetime, `Optional` -> `None`) y validación
+  (`SchemaError`, exportada desde el paquete raíz). Mapeo puro en `domain/schema.py`, orquestado
+  por `RowModelService`. Nadie en el ecosistema lo ofrece de fábrica.
 - **v2.1 — Diferenciación: backend en memoria para tests (`gspreadmanager.testing`):**
   nuevo `InMemoryBackend`/`InMemoryClient`/`InMemorySpreadsheet`/`InMemoryWorksheet` que
   implementan los puertos `ClientPort`/`SpreadsheetPort`/`WorksheetPort`, para que los usuarios

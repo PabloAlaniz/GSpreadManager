@@ -56,7 +56,8 @@ Cerrar lo que aún nos separa (ver [análisis competitivo](docs/competitive-anal
 ## 🌟 Diferenciación (donde el ecosistema es débil)
 
 - [ ] **Async nativo** (`asyncio` sobre `httpx`, no threadpool) detrás de los puertos.
-- [ ] **Modelos de fila tipados** (dataclasses/Pydantic) con esquema y validación.
+- [x] **Modelos de fila tipados** (dataclasses) con coerción y validación
+      (`read_as`/`append_models`/`write_models`). Pydantic: pendiente.
 - [x] **Backend de DataFrame pluggable** (pandas + **polars**) vía el `DataFramePort`
       (`SheetManager(dataframe_backend=...)`).
 - [ ] **Caché de lecturas con invalidación** al escribir.
