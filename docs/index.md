@@ -10,10 +10,10 @@ gestión de hojas.
 - 📖 Lectura flexible (listas, diccionarios, pandas DataFrame)
 - ✏️ Escritura y actualización de celdas, filas y rangos
 - 🗂️ Gestión de hojas: crear, eliminar y limpiar pestañas
-- 🐼 Integración con pandas (`to_gsheet` / `from_gsheet`)
+- 🐼 Integración con pandas (`read_dataframe` / `write_dataframe`)
 - ♻️ Reintentos automáticos con backoff ante límites de cuota
-- 🧩 Context manager (`with ... as conn:`)
-- 🐍 Type hints (PEP 561) y docstrings completas
+- 🧩 Context manager (`with ... as mgr:`)
+- 🧱 Arquitectura por capas (dominio / aplicación / infraestructura) y type hints (PEP 561)
 
 ## Instalación
 
@@ -27,19 +27,16 @@ pip install "GSpreadManager[pandas]"
 ## Ejemplo rápido
 
 ```python
-from gspreadmanager import GoogleSheetConector
+from gspreadmanager import SheetManager
 
-conector = GoogleSheetConector(
-    doc_name="Mi Hoja de Cálculo",
-    json_google_file="credenciales.json",
-    sheet_name="Hoja1",
-)
+mgr = SheetManager("Mi Hoja de Cálculo", json_google_file="credenciales.json")
+ws = mgr.worksheet("Hoja1")  # handle inmutable a la pestaña
 
 # Leer datos como lista de diccionarios
-datos = conector.read_sheet_data(output_format="dict")
+datos = ws.read(output_format="dict")
 
 # Actualizar una celda
-conector.update_cell(row_index=2, col_index=1, value="María")
+ws.update_cell(2, 1, "María")
 ```
 
 Seguí con la [Guía de uso](guide.md) o la [Referencia de API](api.md).
