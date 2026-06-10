@@ -215,6 +215,43 @@ ws.set_tab_color(Color.from_hex("#D9EAD3"))
 ws.clear_tab_color()
 ```
 
+## Charts, pivot tables y banding
+
+Gráficos embebidos, tablas dinámicas y bandas de color, directo desde la API v4 (terreno
+donde gspread no llega y pygsheets solo a medias):
+
+```python
+# Gráfico de columnas: domain = etiquetas (eje X), series = rangos de datos
+chart_id = ws.add_chart("COLUMN", "A1:A13", ["B1:B13", "C1:C13"],
+                        title="Ventas 2026", anchor_cell="E2")
+ws.add_chart("PIE", "A2:A6", ["B2:B6"], anchor_cell="E20")   # torta (usa la 1ª serie)
+ws.delete_chart(chart_id)
+
+# Pivot table: rows/columns son offsets 0-based del rango fuente; values, (offset, función)
+ws.add_pivot_table("A1:C100", "E1", rows=[0], values=[(2, "SUM")], columns=[1])
+
+# Bandas alternadas por fila
+banded_id = ws.set_banding(
+    "A1:C100",
+    first_color=Color.from_hex("#FFFFFF"),
+    second_color=Color.from_hex("#F3F3F3"),
+    header_color=Color.from_hex("#D9EAD3"),
+)
+ws.delete_banding(banded_id)
+```
+
+## Developer metadata
+
+Pares clave/valor invisibles para el usuario final, anclados al documento o a una pestaña
+(útiles para versionado, sincronización o marcar hojas generadas por tu app):
+
+```python
+mgr.set_developer_metadata("owner", "data-team")       # a nivel documento
+ws.set_developer_metadata("schema_version", "3")       # a nivel pestaña
+mgr.list_developer_metadata()                          # documento + todas las hojas
+mgr.delete_developer_metadata("schema_version")        # por clave
+```
+
 ## Exportación
 
 ```python

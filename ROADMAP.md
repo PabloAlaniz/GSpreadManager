@@ -95,7 +95,7 @@ gspread anunciaron que no pueden seguir manteniéndolo, lo que activa el dispara
    caché v2 (TTL, LRU, invalidación por rango).
 7. ✅ **Pydantic y esquema avanzado (v2.6):** puerto `ModelCodec` (dataclasses + Pydantic v2
    opcional), `ensure_schema` con reporte de drift, coerciones extra (Decimal/Enum/Literal).
-8. **API v4 profunda (v2.7):** charts, pivot tables, banding y developer metadata como
+8. ✅ **API v4 profunda (v2.7):** charts, pivot tables, banding y developer metadata como
    value objects + requests (terreno donde solo pygsheets llega a medias).
 9. **Async nativo, parte 1 (v3.0a):** puertos async, cliente nativo sobre httpx
    (extra `[async]`), retry y rate limiting con `asyncio.sleep`.

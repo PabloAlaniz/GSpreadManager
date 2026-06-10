@@ -72,6 +72,10 @@ oficial `google-api-python-client`.
 | **Value render options** (leer fórmulas/crudo) | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
 | **Propiedades del documento** (title/locale/tz) | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ |
 | **Listar/abrir pestañas por índice o id** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ✅ |
+| **Charts embebidos** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Pivot tables** | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
+| **Banding (bandas alternadas)** | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
+| **Developer metadata** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **DataFrame pluggable (pandas + polars)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
@@ -114,6 +118,9 @@ Más allá de la paridad, dónde podemos liderar:
 - ✅ **Streaming para hojas grandes** (hecho, v2.5): `iter_rows`/`iter_records`/`iter_as`
   con paginación perezosa, y caché v2 (TTL, LRU, invalidación selectiva por rango/hoja) —
   nadie en el ecosistema ofrece nada equivalente.
+- ✅ **API v4 profunda** (hecho, v2.7): charts embebidos, pivot tables, banding y developer
+  metadata como value objects tipados — gspread no los tiene; pygsheets solo charts y
+  metadata.
 - ✅ **CLI** (hecho): `gspreadmanager read/append/export/share`, sin dependencias extra.
 - **Documentación bilingüe (es/en)**: ya somos únicos en español; sumar inglés amplía alcance.
 

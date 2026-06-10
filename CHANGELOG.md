@@ -7,12 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–7 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
+Sprints 1–8 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
 cliente nativo de primera clase (gspread pasa a ser opcional), **paridad total** con
-gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes y modelos
-Pydantic.
+gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes, modelos
+Pydantic y la API v4 profunda (charts/pivot/banding/metadata).
 
 ### Added
+- **API v4 profunda (Sprint 8, nuevo `VisualizationService`):**
+  - `ws.add_chart(tipo, domain, series, title=..., anchor_cell=...)` — gráficos embebidos
+    (LINE/BAR/COLUMN/AREA/SCATTER/PIE) y `ws.delete_chart(id)`.
+  - `ws.add_pivot_table(source, anchor_cell, rows=..., values=..., columns=...)` — pivot
+    tables (offsets 0-based + función de agregación).
+  - `ws.set_banding(rango, first_color=..., second_color=..., header_color=...)` y
+    `ws.delete_banding(id)` — bandas de color alternadas.
+  - **Developer metadata**: `ws.set_developer_metadata` (por pestaña),
+    `mgr.set_developer_metadata` (por documento), `mgr.list_developer_metadata` y
+    `mgr.delete_developer_metadata(key)`.
+  - Todo modelado como value objects del dominio (`ChartSpec`, `PivotTableSpec`,
+    `PivotField`/`PivotValue`, `BandingSpec`, `DeveloperMetadataEntry`) con `to_request`
+    validado por tests contra la forma exacta de la API. Fix del fake in-memory: solo
+    trata `updateCells` como nota cuando `fields="note"` (las pivots usan el mismo verbo).
 - **Modelos Pydantic v2 y esquema avanzado (Sprint 7):**
   - Nuevo puerto `ModelCodec` con dos codecs (`infrastructure/model_codecs.py`):
     dataclasses (el mapeo puro del dominio) y **Pydantic v2** (extra opcional
