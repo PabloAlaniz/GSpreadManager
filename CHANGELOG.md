@@ -7,11 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–6 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
+Sprints 1–7 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
 cliente nativo de primera clase (gspread pasa a ser opcional), **paridad total** con
-gspread/pygsheets/EZSheets, la hoja como tabla y streaming para hojas grandes.
+gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes y modelos
+Pydantic.
 
 ### Added
+- **Modelos Pydantic v2 y esquema avanzado (Sprint 7):**
+  - Nuevo puerto `ModelCodec` con dos codecs (`infrastructure/model_codecs.py`):
+    dataclasses (el mapeo puro del dominio) y **Pydantic v2** (extra opcional
+    `pip install "GSpreadManager[pydantic]"`, import diferido). `read_as`/`append_models`/
+    `write_models`/`upsert_models`/`iter_as` aceptan ambos tipos de modelo; con Pydantic
+    la validación/coerción es nativa (alias de campo = nombre de columna; los
+    `ValidationError` llegan como `SchemaError`).
+  - `ws.ensure_schema(Model, create=True, strict=False)`: valida (o crea) el encabezado
+    contra el modelo, con **reporte de drift** — `SchemaError` enriquecido con
+    `missing_columns` / `extra_columns`.
+  - Coerciones nuevas en el codec de dataclasses: `Decimal`, `Enum` (por valor o nombre)
+    y `Literal`, también al serializar (`format_cell`).
 - **Streaming para hojas grandes (Sprint 6):** `ws.iter_rows(page_size=...)`,
   `ws.iter_records(...)` (dicts por encabezado) y `ws.iter_as(Model, ...)` (dataclasses) —
   iteradores perezosos que leen de a páginas vía `values_get`; cada página con su propio

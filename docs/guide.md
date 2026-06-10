@@ -423,11 +423,11 @@ No detecta cambios hechos por **otros** procesos: si otra persona edita la hoja,
 refresco con `mgr.clear_cache()` (o usá `cache_ttl` para acotar la ventana). Por eso la
 caché es opt-in (por defecto está apagada).
 
-## Modelos de fila tipados (dataclasses)
+## Modelos de fila tipados (dataclasses o Pydantic)
 
-Leé y escribí filas como objetos tipados, con coerción de tipos (int/float/bool/date) y
-validación. El encabezado de la hoja mapea a los campos del modelo por nombre (o por
-`field(metadata={"column": ...})`):
+Leé y escribí filas como objetos tipados, con coerción de tipos (int/float/bool/date/
+Decimal/Enum/Literal) y validación. El encabezado de la hoja mapea a los campos del modelo
+por nombre (o por `field(metadata={"column": ...})`):
 
 ```python
 from dataclasses import dataclass, field
@@ -449,8 +449,44 @@ ws.write_models(personas)                     # reescribe la hoja desde A1 (con 
 ```
 
 Los booleanos se parsean de `TRUE`/`FALSE`/`1`/`0`/`sí`/`no`; las fechas con
-`fromisoformat`. Un valor que no encaja con el tipo del campo lanza `SchemaError`. Los campos
-con valor por defecto toleran que falte su columna en la hoja.
+`fromisoformat`; también `Decimal`, `Enum` (por valor o nombre) y `Literal`. Un valor que no
+encaja con el tipo del campo lanza `SchemaError`. Los campos con valor por defecto toleran
+que falte su columna en la hoja.
+
+### Modelos Pydantic v2
+
+Con el extra `pip install "GSpreadManager[pydantic]"`, los mismos métodos aceptan modelos
+Pydantic (la validación y coerción la hace Pydantic; los errores llegan como `SchemaError`).
+El nombre de columna es el `alias` del campo, o su nombre:
+
+```python
+from pydantic import BaseModel, Field
+
+class Cliente(BaseModel):
+    id: int
+    nombre: str = Field(alias="nombre completo")
+    activo: bool = True            # celda vacía -> default
+
+clientes = ws.read_as(Cliente)
+ws.append_models([Cliente.model_validate({"id": 9, "nombre completo": "Eva"})])
+ws.upsert_models(clientes, key="id")
+for c in ws.iter_as(Cliente, page_size=1000): ...
+```
+
+### Validar o crear el esquema (`ensure_schema`)
+
+Antes de operar, asegurate de que el encabezado de la hoja coincide con el modelo:
+
+```python
+ws.ensure_schema(Cliente)
+# Hoja vacía -> escribe el encabezado del modelo y devuelve {"created": True, ...}
+# Coincide   -> {"created": False, "missing": [], "extra": [...toleradas...]}
+
+try:
+    ws.ensure_schema(Cliente, strict=True)   # strict: las columnas extra también fallan
+except SchemaError as e:
+    print(e.missing_columns, e.extra_columns)  # reporte de drift
+```
 
 ## Testear sin red (backend en memoria)
 

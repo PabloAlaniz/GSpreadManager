@@ -41,6 +41,7 @@ Changelog = "https://github.com/PabloAlaniz/GSpreadManager/blob/main/CHANGELOG.m
 [project.optional-dependencies]
 gspread = ["gspread>=3.0"]
 pandas = ["pandas>=1.2.4"]
+pydantic = ["pydantic>=2.0"]
 polars = ["polars>=0.20"]
 docs = [
     "mkdocs-material>=9.0",
@@ -55,6 +56,7 @@ dev = [
     "gspread>=3.0",
     "pandas>=1.2.4",
     "polars>=0.20",
+    "pydantic>=2.0",
 ]
 
 [tool.setuptools.dynamic]

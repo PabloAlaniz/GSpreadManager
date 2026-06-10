@@ -96,8 +96,11 @@ Más allá de la paridad, dónde podemos liderar:
 - ✅ **Backend testeable sin red** (hecho): `gspreadmanager.testing.InMemoryBackend`, un fake
   in-memory que implementa los puertos para que los usuarios testeen sin tocar la API.
   A futuro, el cliente nativo REST se enchufa por el mismo `sheets_client` (ver ADR 0001).
-- ✅ **Mapeo de filas a modelos tipados** (hecho, dataclasses): `read_as`/`append_models`/
-  `write_models` con coerción de tipos y validación (`SchemaError`). Pydantic queda pendiente.
+- ✅ **Mapeo de filas a modelos tipados** (hecho: dataclasses **y Pydantic v2**, v2.6):
+  `read_as`/`append_models`/`write_models`/`upsert_models`/`iter_as` con coerción
+  (int/float/bool/date/Decimal/Enum/Literal) y validación (`SchemaError`), más
+  `ensure_schema` con reporte de drift de columnas. Codecs pluggables vía el puerto
+  `ModelCodec`.
 - ✅ **Caché de lecturas con invalidación al escribir** (hecho, opt-in `cache=True`): clave
   para apps que releen; implementada como wrappers de los puertos.
 - ✅ **Backend de DataFrame pluggable** (hecho): pandas **y polars** vía el `DataFramePort`

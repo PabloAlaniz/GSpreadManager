@@ -19,7 +19,7 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 ## ✨ Características
 
 - 🔐 **Autenticación flexible**: service account (archivo o dict), credenciales de `google-auth`, cliente ya autorizado o ADC
-- 📖 **Lectura flexible**: listas, diccionarios, `pandas`/`polars` o **modelos de fila tipados** (`@dataclass`)
+- 📖 **Lectura flexible**: listas, diccionarios, `pandas`/`polars` o **modelos de fila tipados** (`@dataclass` o **Pydantic v2**)
 - ✏️ **Escritura y actualización**: celdas, filas, rangos, append, insert y lotes
 - 📐 **Estructura de la hoja**: insertar/eliminar/redimensionar/ocultar filas y columnas, **orden y filtro**, merge/unmerge, color de pestaña
 - 🗂️ **Gestión de hojas y documentos** (Drive): crear, copiar, listar, borrar, **compartir/permisos** y **exportar** (PDF/CSV/XLSX/...)
@@ -42,6 +42,7 @@ pip install GSpreadManager                # núcleo (cliente nativo, solo google
 pip install "GSpreadManager[gspread]"     # backend de gspread (default si está instalado)
 pip install "GSpreadManager[pandas]"      # DataFrames con pandas
 pip install "GSpreadManager[polars]"      # DataFrames con polars
+pip install "GSpreadManager[pydantic]"    # modelos de fila con Pydantic v2
 ```
 
 > Desde la v2.2 `gspread` es **opcional**: sin él, `SheetManager` usa automáticamente el
