@@ -7,11 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–4 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
-cliente nativo de primera clase (gspread pasa a ser opcional) y **paridad total** con
-gspread/pygsheets/EZSheets.
+Sprints 1–5 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
+cliente nativo de primera clase (gspread pasa a ser opcional), **paridad total** con
+gspread/pygsheets/EZSheets y la hoja como tabla.
 
 ### Added
+- **La hoja como tabla (Sprint 5, nuevo `TableService`):**
+  - `ws.upsert(rows, key=...)` — actualiza por columna clave y agrega lo nuevo; acepta
+    dicts (actualiza solo las columnas presentes) o listas alineadas al encabezado;
+    devuelve `{"updated": n, "appended": m}`. `ws.upsert_models(models, key=...)` para
+    dataclasses. Idempotente: re-ejecutar el mismo upsert no duplica filas.
+  - `mgr.worksheet_or_create(title, rows=..., cols=...)` — find-or-create de pestaña.
+  - `ws.update_where(where, updates)` y `ws.delete_where(where)` — `where` como dict de
+    igualdades o predicado sobre la fila; el delete agrupa rangos contiguos y borra de
+    abajo hacia arriba (`deleteDimension`).
+  - **Chunking automático de escrituras** (`SheetManager(batch_cell_limit=50_000)`):
+    `append`/`batch_update`/`upsert` grandes se parten en varias peticiones — cada chunk
+    con su propio retry y permiso del rate limiter, así un 429 a mitad de camino no
+    re-ejecuta los chunks ya aplicados. Helpers puros en `domain/batching.py`
+    (`split_rows`/`split_range_data`; una fila o rango nunca se parte). `None` lo
+    desactiva.
 - **Paridad final con el ecosistema (Sprint 4):**
   - `ws.import_csv(ruta_o_buffer, clear=..., delimiter=...)` — vuelca un CSV en la hoja
     (parsing puro en `domain/csv_data.py`, escritura `RAW`).

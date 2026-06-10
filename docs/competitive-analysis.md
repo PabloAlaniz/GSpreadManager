@@ -105,8 +105,9 @@ Más allá de la paridad, dónde podemos liderar:
   `index_col`) y escritura anclada (`start_cell`, `include_index`).
 - ✅ **Rate limiting proactivo** (hecho, opt-in `rate_limit=...`): token bucket que frena
   *antes* de chocar la cuota, además del retry reactivo.
-- **Operaciones de alto nivel**: `upsert` por clave, *find-or-create* de pestaña, *bulk* con
-  control de batch automático, *paginación/streaming* para hojas grandes.
+- ✅ **Operaciones de alto nivel** (hecho, v2.4): `upsert`/`upsert_models` por clave,
+  `worksheet_or_create`, `update_where`/`delete_where` y chunking automático de escrituras
+  (`batch_cell_limit`). Pendiente: *paginación/streaming* para hojas grandes (v2.5).
 - ✅ **CLI** (hecho): `gspreadmanager read/append/export/share`, sin dependencias extra.
 - **Documentación bilingüe (es/en)**: ya somos únicos en español; sumar inglés amplía alcance.
 

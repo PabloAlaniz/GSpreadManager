@@ -120,6 +120,32 @@ ws.hide_rows(2, 4)            # oculta filas 2..4
 ws.unhide_rows(2, 4)
 ```
 
+## La hoja como tabla
+
+Con encabezado en la fila 1, la pestaña se puede operar como una tabla con clave:
+
+```python
+ws = mgr.worksheet_or_create("Clientes")   # devuelve la pestaña, creándola si falta
+
+# Upsert por columna clave: actualiza las filas existentes y agrega las nuevas.
+ws.upsert([
+    {"id": "2", "nombre": "Luisa"},          # dict: solo actualiza las columnas presentes
+    {"id": "9", "nombre": "Nuevo", "estado": "pendiente"},
+], key="id")
+# -> {"updated": 1, "appended": 1}
+
+# También con modelos tipados (dataclasses)
+ws.upsert_models([Cliente(id=2, nombre="Luisa", estado="ok")], key="id")
+
+# Update / delete condicional: dict de igualdades o un predicado sobre la fila
+ws.update_where({"estado": "pendiente"}, {"estado": "en curso"})   # -> filas afectadas
+ws.delete_where(lambda fila: fila["edad"] == "")                   # -> filas borradas
+```
+
+Las escrituras grandes (`append`, `batch_update`, `upsert`) se **parten automáticamente**
+en varias peticiones según `SheetManager(batch_cell_limit=...)` (50.000 celdas por defecto;
+cada chunk con su propio retry y permiso del rate limiter; `None` lo desactiva).
+
 ## Búsqueda
 
 ```python
