@@ -3,7 +3,12 @@
 Comparación de **GSpreadManager** con las librerías del ecosistema Python para Google Sheets,
 y derivación del [ROADMAP](https://github.com/PabloAlaniz/GSpreadManager/blob/main/ROADMAP.md).
 
-_Última actualización: junio 2026 (post 2.0)._
+_Última actualización: junio 2026 (post 2.1)._
+
+> **Nota (jun-2026):** los maintainers de gspread anunciaron públicamente que no pueden
+> seguir manteniendo la librería y buscan nuevos maintainers. Esto cumple el disparador del
+> [ADR 0001](adr/0001-dependencia-de-gspread.md): el cliente nativo propio (hoy spike) se
+> promueve a adaptador de primera clase en los próximos sprints (ver ROADMAP).
 
 ## Posicionamiento
 
@@ -17,7 +22,7 @@ oficial `google-api-python-client`.
 
 | Librería | Enfoque | Estado |
 |---|---|---|
-| **gspread** | El wrapper de facto sobre Sheets API. | Maduro; mantenimiento desacelerado (último release may-2025) |
+| **gspread** | El wrapper de facto sobre Sheets API. | Maduro; **sin mantenimiento activo** (último release may-2025; los maintainers anunciaron que buscan reemplazo) |
 | **pygsheets** | Wrapper rico (formato, named ranges, pandas). | Maduro; baja actividad |
 | **gspread-pandas** | DataFrames sobre gspread. | Activo (capa fina) |
 | **gspread-dataframe** | `get_as_dataframe` / `set_with_dataframe`. | Mantenido |
