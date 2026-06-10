@@ -1,7 +1,8 @@
-"""Tests del spike del cliente nativo (REST) con una sesión HTTP falsa.
+"""Tests del cliente nativo (REST) con una sesión HTTP falsa.
 
 Validan que el cliente nativo implementa los puertos y arma las llamadas correctas a la
-Sheets API v4 / Drive API v3, sin red real. No prueban el wiring (el spike no está cableado).
+Sheets API v4 / Drive API v3, sin red real. El wiring (``SheetManager(backend="native")``)
+se prueba en ``test_native_backend.py``; la integración real, en ``test_native_integration``.
 """
 
 from typing import Any

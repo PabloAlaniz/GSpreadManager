@@ -31,14 +31,15 @@ estado mutable. **Sin usuarios previos, se hizo el corte limpio** (se eliminó e
 ## 🧭 Independencia de gspread
 
 Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado en
-`infrastructure/` detrás de puertos nominales.
+`infrastructure/` detrás de puertos nominales. **Disparador cumplido (jun-2026):** gspread
+quedó sin mantenimiento activo, así que la opción C está en ejecución.
 
 - [x] **Puertos nominales `WorksheetPort`/`SpreadsheetPort`/`ClientPort` + adaptadores**
       sobre gspread (opción B): resuelto el tipado y gspread queda 100% sustituible.
-- [ ] **Reemplazo total por cliente propio nativo** (REST directo con google-auth) detrás de
-      los mismos puertos. **Disparador (política):** se ejecuta si gspread es declarado EOL o
-      su repositorio queda inactivo (sin releases ni actividad de mantenimiento por un período
-      prolongado). Mientras tanto, gspread sigue como adaptador por defecto.
+- [x] **Cliente nativo opt-in** (`SheetManager(backend="native")`): REST directo con
+      google-auth detrás de los mismos puertos, con caché de documentos, timeouts y mapeo
+      de errores a la jerarquía propia (Sprint 2).
+- [ ] **Nativo como default** (gspread pasa a extra opcional) — Sprint 3 y release 3.0.
 
 ## ✅ v2.1 — Paridad con gspread/pygsheets + diferenciación (RELEASED)
 

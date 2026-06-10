@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprint 1 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas y contrato de errores.
+Sprints 1 y 2 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores y
+cliente nativo opt-in.
 
 ### Added
+- **Backend nativo opt-in (`SheetManager(backend="native")`):** ejecuta el ADR 0001 (gspread
+  quedó sin mantenimiento activo). El cliente REST propio (`infrastructure/native/`) deja de
+  ser spike: se cablea detrás de los mismos puertos con caché de documentos abiertos por
+  nombre/key, **timeouts por petición** (`http_timeout`, default 60s) y mapeo de
+  404 → `SpreadsheetNotFoundError`. Acepta `json_google_file`, `credentials`,
+  `service_account_info` o `use_adc` (nuevo `build_credentials` en `infrastructure/auth.py`,
+  que construye credenciales de google-auth sin gspread). gspread sigue como default
+  hasta la 3.0.
+- **Tests de integración opcionales** contra la API real (marker `integration`; se saltean
+  sin `GSPREADMANAGER_TEST_CREDENTIALS`).
 - **Jerarquía completa de errores de dominio:** `ApiError` (con `status_code`),
   `QuotaExceededError` (429), `PermissionDeniedError` (403), `SpreadsheetNotFoundError`,
   `WorksheetNotFoundError` y `CellNotFoundError`, exportadas desde el paquete raíz.
@@ -32,12 +43,17 @@ Sprint 1 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas y contrato de err
   (`data_service`), los request builders y el backend en memoria usan las conversiones A1
   del dominio. Cierra la última fuga de la regla de dependencias (DIP).
 
+### Fixed
+- `pytest.ini` usaba la sección `[tool:pytest]` (solo válida en setup.cfg), por lo que pytest
+  ignoraba `addopts`/`testpaths`; ahora es `[pytest]` y la config (cobertura mínima, markers)
+  aplica de verdad.
+
 ### Docs
 - ROADMAP con el plan de 10 sprints (v2.2 → v3.0).
 - ADR 0001 actualizado: **disparador cumplido** (gspread sin maintainers); se ejecuta la
   opción C de forma incremental (nativo opt-in primero, default en 3.0).
-- Análisis competitivo actualizado (estado de gspread) y guía con la jerarquía de errores
-  y el logging.
+- Análisis competitivo actualizado (estado de gspread) y guía con la jerarquía de errores,
+  el logging y el backend nativo (`backend="native"`).
 
 ## [2.1.0] - 2026-06-09
 

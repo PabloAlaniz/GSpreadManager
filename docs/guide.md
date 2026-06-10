@@ -27,6 +27,26 @@ mgr = SheetManager.open_by_url("https://docs.google.com/spreadsheets/d/1AbC...xy
                                json_google_file="credenciales.json")
 ```
 
+### Backend nativo (sin gspread)
+
+Por defecto el transporte es gspread, pero podés usar el **cliente nativo** propio
+(REST directo sobre `google-auth`, sin gspread en el medio) con `backend="native"`.
+La API es exactamente la misma — ambos backends implementan los mismos puertos y pasan
+el mismo test de contrato:
+
+```python
+mgr = SheetManager(
+    "Mi Hoja de Cálculo",
+    json_google_file="credenciales.json",
+    backend="native",     # cliente REST propio (gspread no se importa)
+    http_timeout=30.0,    # timeout por petición en segundos (default 60; None lo desactiva)
+)
+```
+
+Funciona con `json_google_file`, `credentials`, `service_account_info` o `use_adc=True`
+(no con `client`, que es un cliente de gspread). gspread sigue siendo el default hasta la
+3.0 (ver ADR 0001 — gspread quedó sin mantenimiento activo, por eso existe esta salida).
+
 ## Lectura
 
 ```python

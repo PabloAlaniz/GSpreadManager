@@ -16,6 +16,7 @@ from gspreadmanager.infrastructure.auth import (
     ServiceAccountFileAuth,
     ServiceAccountInfoAuth,
     build_auth_strategy,
+    build_credentials,
 )
 from gspreadmanager.infrastructure.gspread_adapters import GspreadSpreadsheet
 from gspreadmanager.infrastructure.gspread_client import GspreadClientAdapter
@@ -165,3 +166,35 @@ def test_gspread_spreadsheet_get_metadata():
     ss = GspreadSpreadsheet(raw)
     assert ss.get_metadata(["A1:B2"], "namedRanges") == {"namedRanges": []}
     raw.fetch_sheet_metadata.assert_called_once_with({"fields": "namedRanges", "ranges": ["A1:B2"]})
+
+
+class TestBuildCredentials:
+    """``build_credentials`` construye credenciales de google-auth sin gspread (backend nativo)."""
+
+    def test_returns_given_credentials_untouched(self):
+        creds = Mock()
+        assert build_credentials(credentials=creds) is creds
+
+    def test_service_account_info(self):
+        with patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds:
+            build_credentials(service_account_info={"type": "service_account"})
+        mock_creds.from_service_account_info.assert_called_once()
+
+    def test_service_account_file(self):
+        with patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds:
+            build_credentials(json_google_file="creds.json")
+        mock_creds.from_service_account_file.assert_called_once()
+
+    def test_adc(self):
+        adc_creds = Mock()
+        with patch("google.auth.default", return_value=(adc_creds, "proj")) as mock_default:
+            assert build_credentials(use_adc=True) is adc_creds
+        mock_default.assert_called_once()
+
+    def test_no_credentials_raises(self):
+        with pytest.raises(GSpreadManagerError, match="No se proporcionaron credenciales"):
+            build_credentials()
+
+    def test_precedence_credentials_over_file(self):
+        creds = Mock()
+        assert build_credentials(credentials=creds, json_google_file="x.json") is creds

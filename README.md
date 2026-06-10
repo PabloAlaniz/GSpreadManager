@@ -29,6 +29,7 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 - ⚡ **Robustez de cuota**: reintentos con backoff (429/500/503) + **rate limiting proactivo** (token bucket) + **caché de lecturas**
 - 🧪 **Testeable sin red**: backend en memoria (`gspreadmanager.testing`) que implementa los mismos puertos
 - ⌨️ **CLI**: `gspreadmanager read/append/export/share`
+- 🔌 **Backend nativo opcional** (`backend="native"`): cliente REST propio sobre `google-auth`, sin gspread en el medio
 - 🧱 **Arquitectura hexagonal** (dominio / aplicación / infraestructura / puertos) con type hints (PEP 561)
 - 📦 **Dependencias mínimas**: solo `gspread` y `google-auth` (`pandas`/`polars` opcionales)
 

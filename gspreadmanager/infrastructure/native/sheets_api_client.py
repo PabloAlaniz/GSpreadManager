@@ -1,10 +1,11 @@
-"""Cliente nativo (spike) de Google Sheets/Drive vía REST, detrás de los puertos.
+"""Cliente nativo de Google Sheets/Drive vía REST, detrás de los puertos.
 
 Implementa ``ClientPort`` / ``SpreadsheetPort`` / ``WorksheetPort`` llamando a la Sheets API
-v4 y la Drive API v3 a través de una ``HttpSession`` (inyectable). **No está cableado** en el
-facade: gspread sigue siendo el adaptador por defecto. Cubre todas las operaciones de los
-puertos, con mapeo de errores de la API a ``SheetsApiError``; quedan pendientes refinamientos
-menores (mover a carpeta en ``create``, semántica de ``with_link``).
+v4 y la Drive API v3 a través de una ``HttpSession`` (inyectable). Se cablea con
+``SheetManager(backend="native")`` (opt-in; gspread sigue siendo el default hasta la 3.0 —
+ver ADR 0001). Cubre todas las operaciones de los puertos, con mapeo de errores de la API a
+``SheetsApiError`` (jerarquía de dominio); quedan pendientes refinamientos menores (mover a
+carpeta en ``create``, semántica de ``with_link``).
 """
 
 from __future__ import annotations
@@ -83,36 +84,59 @@ class Cell:
     value: str
 
 
+_HTTP_NOT_FOUND = 404
+
+
 class SheetsApiClient(_ApiCaller):
-    """``ClientPort`` nativo: abre documentos (Drive) y opera a nivel Drive/Sheets."""
+    """``ClientPort`` nativo: abre documentos (Drive) y opera a nivel Drive/Sheets.
+
+    Cachea los documentos abiertos por nombre/key (como el adaptador de gspread): pedir
+    otra pestaña del mismo documento no repite la búsqueda en Drive ni la carga de metadata.
+    """
 
     def __init__(self, session: HttpSession) -> None:
         """Recibe una sesión HTTP autorizada (ver ``build_authorized_session``)."""
         self._session = session
+        self._spreadsheets: dict[str, SpreadsheetPort] = {}
 
     def open(self, doc_name: str) -> SpreadsheetPort:
-        """Resuelve el documento por nombre (Drive) y carga sus hojas (Sheets)."""
-        files = self._get(
-            DRIVE_FILES,
-            params={
-                "q": f"name = '{doc_name}' and mimeType = '{_SPREADSHEET_MIME}' and trashed = false",
-                "fields": "files(id,name)",
-            },
-        ).get("files", [])
-        if not files:
-            raise SpreadsheetNotFoundError(f"No se encontró el documento '{doc_name}'.")
-        return self.open_by_key(files[0]["id"])
+        """Resuelve el documento por nombre (Drive) y carga sus hojas (Sheets), cacheándolo."""
+        if doc_name not in self._spreadsheets:
+            files = self._get(
+                DRIVE_FILES,
+                params={
+                    "q": (
+                        f"name = '{doc_name}' and mimeType = '{_SPREADSHEET_MIME}' "
+                        "and trashed = false"
+                    ),
+                    "fields": "files(id,name)",
+                },
+            ).get("files", [])
+            if not files:
+                raise SpreadsheetNotFoundError(f"No se encontró el documento '{doc_name}'.")
+            self._spreadsheets[doc_name] = self.open_by_key(files[0]["id"])
+        return self._spreadsheets[doc_name]
 
     def open_by_key(self, key: str) -> SpreadsheetPort:
-        """Carga las hojas del documento por su key (id) y lo devuelve."""
-        meta = self._get(
-            f"{SHEETS_BASE}/{key}",
-            params={"fields": "sheets.properties(sheetId,title)"},
-        )
-        sheets = [
-            (s["properties"]["title"], s["properties"]["sheetId"]) for s in meta.get("sheets", [])
-        ]
-        return NativeSpreadsheet(self._session, key, sheets)
+        """Carga las hojas del documento por su key (id) y lo devuelve, cacheándolo."""
+        if key not in self._spreadsheets:
+            try:
+                meta = self._get(
+                    f"{SHEETS_BASE}/{key}",
+                    params={"fields": "sheets.properties(sheetId,title)"},
+                )
+            except SheetsApiError as exc:
+                if exc.code == _HTTP_NOT_FOUND:
+                    raise SpreadsheetNotFoundError(
+                        f"No se encontró el documento con key '{key}'."
+                    ) from exc
+                raise
+            sheets = [
+                (s["properties"]["title"], s["properties"]["sheetId"])
+                for s in meta.get("sheets", [])
+            ]
+            self._spreadsheets[key] = NativeSpreadsheet(self._session, key, sheets)
+        return self._spreadsheets[key]
 
     def create(self, title: str, folder_id: str | None) -> Any:
         """Crea un documento (Sheets API). ``folder_id`` aún no se mueve (spike)."""

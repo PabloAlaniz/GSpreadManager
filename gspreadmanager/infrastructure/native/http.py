@@ -71,8 +71,61 @@ class HttpSession(Protocol):
         ...
 
 
-def build_authorized_session(credentials: Any) -> HttpSession:
-    """Construye una ``AuthorizedSession`` de google-auth (import diferido de ``requests``)."""
+# Timeout por defecto (segundos) para cada petición del backend nativo.
+DEFAULT_HTTP_TIMEOUT = 60.0
+
+
+class TimeoutHttpSession:
+    """``HttpSession`` que aplica un timeout por defecto a cada petición de la sesión envuelta.
+
+    La ``AuthorizedSession`` de google-auth (como ``requests``) no aplica timeout salvo que
+    se pase por llamada; este wrapper lo fija una sola vez para todo el backend nativo.
+    """
+
+    def __init__(self, inner: Any, timeout: float) -> None:
+        """Envuelve ``inner`` (una sesión estilo requests) con el ``timeout`` en segundos."""
+        self._inner = inner
+        self._timeout = timeout
+
+    def get(self, url: str, *, params: dict[str, Any] | None = None) -> HttpResponse:
+        """GET con timeout."""
+        return self._inner.get(url, params=params, timeout=self._timeout)
+
+    def post(
+        self,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> HttpResponse:
+        """POST con timeout."""
+        return self._inner.post(url, params=params, json=json, timeout=self._timeout)
+
+    def put(
+        self,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> HttpResponse:
+        """PUT con timeout."""
+        return self._inner.put(url, params=params, json=json, timeout=self._timeout)
+
+    def delete(self, url: str, *, params: dict[str, Any] | None = None) -> HttpResponse:
+        """DELETE con timeout."""
+        return self._inner.delete(url, params=params, timeout=self._timeout)
+
+
+def build_authorized_session(
+    credentials: Any, timeout: float | None = DEFAULT_HTTP_TIMEOUT
+) -> HttpSession:
+    """Construye una ``AuthorizedSession`` de google-auth (import diferido de ``requests``).
+
+    Con ``timeout`` (por defecto 60s) cada petición lo aplica; ``None`` lo desactiva.
+    """
     from google.auth.transport.requests import AuthorizedSession  # noqa: PLC0415
 
-    return AuthorizedSession(credentials)
+    session = AuthorizedSession(credentials)
+    if timeout is None:
+        return session
+    return TimeoutHttpSession(session, timeout)
