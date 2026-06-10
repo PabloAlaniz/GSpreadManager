@@ -14,7 +14,11 @@ from typing import Any
 from urllib.parse import quote
 
 from gspreadmanager.config import DEFAULT_VALUE_INPUT_OPTION
-from gspreadmanager.domain.errors import GSpreadManagerError
+from gspreadmanager.domain.errors import (
+    GSpreadManagerError,
+    SpreadsheetNotFoundError,
+    WorksheetNotFoundError,
+)
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
 from ._a1 import a1_to_grid_range, rowcol_to_a1
@@ -96,7 +100,7 @@ class SheetsApiClient(_ApiCaller):
             },
         ).get("files", [])
         if not files:
-            raise GSpreadManagerError(f"No se encontró el documento '{doc_name}'.")
+            raise SpreadsheetNotFoundError(f"No se encontró el documento '{doc_name}'.")
         return self.open_by_key(files[0]["id"])
 
     def open_by_key(self, key: str) -> SpreadsheetPort:
@@ -173,7 +177,7 @@ class NativeSpreadsheet(_ApiCaller):
         for name, sheet_id in self._sheets:
             if name == title:
                 return sheet_id
-        raise GSpreadManagerError(f"No existe la hoja '{title}'.")
+        raise WorksheetNotFoundError(f"No existe la hoja '{title}'.")
 
     @property
     def sheet1(self) -> WorksheetPort:

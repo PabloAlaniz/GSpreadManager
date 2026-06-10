@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Sprint 1 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas y contrato de errores.
+
+### Added
+- **Jerarquía completa de errores de dominio:** `ApiError` (con `status_code`),
+  `QuotaExceededError` (429), `PermissionDeniedError` (403), `SpreadsheetNotFoundError`,
+  `WorksheetNotFoundError` y `CellNotFoundError`, exportadas desde el paquete raíz.
+  Los adaptadores de gspread traducen **todas** las excepciones de gspread a esta jerarquía
+  (`infrastructure/gspread_errors.py`): ninguna excepción del backend escapa al usuario.
+  El `SheetsApiError` del cliente nativo y los not-found del backend en memoria se integran
+  a la misma jerarquía.
+- **Logging estructurado opt-in:** logger `gspreadmanager` con `NullHandler` por defecto.
+  Reintentos en `WARNING`; rate limiting, caché (hit/miss/invalidación) y apertura de
+  documentos en `DEBUG`.
+- **Helpers A1 en el dominio:** `rowcol_to_a1`, `column_to_letter`, `letter_to_column` y
+  `GridRange.from_a1` viven en `domain/values/ranges.py` (lógica pura, errores
+  `InvalidRangeError`), con paridad verificada contra `gspread.utils`.
+
+### Changed
+- **`ExponentialBackoffRetry` desacoplada de gspread:** ahora opera sobre el `ApiError`
+  del dominio (los adaptadores traducen antes), por lo que funciona igual con cualquier
+  backend (gspread, nativo, in-memory).
+- **Sin `gspread.utils` fuera de los adaptadores:** la capa de aplicación
+  (`data_service`), los request builders y el backend en memoria usan las conversiones A1
+  del dominio. Cierra la última fuga de la regla de dependencias (DIP).
+
+### Docs
+- ROADMAP con el plan de 10 sprints (v2.2 → v3.0).
+- ADR 0001 actualizado: **disparador cumplido** (gspread sin maintainers); se ejecuta la
+  opción C de forma incremental (nativo opt-in primero, default en 3.0).
+- Análisis competitivo actualizado (estado de gspread) y guía con la jerarquía de errores
+  y el logging.
+
 ## [2.1.0] - 2026-06-09
 
 Paridad con gspread/pygsheets y un conjunto de capacidades de diferenciación, todo sobre la

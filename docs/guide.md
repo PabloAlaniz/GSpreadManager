@@ -232,16 +232,47 @@ mgr.remove_permission("alguien@example.com")
 ## Manejo de errores
 
 Las operaciones reintentan automáticamente ante errores transitorios (HTTP 429/500/503).
-La librería expone excepciones propias:
+La librería expone una jerarquía propia de excepciones — ninguna excepción del backend
+(gspread o el cliente nativo) escapa sin traducir:
 
 ```python
-from gspreadmanager import InsertError
+from gspreadmanager import (
+    ApiError,                  # error genérico de la API (con .status_code)
+    GSpreadManagerError,       # base de toda la jerarquía
+    InsertError,
+    PermissionDeniedError,     # HTTP 403
+    QuotaExceededError,        # HTTP 429 (el retry ya lo reintentó)
+    SpreadsheetNotFoundError,
+    WorksheetNotFoundError,
+)
+
+try:
+    ws = mgr.worksheet("Hoja inexistente")
+except WorksheetNotFoundError as e:
+    print(f"No existe la pestaña: {e}")
 
 try:
     ws.insert([["A", "B"]])
-except InsertError as e:
-    print(f"No se pudo insertar: {e}")
+except QuotaExceededError:
+    print("Cuota agotada incluso después de los reintentos.")
+except ApiError as e:
+    print(f"Error de la API (HTTP {e.status_code}): {e}")
 ```
+
+## Logging
+
+La librería no configura handlers (usa un `NullHandler`); si querés ver qué hace por dentro
+(requests, reintentos, esperas del rate limiter, hits de caché), activá el logger:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("gspreadmanager").setLevel(logging.DEBUG)
+```
+
+Los reintentos ante errores transitorios se loguean en nivel `WARNING`; el detalle de caché
+y rate limiting, en `DEBUG`.
 
 ## Context manager
 

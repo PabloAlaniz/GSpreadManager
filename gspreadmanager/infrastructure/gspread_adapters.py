@@ -14,7 +14,10 @@ from gspread.utils import ValueInputOption
 
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
+from .gspread_errors import translates_gspread_errors
 
+
+@translates_gspread_errors
 class GspreadWorksheet:
     """Adaptador de ``gspread.Worksheet`` que implementa ``WorksheetPort``."""
 
@@ -104,6 +107,7 @@ class GspreadWorksheet:
         return self._ws.update(values, value_input_option=option)
 
 
+@translates_gspread_errors
 class GspreadSpreadsheet:
     """Adaptador de ``gspread.Spreadsheet`` que implementa ``SpreadsheetPort``."""
 

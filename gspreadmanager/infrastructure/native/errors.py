@@ -7,15 +7,19 @@ depender de gspread ni de ``requests``.
 
 from __future__ import annotations
 
-from gspreadmanager.domain.errors import GSpreadManagerError
+from gspreadmanager.domain.errors import ApiError
 
 
-class SheetsApiError(GSpreadManagerError):
-    """Error devuelto por la Google Sheets/Drive API (status HTTP no exitoso)."""
+class SheetsApiError(ApiError):
+    """Error devuelto por la Google Sheets/Drive API (status HTTP no exitoso).
+
+    Subclase de ``ApiError`` del dominio: expone ``status_code`` para que la política de
+    reintentos lo trate igual que a los errores traducidos del adaptador de gspread.
+    """
 
     def __init__(self, code: int, status: str, message: str) -> None:
         """Guarda el código HTTP, el ``status`` de la API y el mensaje."""
-        super().__init__(f"[{code} {status}] {message}")
+        super().__init__(f"[{code} {status}] {message}", status_code=code)
         self.code = code
         self.status = status
         self.message = message
