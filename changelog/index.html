@@ -1,0 +1,2034 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Un wrapper de Python para gestionar y automatizar tareas en Google Sheets.">
+      
+      
+      
+        <link rel="canonical" href="https://pabloalaniz.github.io/GSpreadManager/changelog/">
+      
+      
+        <link rel="prev" href="../adr/0001-dependencia-de-gspread/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Changelog - GSpreadManager</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="GSpreadManager" class="md-header__button md-logo" aria-label="GSpreadManager" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            GSpreadManager
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="green" data-md-color-accent="indigo"  aria-label="Modo oscuro"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Modo oscuro" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="green" data-md-color-accent="indigo"  aria-label="Modo claro"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Modo claro" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PabloAlaniz/GSpreadManager" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PabloAlaniz/GSpreadManager
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="GSpreadManager" class="md-nav__button md-logo" aria-label="GSpreadManager" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    GSpreadManager
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PabloAlaniz/GSpreadManager" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    PabloAlaniz/GSpreadManager
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guía de uso
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration-3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migración 3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../en/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referencia de API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../competitive-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Análisis competitivo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisiones (ADR)
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisiones (ADR)
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adr/0001-dependencia-de-gspread/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dependencia de gspread
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#300-2026-06-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [3.0.0] - 2026-06-10
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[3.0.0] - 2026-06-10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes-desde-210" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking changes (desde 2.1.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#210-2026-06-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [2.1.0] - 2026-06-09
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[2.1.0] - 2026-06-09">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#200-2026-06-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [2.0.0] - 2026-06-08
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[2.0.0] - 2026-06-08">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#120-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.2.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.2.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#110-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.1.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.1.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#100-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.0.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.0.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#040-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-2026-02-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.0] - 2026-02-22
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.0] - 2026-02-22">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Guide
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#015-previous-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.5] - Previous Release
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#300-2026-06-10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [3.0.0] - 2026-06-10
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[3.0.0] - 2026-06-10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes-desde-210" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking changes (desde 2.1.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Docs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#210-2026-06-09" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [2.1.0] - 2026-06-09
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[2.1.0] - 2026-06-09">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#200-2026-06-08" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [2.0.0] - 2026-06-08
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[2.0.0] - 2026-06-08">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#120-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.2.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.2.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#110-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.1.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.1.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#100-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.0.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.0.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#040-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.4.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.4.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#030-2026-06-07" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.3.0] - 2026-06-07
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.3.0] - 2026-06-07">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#020-2026-02-22" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.2.0] - 2026-02-22
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.2.0] - 2026-02-22">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-guide" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Guide
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#015-previous-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.5] - Previous Release
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="changelog">Changelog</h1>
+<p>All notable changes to GSpreadManager will be documented in this file.</p>
+<p>The format is based on <a href="https://keepachangelog.com/en/1.0.0/">Keep a Changelog</a>,
+and this project adheres to <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<h2 id="unreleased">[Unreleased]</h2>
+<h2 id="300-2026-06-10">[3.0.0] - 2026-06-10</h2>
+<p>Los 10 sprints del plan v2.2 → v3.0 (ver ROADMAP), publicados como un único release mayor:
+pureza de capas y contrato de errores, <strong>cliente nativo como backend por defecto</strong>
+(culmina el ADR 0001; gspread queda como extra opcional), <strong>paridad total</strong> con
+gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes, modelos
+Pydantic, la API v4 profunda (charts/pivot/banding/metadata) y la <strong>API async real</strong>.
+Guía de migración: <code>docs/migration-3.0.md</code>.</p>
+<h3 id="breaking-changes-desde-210">Breaking changes (desde 2.1.0)</h3>
+<ul>
+<li><strong>El backend por defecto es el cliente nativo</strong> (REST sobre google-auth). Se usa gspread
+  solo si se pasa <code>client=</code> (preautorizado) o <code>backend="gspread"</code>/<code>"auto"</code>.</li>
+<li><strong>gspread es un extra opcional</strong>: <code>pip install "GSpreadManager[gspread]"</code>. El núcleo
+  solo depende de <code>google-auth</code>.</li>
+</ul>
+<h3 id="added">Added</h3>
+<ul>
+<li><strong>API async (Sprint 10):</strong> <code>AsyncSheetManager</code> + <code>AsyncWorksheetContext</code> —
+  lectura (list/dict/render/numericise), escritura con chunking, streaming
+  (<code>iter_rows</code>/<code>iter_records</code>/<code>iter_as</code> como async generators), la hoja como tabla
+  (<code>upsert</code>/<code>upsert_models</code>/<code>update_where</code>/<code>delete_where</code>), modelos tipados
+  (<code>read_as</code>/<code>append_models</code>/<code>write_models</code>/<code>ensure_schema</code>), import CSV,
+  find/replace, <code>copy_to</code> y operaciones de documento (Drive, permisos, propiedades,
+  export). Reutiliza la lógica pura del paquete (planners de tabla extraídos a funciones
+  de módulo en <code>table_service</code>); usable como <code>async with</code> (cierra la sesión httpx).
+  Formato/validación/charts siguen, por ahora, solo en la API síncrona.</li>
+<li><strong><code>AsyncInMemoryBackend</code></strong> (<code>gspreadmanager.testing</code>): el mismo fake en memoria con
+  superficie async, para testear <code>AsyncSheetManager</code> sin red.</li>
+<li><strong>Async nativo, núcleo (Sprint 9):</strong> asyncio real, no threadpool (nadie en el ecosistema
+  lo tiene; <code>gspread-asyncio</code> usa threads):</li>
+<li>Puertos async espejo (<code>ports/async_sheets.py</code>): <code>AsyncClientPort</code>/
+    <code>AsyncSpreadsheetPort</code>/<code>AsyncWorksheetPort</code> con la <strong>misma superficie</strong> que los
+    síncronos (verificado por test), más <code>AsyncRetryPolicy</code> y <code>AsyncRateLimiter</code>.</li>
+<li><code>AsyncSheetsApiClient</code> (<code>infrastructure/native/async_client.py</code>): espejo async del
+    cliente nativo — Sheets v4 + Drive v3 completos, caché de documentos, 404 →
+    <code>SpreadsheetNotFoundError</code>, mismos errores de dominio.</li>
+<li>Sesión <code>httpx</code> autorizada (<code>build_async_session</code>, extra opcional
+    <code>pip install "GSpreadManager[async]"</code>): token Bearer de google-auth con refresh fuera
+    del event loop (<code>asyncio.to_thread</code>), timeout por petición, usable como
+    <code>async with</code>.</li>
+<li><code>AsyncExponentialBackoffRetry</code> y <code>AsyncTokenBucketRateLimiter</code> con <code>asyncio.sleep</code>
+    (esperas cooperativas, sin bloquear el loop; reloj y sleep inyectables).</li>
+<li><strong>API v4 profunda (Sprint 8, nuevo <code>VisualizationService</code>):</strong></li>
+<li><code>ws.add_chart(tipo, domain, series, title=..., anchor_cell=...)</code> — gráficos embebidos
+    (LINE/BAR/COLUMN/AREA/SCATTER/PIE) y <code>ws.delete_chart(id)</code>.</li>
+<li><code>ws.add_pivot_table(source, anchor_cell, rows=..., values=..., columns=...)</code> — pivot
+    tables (offsets 0-based + función de agregación).</li>
+<li><code>ws.set_banding(rango, first_color=..., second_color=..., header_color=...)</code> y
+    <code>ws.delete_banding(id)</code> — bandas de color alternadas.</li>
+<li><strong>Developer metadata</strong>: <code>ws.set_developer_metadata</code> (por pestaña),
+    <code>mgr.set_developer_metadata</code> (por documento), <code>mgr.list_developer_metadata</code> y
+    <code>mgr.delete_developer_metadata(key)</code>.</li>
+<li>Todo modelado como value objects del dominio (<code>ChartSpec</code>, <code>PivotTableSpec</code>,
+    <code>PivotField</code>/<code>PivotValue</code>, <code>BandingSpec</code>, <code>DeveloperMetadataEntry</code>) con <code>to_request</code>
+    validado por tests contra la forma exacta de la API. Fix del fake in-memory: solo
+    trata <code>updateCells</code> como nota cuando <code>fields="note"</code> (las pivots usan el mismo verbo).</li>
+<li><strong>Modelos Pydantic v2 y esquema avanzado (Sprint 7):</strong></li>
+<li>Nuevo puerto <code>ModelCodec</code> con dos codecs (<code>infrastructure/model_codecs.py</code>):
+    dataclasses (el mapeo puro del dominio) y <strong>Pydantic v2</strong> (extra opcional
+    <code>pip install "GSpreadManager[pydantic]"</code>, import diferido). <code>read_as</code>/<code>append_models</code>/
+    <code>write_models</code>/<code>upsert_models</code>/<code>iter_as</code> aceptan ambos tipos de modelo; con Pydantic
+    la validación/coerción es nativa (alias de campo = nombre de columna; los
+    <code>ValidationError</code> llegan como <code>SchemaError</code>).</li>
+<li><code>ws.ensure_schema(Model, create=True, strict=False)</code>: valida (o crea) el encabezado
+    contra el modelo, con <strong>reporte de drift</strong> — <code>SchemaError</code> enriquecido con
+    <code>missing_columns</code> / <code>extra_columns</code>.</li>
+<li>Coerciones nuevas en el codec de dataclasses: <code>Decimal</code>, <code>Enum</code> (por valor o nombre)
+    y <code>Literal</code>, también al serializar (<code>format_cell</code>).</li>
+<li><strong>Streaming para hojas grandes (Sprint 6):</strong> <code>ws.iter_rows(page_size=...)</code>,
+  <code>ws.iter_records(...)</code> (dicts por encabezado) y <code>ws.iter_as(Model, ...)</code> (dataclasses) —
+  iteradores perezosos que leen de a páginas vía <code>values_get</code>; cada página con su propio
+  retry y permiso del rate limiter. Solo se materializa una página por vez.</li>
+<li><strong>Caché v2 (Sprint 6):</strong> TTL opcional (<code>SheetManager(cache_ttl=...)</code>, acota la ventana de
+  staleness), límite de entradas con desalojo LRU (<code>cache_max_entries=...</code>; pasar
+  cualquiera de los dos activa la caché) e <strong>invalidación selectiva</strong>: <code>update_cell</code>/
+  <code>batch_update</code>/<code>batch_clear</code> solo invalidan lo cacheado que se superpone con el rango
+  escrito (nuevo <code>GridRange.overlaps</code> en el dominio); las escrituras de alcance hoja
+  (<code>update</code>/<code>append</code>/<code>clear</code>/formato) invalidan esa hoja sin tocar las demás; las
+  operaciones a nivel documento invalidan todo.</li>
+<li><strong>La hoja como tabla (Sprint 5, nuevo <code>TableService</code>):</strong></li>
+<li><code>ws.upsert(rows, key=...)</code> — actualiza por columna clave y agrega lo nuevo; acepta
+    dicts (actualiza solo las columnas presentes) o listas alineadas al encabezado;
+    devuelve <code>{"updated": n, "appended": m}</code>. <code>ws.upsert_models(models, key=...)</code> para
+    dataclasses. Idempotente: re-ejecutar el mismo upsert no duplica filas.</li>
+<li><code>mgr.worksheet_or_create(title, rows=..., cols=...)</code> — find-or-create de pestaña.</li>
+<li><code>ws.update_where(where, updates)</code> y <code>ws.delete_where(where)</code> — <code>where</code> como dict de
+    igualdades o predicado sobre la fila; el delete agrupa rangos contiguos y borra de
+    abajo hacia arriba (<code>deleteDimension</code>).</li>
+<li><strong>Chunking automático de escrituras</strong> (<code>SheetManager(batch_cell_limit=50_000)</code>):
+    <code>append</code>/<code>batch_update</code>/<code>upsert</code> grandes se parten en varias peticiones — cada chunk
+    con su propio retry y permiso del rate limiter, así un 429 a mitad de camino no
+    re-ejecuta los chunks ya aplicados. Helpers puros en <code>domain/batching.py</code>
+    (<code>split_rows</code>/<code>split_range_data</code>; una fila o rango nunca se parte). <code>None</code> lo
+    desactiva.</li>
+<li><strong>Paridad final con el ecosistema (Sprint 4):</strong></li>
+<li><code>ws.import_csv(ruta_o_buffer, clear=..., delimiter=...)</code> — vuelca un CSV en la hoja
+    (parsing puro en <code>domain/csv_data.py</code>, escritura <code>RAW</code>).</li>
+<li><code>mgr.update_title()</code> / <code>update_locale()</code> / <code>update_timezone()</code> — propiedades del
+    documento vía <code>updateSpreadsheetProperties</code>.</li>
+<li><code>mgr.list_worksheets()</code> y apertura de pestañas por posición o id:
+    <code>worksheet_by_index(i)</code> / <code>worksheet_by_id(sheet_id)</code>.</li>
+<li><code>ws.find_replace(find, replacement, match_case=..., match_entire_cell=...,
+    search_by_regex=..., include_formulas=...)</code> — <code>findReplace</code> de la API v4; devuelve el
+    resumen (<code>occurrencesChanged</code>, ...). El backend en memoria lo aplica de verdad a la
+    grilla (literal, sin regex) para poder testearlo.</li>
+<li><code>ws.copy_to(destination_key)</code> — copia la pestaña a otro documento (<code>sheets.copyTo</code>;
+    nuevo método del <code>WorksheetPort</code> en los 4 backends; el in-memory copia entre documentos
+    del mismo <code>InMemoryBackend</code>).</li>
+<li><code>ws.read(render="formatted" | "unformatted" | "formula")</code> — value render options al
+    leer (fórmulas o valores crudos); <code>get_all_values</code> del puerto acepta el render y la
+    caché memoiza por opción.</li>
+<li><strong>gspread es ahora un extra opcional</strong> (<code>pip install "GSpreadManager[gspread]"</code>): el
+  núcleo solo depende de <code>google-auth</code>. Nuevo default <code>backend="auto"</code>: usa gspread si está
+  instalado (o si se pasa <code>client=</code>), si no el cliente nativo — el quick start funciona
+  igual con cualquier instalación. Si se fuerza <code>backend="gspread"</code> sin el paquete, el
+  error explica cómo instalarlo. (Breaking solo para quien dependía de que gspread viniera
+  de fábrica: instalá el extra.)</li>
+<li><strong>Hardening del cliente nativo:</strong> <code>create(..., folder_id=...)</code> ahora mueve el documento a
+  la carpeta (Drive <code>files.update</code> con <code>addParents</code>; cierra un pendiente del spike), y los
+  errores 429/403 producen <code>SheetsQuotaExceededError</code> / <code>SheetsPermissionDeniedError</code>, que
+  heredan de <code>QuotaExceededError</code> / <code>PermissionDeniedError</code> del dominio: el mismo <code>except</code>
+  funciona con cualquier backend.</li>
+<li><strong>Suite de benchmarks</strong> (<code>benchmarks/run_benchmarks.py</code> + página en docs): compara
+  gspread vs nativo contra la API real (read/append/batch/update/formato) y emite la tabla
+  en Markdown. Manual, con las mismas credenciales que la suite de integración.</li>
+<li><strong>Backend nativo opt-in (<code>SheetManager(backend="native")</code>):</strong> ejecuta el ADR 0001 (gspread
+  quedó sin mantenimiento activo). El cliente REST propio (<code>infrastructure/native/</code>) deja de
+  ser spike: se cablea detrás de los mismos puertos con caché de documentos abiertos por
+  nombre/key, <strong>timeouts por petición</strong> (<code>http_timeout</code>, default 60s) y mapeo de
+  404 → <code>SpreadsheetNotFoundError</code>. Acepta <code>json_google_file</code>, <code>credentials</code>,
+  <code>service_account_info</code> o <code>use_adc</code> (nuevo <code>build_credentials</code> en <code>infrastructure/auth.py</code>,
+  que construye credenciales de google-auth sin gspread). gspread sigue como default
+  hasta la 3.0.</li>
+<li><strong>Tests de integración opcionales</strong> contra la API real (marker <code>integration</code>; se saltean
+  sin <code>GSPREADMANAGER_TEST_CREDENTIALS</code>).</li>
+<li><strong>Jerarquía completa de errores de dominio:</strong> <code>ApiError</code> (con <code>status_code</code>),
+  <code>QuotaExceededError</code> (429), <code>PermissionDeniedError</code> (403), <code>SpreadsheetNotFoundError</code>,
+  <code>WorksheetNotFoundError</code> y <code>CellNotFoundError</code>, exportadas desde el paquete raíz.
+  Los adaptadores de gspread traducen <strong>todas</strong> las excepciones de gspread a esta jerarquía
+  (<code>infrastructure/gspread_errors.py</code>): ninguna excepción del backend escapa al usuario.
+  El <code>SheetsApiError</code> del cliente nativo y los not-found del backend en memoria se integran
+  a la misma jerarquía.</li>
+<li><strong>Logging estructurado opt-in:</strong> logger <code>gspreadmanager</code> con <code>NullHandler</code> por defecto.
+  Reintentos en <code>WARNING</code>; rate limiting, caché (hit/miss/invalidación) y apertura de
+  documentos en <code>DEBUG</code>.</li>
+<li><strong>Helpers A1 en el dominio:</strong> <code>rowcol_to_a1</code>, <code>column_to_letter</code>, <code>letter_to_column</code> y
+  <code>GridRange.from_a1</code> viven en <code>domain/values/ranges.py</code> (lógica pura, errores
+  <code>InvalidRangeError</code>), con paridad verificada contra <code>gspread.utils</code>.</li>
+</ul>
+<h3 id="changed">Changed</h3>
+<ul>
+<li><strong><code>ExponentialBackoffRetry</code> desacoplada de gspread:</strong> ahora opera sobre el <code>ApiError</code>
+  del dominio (los adaptadores traducen antes), por lo que funciona igual con cualquier
+  backend (gspread, nativo, in-memory).</li>
+<li><strong>Sin <code>gspread.utils</code> fuera de los adaptadores:</strong> la capa de aplicación
+  (<code>data_service</code>), los request builders y el backend en memoria usan las conversiones A1
+  del dominio. Cierra la última fuga de la regla de dependencias (DIP).</li>
+</ul>
+<h3 id="fixed">Fixed</h3>
+<ul>
+<li><code>pytest.ini</code> usaba la sección <code>[tool:pytest]</code> (solo válida en setup.cfg), por lo que pytest
+  ignoraba <code>addopts</code>/<code>testpaths</code>; ahora es <code>[pytest]</code> y la config (cobertura mínima, markers)
+  aplica de verdad.</li>
+</ul>
+<h3 id="docs">Docs</h3>
+<ul>
+<li>ROADMAP con el plan de 10 sprints (v2.2 → v3.0).</li>
+<li>ADR 0001 actualizado: <strong>disparador cumplido</strong> (gspread sin maintainers); se ejecuta la
+  opción C de forma incremental (nativo opt-in primero, default en 3.0).</li>
+<li>Análisis competitivo actualizado (estado de gspread) y guía con la jerarquía de errores,
+  el logging y el backend nativo (<code>backend="native"</code>).</li>
+</ul>
+<h2 id="210-2026-06-09">[2.1.0] - 2026-06-09</h2>
+<p>Paridad con gspread/pygsheets y un conjunto de capacidades de diferenciación, todo sobre la
+arquitectura hexagonal de la 2.0 (sin reemplazar gspread, que sigue como adaptador por defecto).</p>
+<h3 id="added_1">Added</h3>
+<ul>
+<li><strong>v2.1 — Diferenciación: CLI (<code>gspreadmanager</code>):</strong> comando de terminal (solo <code>argparse</code>, sin
+  dependencias extra) con <code>read</code> (CSV/TSV/JSON), <code>append</code>, <code>export</code> (a archivo o stdout) y
+  <code>share</code>. El documento se indica por nombre, key (<code>--key</code>) o URL; autenticación con
+  <code>--json-file</code> o <code>--use-adc</code>. Entry point <code>gspreadmanager = "gspreadmanager.cli:main"</code>; la
+  construcción del gestor es inyectable (<code>manager_factory</code>) para testear sin red.</li>
+<li><strong>v2.1 — Diferenciación: rate limiting proactivo (token bucket):</strong>
+  <code>SheetManager(..., rate_limit=&lt;ops/seg&gt;, rate_limit_burst=&lt;ráfaga&gt;)</code> frena las operaciones
+  <em>antes</em> de pegarle a la cuota (a diferencia del retry, que reacciona a un 429). Nuevo puerto
+  <code>RateLimiter</code> e implementación <code>TokenBucketRateLimiter</code> (con reloj/sleep inyectables,
+  thread-safe); el decorador <code>retry_on_rate_limit</code> pide un permiso antes de cada operación.
+  Opt-in (apagado por defecto). El bucket es global por gestor (compartido entre handles).</li>
+<li><strong>v2.1 — Diferenciación: caché de lecturas con invalidación:</strong> <code>SheetManager(..., cache=True)</code>
+  activa una caché transparente que memoiza las lecturas (<code>get_all_values</code>, <code>values_get</code>,
+  <code>get_metadata</code>) por documento y se invalida con cada escritura propia (a nivel hoja o
+  documento). Implementada como wrappers de los puertos (<code>CachingClient</code>/<code>CachingSpreadsheet</code>/
+  <code>CachingWorksheet</code>), opt-in (no detecta cambios de otros procesos); <code>mgr.clear_cache()</code> fuerza
+  el refresco. El test de contrato cubre también los wrappers.</li>
+<li><strong>v2.1 — Diferenciación: modelos de fila tipados (dataclasses):</strong> <code>WorksheetContext</code> gana
+  <code>read_as(Model)</code> (devuelve <code>list[Model]</code>), <code>append_models(...)</code> y <code>write_models(...)</code>. El
+  encabezado mapea a los campos del dataclass por nombre o por <code>field(metadata={"column": ...})</code>,
+  con coerción de tipos (int/float/bool/date/datetime, <code>Optional</code> -&gt; <code>None</code>) y validación
+  (<code>SchemaError</code>, exportada desde el paquete raíz). Mapeo puro en <code>domain/schema.py</code>, orquestado
+  por <code>RowModelService</code>. Nadie en el ecosistema lo ofrece de fábrica.</li>
+<li><strong>v2.1 — Diferenciación: backend en memoria para tests (<code>gspreadmanager.testing</code>):</strong>
+  nuevo <code>InMemoryBackend</code>/<code>InMemoryClient</code>/<code>InMemorySpreadsheet</code>/<code>InMemoryWorksheet</code> que
+  implementan los puertos <code>ClientPort</code>/<code>SpreadsheetPort</code>/<code>WorksheetPort</code>, para que los usuarios
+  prueben su código sin red. Los valores hacen round-trip y las operaciones estructurales
+  (insertar/eliminar filas, notas, named/protected ranges) se aplican sobre la grilla; el
+  formato/validación/orden/filtro se registran en <code>spreadsheet.requests</code> sin alterarla.
+  <code>SheetManager</code> acepta <code>sheets_client=...</code> para inyectar cualquier <code>ClientPort</code>. El test de
+  contrato ahora cubre también el fake (mismo set de métodos que gspread y el cliente nativo).</li>
+<li><strong>v2.1 — Sprint 5 (pandas avanzado + backend polars):</strong> el motor de DataFrame es
+  pluggable vía <code>SheetManager(dataframe_backend="pandas"|"polars")</code> (nuevo
+  <code>PolarsDataFrameAdapter</code> detrás del <code>DataFramePort</code>, factory <code>build_dataframe_adapter</code>,
+  extra <code>pip install GSpreadManager[polars]</code>). <code>read_dataframe</code> gana <code>drop_empty_rows</code>,
+  <code>drop_empty_cols</code> e <code>index_col</code> (índice solo pandas); el limpiado de filas/columnas vacías
+  es una función pura del dominio (<code>domain/dataframe.prune_empty</code>). <code>write_dataframe</code> gana
+  <code>start_cell</code> (anclar la escritura en una celda arbitraria) e <code>include_index</code>. El puerto
+  <code>WorksheetPort.update</code> acepta un <code>range_name</code> opcional, implementado en ambos adaptadores.</li>
+<li><strong>v2.1 — Sprint 4 (orden/filtro, unmerge, color de pestaña, exportación):</strong>
+  <code>WorksheetContext</code> gana <code>sort_range(rango, (columna, "asc"|"desc"), ...)</code>,
+  <code>set_basic_filter</code>/<code>clear_basic_filter</code>, <code>unmerge</code> y <code>set_tab_color</code>/<code>clear_tab_color</code>
+  (requests <code>sortRange</code>/<code>setBasicFilter</code>/<code>clearBasicFilter</code>/<code>unmergeCells</code>/
+  <code>updateSheetProperties</code> en <code>WorksheetService</code>, sin nueva superficie de puerto).
+  <code>SheetManager.export(export_format=ExportFormat.PDF)</code> descarga el documento como bytes
+  (PDF/CSV/TSV/Excel/ODS/HTML); nuevo enum <code>ExportFormat</code> exportado desde el paquete raíz,
+  un único método de puerto <code>SpreadsheetPort.export</code> (vía <code>files.export</code> de Drive)
+  implementado en ambos adaptadores, y <code>HttpResponse.content</code> para el cliente nativo.
+  La importación desde CSV queda pendiente (ver ROADMAP).</li>
+<li><strong>v2.1 — Sprint 3 (notas + named/protected ranges):</strong> <code>WorksheetContext</code> gana
+  <code>update_note</code>/<code>clear_note</code>/<code>get_note</code>, <code>define_named_range</code>, <code>add_protected_range</code>/
+  <code>list_protected_ranges</code>/<code>delete_protected_range</code>; <code>SheetManager</code> gana <code>list_named_ranges</code>/
+  <code>delete_named_range</code>. Nuevo <code>MetadataService</code> y un único método de puerto
+  <code>SpreadsheetPort.get_metadata</code> (lecturas vía <code>spreadsheets.get</code>), implementado en ambos
+  adaptadores. El resto son requests de <code>batchUpdate</code> (sin más superficie de puerto).</li>
+<li><strong>v2.1 — Sprint 2 (filas/columnas estructurales):</strong> <code>WorksheetContext</code> gana
+  <code>insert_rows</code>/<code>insert_cols</code>, <code>delete_rows</code>/<code>delete_cols</code>, <code>add_rows</code>/<code>add_cols</code>,
+  <code>resize_rows</code>/<code>resize_cols</code> y <code>hide_rows</code>/<code>unhide_rows</code>/<code>hide_cols</code>/<code>unhide_cols</code>
+  (posiciones 1-based). Implementado como requests <code>insertDimension</code>/<code>deleteDimension</code>/
+  <code>appendDimension</code>/<code>updateDimensionProperties</code> en <code>WorksheetService</code>; no agrega métodos de
+  puerto (usa <code>worksheet.spreadsheet.batch_update</code>), así que funciona en ambos backends.</li>
+<li><strong>v2.1 — Sprint 1 (direccionamiento + lectura tipada):</strong></li>
+<li><strong>Abrir por key / URL:</strong> <code>SheetManager.open_by_key(key)</code> y <code>SheetManager.open_by_url(url)</code>
+    (además del nombre). Nuevo <code>ClientPort.open_by_key</code> implementado en ambos adaptadores
+    (gspread y nativo) y <code>SpreadsheetId.from_url</code>. El <code>__init__</code> acepta <code>key=...</code>.</li>
+<li><strong>Type inference al leer:</strong> <code>WorksheetContext.read(..., numericise=True)</code> convierte los
+    valores a int/float cuando corresponde (preserva ceros a la izquierda). Módulo
+    <code>gspreadmanager.domain.numericise</code>.</li>
+</ul>
+<h2 id="200-2026-06-08">[2.0.0] - 2026-06-08</h2>
+<p>Reescritura interna a Clean Architecture / DDD táctico (capas dominio / aplicación /
+infraestructura / puertos) y un API nuevo sin estado mutable. Sin usuarios previos, se
+hace el corte limpio: se elimina el API 1.x en vez de deprecarlo.</p>
+<h3 id="breaking-changes">Breaking changes</h3>
+<ul>
+<li><strong>Se elimina <code>GoogleSheetConector</code>.</strong> El nuevo punto de entrada es <code>SheetManager</code> +
+  <code>WorksheetContext</code>: <code>mgr = SheetManager(doc); ws = mgr.worksheet("Hoja1"); ws.append(...)</code>.
+  Ya no existe una "hoja activa" mutable ni el parámetro <code>tab_name</code> con efecto colateral:
+  cada <code>worksheet(...)</code> devuelve un handle inmutable e independiente.</li>
+<li><strong>Se elimina el parámetro <code>sheet</code></strong> (que estaba obsoleto en 1.x) de las operaciones de hoja.</li>
+<li><strong>Se eliminan los módulos shim <code>gspreadmanager.formatting</code> y <code>gspreadmanager.exceptions</code>.</strong>
+  Importar desde el paquete raíz (<code>from gspreadmanager import CellFormat, GSpreadManagerError</code>)
+  o desde <code>gspreadmanager.domain</code>.</li>
+<li>Renombres de operaciones en el handle de hoja: <code>read_sheet_data</code>→<code>read</code>,
+  <code>spreadsheet_append</code>→<code>append</code>, <code>spreadsheet_read_range</code>→<code>read_range</code>,
+  <code>spreadsheet_insert</code>→<code>insert</code>, <code>clear_range</code>→<code>clear</code>, <code>find_cell</code>→<code>find</code>,
+  <code>from_gsheet</code>→<code>read_dataframe</code>, <code>to_gsheet</code>→<code>write_dataframe</code>.</li>
+</ul>
+<h3 id="added_2">Added</h3>
+<ul>
+<li><strong>API 2.0 <code>SheetManager</code> + <code>WorksheetContext</code>
+  (<code>gspreadmanager.facade</code>):</strong> nuevo punto de entrada sin "hoja activa" mutable.
+  <code>mgr = SheetManager(doc); ws = mgr.worksheet("Hoja1")</code> devuelve un handle inmutable atado
+  a una pestaña; dos handles son independientes y ninguna operación tiene efectos colaterales
+  sobre otro. El <code>WorksheetContext</code> expone las operaciones de hoja sin parámetro <code>tab_name</code>
+  ni <code>sheet</code>; <code>SheetManager</code> expone las operaciones a nivel documento (Drive, permisos,
+  crear/eliminar hojas) y <code>create_sheet</code> devuelve un handle en vez de "activar" la hoja.
+  Ambos delegan en los 7 servicios de la capa de aplicación. Exportados desde el paquete raíz.</li>
+<li><strong>Sprint 5 de purificación — capa de aplicación (<code>gspreadmanager.application</code>):</strong> se
+  extraen 7 servicios de casos de uso desde el god class <code>GoogleSheetConector</code>, que ahora
+  delega en ellos: <code>DataService</code> (lectura/escritura/append/insert/consultas),
+  <code>FormattingService</code> (formato, freeze, merge + builders de <code>CellFormat</code>),
+  <code>ValidationService</code> (validación y formato condicional), <code>WorksheetService</code> (crear/eliminar/
+  limpiar/buscar), <code>DocumentService</code> (Drive), <code>SharingService</code> (permisos) y <code>DataframeService</code>
+  (integración pandas vía el puerto <code>DataFramePort</code> y <code>PandasDataFrameAdapter</code>). Los servicios
+  no importan gspread (salvo utilidades puras) y son testeables con fakes. Sin cambios de
+  comportamiento.</li>
+<li><strong>Puertos nominales de Sheets + adaptadores (ADR 0001, opción B):</strong> se introducen
+  <code>WorksheetPort</code>/<code>SpreadsheetPort</code>/<code>ClientPort</code> (<code>gspreadmanager.ports.sheets</code>) con firmas
+  propias, y los adaptadores <code>GspreadWorksheet</code>/<code>GspreadSpreadsheet</code>/<code>GspreadClientAdapter</code>
+  (<code>gspreadmanager.infrastructure</code>) que los implementan envolviendo gspread. La capa de
+  aplicación pasa a depender de los puertos (no de <code>Any</code>); el enum <code>ValueInputOption</code> queda
+  confinado al adaptador. gspread queda 100% sustituible: un cliente nativo futuro implementa
+  los mismos puertos sin tocar dominio ni aplicación.</li>
+<li><strong>Sprint 4 de purificación — request builders + cableado de los value objects de
+  validación:</strong> <code>_grid</code> y los dicts crudos de <code>setDataValidation</code>/<code>addConditionalFormatRule</code>
+  se mueven a <code>gspreadmanager.infrastructure.request_builders</code>, que convierte A1 -&gt; GridRange
+  (vía gspread) y arma las peticiones desde los VOs del dominio (<code>DataValidationRule</code>,
+  <code>ConditionalFormatRule</code>, <code>GridRange</code>). <code>set_data_validation</code> y <code>add_conditional_format</code> del
+  conector pasan a delegar en estos builders. Nuevos golden-tests del módulo. Sin cambios de
+  comportamiento (peticiones byte a byte idénticas).</li>
+<li><strong>Sprint 3 de purificación — estrategias de autenticación + adaptador con caché:</strong> la
+  cadena <code>if-elif</code> de <code>GoogleSheetConector._build_client</code> se reemplaza por una estrategia
+  por método (<code>PreauthorizedClientAuth</code>, <code>CredentialsAuth</code>, <code>ServiceAccountInfoAuth</code>,
+  <code>ServiceAccountFileAuth</code>, <code>ADCAuth</code>) detrás del puerto <code>AuthStrategy</code>
+  (<code>gspreadmanager.ports.auth</code>) y una factory <code>build_auth_strategy</code>
+  (<code>gspreadmanager.infrastructure.auth</code>). El caché de cliente y documentos se encapsula en
+  <code>GspreadClientAdapter</code> (<code>gspreadmanager.infrastructure.gspread_client</code>). Nuevos tests
+  aíslan auth y caché del conector. Sin cambios de comportamiento (misma precedencia y
+  mismos mensajes de error).</li>
+<li><strong>Sprint 2 de purificación — puerto <code>RetryPolicy</code> (<code>gspreadmanager.ports.retry</code>) e
+  implementación <code>ExponentialBackoffRetry</code> (<code>gspreadmanager.infrastructure.retry</code>):</strong> el
+  reintento deja de leer <code>self.max_retries</code>/<code>self.retry_backoff</code> y pasa a ser una política
+  inyectable (<code>run(operation)</code>). El decorador <code>retry_on_rate_limit</code> se conserva como capa
+  de compatibilidad que delega en la política. Nuevos tests aíslan la política del conector.
+  Sin cambios de comportamiento (misma semántica: 429/500/503, backoff <code>b·2^intento</code>).</li>
+<li><strong>Sprint 1 de purificación — capa de dominio (<code>gspreadmanager.domain</code>):</strong> nuevos value
+  objects inmutables (<code>@dataclass(frozen=True)</code>) que serializan a la forma JSON de la
+  Sheets API. Se mueven los modelos de formato (<code>Color</code>, <code>TextFormat</code>, <code>NumberFormat</code>,
+  <code>Border</code>, <code>Borders</code>, <code>CellFormat</code>) a <code>domain/values/</code> y se agregan <code>A1Range</code>,
+  <code>GridRange</code>, <code>SpreadsheetId</code>, <code>WorksheetRef</code>, <code>Condition</code>, <code>DataValidationRule</code> y
+  <code>ConditionalFormatRule</code>. Jerarquía de errores en <code>domain/errors.py</code> (nuevos
+  <code>InvalidColorError</code>, <code>InvalidRangeError</code>, <code>InvalidIdentifierError</code>, todos subclase de
+  <code>ValueError</code> por compatibilidad). <code>gspreadmanager.formatting</code> y
+  <code>gspreadmanager.exceptions</code> quedan como shims de re-export: los imports antiguos y la
+  identidad de las clases se mantienen. Sin cambios de comportamiento.</li>
+</ul>
+<h3 id="changed_1">Changed</h3>
+<ul>
+<li><strong>Sprint 0 de purificación (tooling, sin cambios de comportamiento):</strong> ruff estricto
+  (se suman <code>W</code>, <code>C4</code>, <code>SIM</code>, <code>TID</code>, <code>PTH</code>, <code>RET</code>, <code>ARG</code>, <code>PIE</code>, <code>PERF</code>, <code>PL</code>, <code>RUF</code>,
+  <code>ANN</code>, <code>S</code>, <code>PT</code>, <code>D</code>) con <code>per-file-ignores</code> para <code>tests/</code>; mypy en modo <code>strict</code>
+  ahora también type-checkea <code>tests/</code>, con el <code>Any</code> de gspread acotado al borde
+  (<code>gspreadmanager.connector</code>) vía override. Pin de <code>ruff-pre-commit</code> actualizado.
+  Primer paso del plan de migración hacia DDD/SOLID/Clean (2.0).</li>
+</ul>
+<h2 id="120-2026-06-07">[1.2.0] - 2026-06-07</h2>
+<h3 id="added_3">Added</h3>
+<ul>
+<li><strong>Formato de celdas (implementación propia, sin dependencias nuevas):</strong> módulo
+  <code>gspreadmanager.formatting</code> con modelo tipado (<code>CellFormat</code>, <code>Color</code>, <code>TextFormat</code>,
+  <code>NumberFormat</code>, <code>Border</code>, <code>Borders</code>), exportado desde el paquete.</li>
+<li>Métodos en el conector: <code>format_range</code>, <code>format_header</code>, <code>set_background</code>,
+  <code>set_text_format</code>, <code>set_number_format</code>, <code>freeze</code>, <code>merge</code>.</li>
+<li><strong>Validación de datos:</strong> <code>add_dropdown</code>, <code>add_checkbox</code>, <code>set_data_validation</code>.</li>
+<li><strong>Formato condicional:</strong> <code>add_conditional_format</code> (reglas booleanas).</li>
+<li><strong>Operaciones a nivel documento (Drive):</strong> <code>create_spreadsheet</code>, <code>delete_spreadsheet</code>,
+  <code>copy_spreadsheet</code>, <code>list_spreadsheets</code>.</li>
+<li><strong>Compartir / permisos:</strong> <code>share</code>, <code>list_permissions</code>, <code>remove_permission</code>.</li>
+</ul>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>Decisión de diseño: en lugar de depender de <code>gspread-formatting</code> (~1.564 LOC, un solo
+  mantenedor), se implementó un modelo propio y enfocado sobre el transporte de gspread
+  (<code>worksheet.format</code>, <code>freeze</code>, <code>merge_cells</code> y <code>spreadsheets.batchUpdate</code>). Ver
+  <a href="https://github.com/PabloAlaniz/GSpreadManager/blob/main/docs/competitive-analysis.md">análisis competitivo</a>.</li>
+</ul>
+<h2 id="110-2026-06-07">[1.1.0] - 2026-06-07</h2>
+<h3 id="added_4">Added</h3>
+<ul>
+<li><strong>Autenticación flexible:</strong> además del service account por archivo, ahora se acepta
+  <code>credentials</code> (objeto google-auth), <code>client</code> (cliente gspread ya autorizado),
+  <code>service_account_info</code> (dict) y <code>use_adc=True</code> (Application Default Credentials).</li>
+<li>Documento de <a href="https://github.com/PabloAlaniz/GSpreadManager/blob/main/docs/competitive-analysis.md">análisis competitivo</a> y roadmap actualizado.</li>
+</ul>
+<h3 id="changed_2">Changed</h3>
+<ul>
+<li><strong>Caché de cliente y documento:</strong> cambiar de pestaña ya no re-autentica ni reabre el
+  documento (antes <code>connect_to_sheet</code> reconstruía el cliente en cada llamada).</li>
+<li><code>json_google_file</code> pasa a ser opcional (default <code>None</code>) para habilitar los otros métodos
+  de autenticación; sigue siendo el segundo parámetro posicional (compatible).</li>
+</ul>
+<h2 id="100-2026-06-07">[1.0.0] - 2026-06-07</h2>
+<p>Primer release estable. Consolida los sprints de estabilización, tipado, robustez y features.</p>
+<h3 id="added_5">Added</h3>
+<ul>
+<li>Sitio de documentación con <strong>MkDocs Material</strong> + <strong>mkdocstrings</strong> (<code>docs/</code>, <code>mkdocs.yml</code>).</li>
+<li><strong>Bandit</strong> (escaneo de seguridad) integrado al job de lint del CI; job de build de docs.</li>
+<li>Badges de CI, mypy y ruff en el README.</li>
+</ul>
+<h3 id="changed_3">Changed</h3>
+<ul>
+<li>Estado del paquete a <code>Development Status :: 5 - Production/Stable</code>; clasificadores
+  <code>Typing :: Typed</code> y de tópicos.</li>
+<li><code>.gitignore</code> ampliado para cubrir artefactos de build, caches y <code>site/</code>.</li>
+</ul>
+<h2 id="040-2026-06-07">[0.4.0] - 2026-06-07</h2>
+<h3 id="added_6">Added</h3>
+<ul>
+<li>Gestión de hojas: <code>create_sheet(title, rows, cols, index, activate)</code> y <code>delete_sheet(title)</code>.</li>
+<li><code>clear_range(ranges=None, tab_name=None)</code>: limpia uno o varios rangos, o toda la hoja.</li>
+<li><code>find_cell(query, case_sensitive=True)</code>: devuelve la primera celda coincidente o <code>None</code>.</li>
+<li>Integración con pandas: <code>from_gsheet(...)</code> (lee como DataFrame) y
+  <code>to_gsheet(df, tab_name, include_header, clear)</code> (vuelca un DataFrame a la hoja).</li>
+<li>Soporte de <strong>context manager</strong>: <code>with GoogleSheetConector(...) as conn:</code>.</li>
+</ul>
+<h2 id="030-2026-06-07">[0.3.0] - 2026-06-07</h2>
+<h3 id="added_7">Added</h3>
+<ul>
+<li><code>pyproject.toml</code> con metadata de packaging moderna (PEP 621) y versión dinámica.</li>
+<li>Archivo <code>LICENSE</code> (MIT) y <code>CONTRIBUTING.md</code>.</li>
+<li>Configuración de <code>ruff</code> (lint + format), <code>mypy</code> y <code>.pre-commit-config.yaml</code>.</li>
+<li>Extra opcional <code>pandas</code> (<code>pip install GSpreadManager[pandas]</code>) y extra <code>dev</code>.</li>
+<li><strong>Type hints</strong> en todos los métodos públicos de <code>GoogleSheetConector</code>.</li>
+<li>Marcador <code>py.typed</code> (PEP 561) para que los consumidores reciban los tipos.</li>
+<li><strong>Reintentos automáticos con backoff exponencial</strong> ante errores transitorios de la API
+  (HTTP 429/500/503), configurables vía <code>max_retries</code> y <code>retry_backoff</code> en el constructor.</li>
+<li><strong>Excepciones propias</strong> <code>GSpreadManagerError</code> e <code>InsertError</code>, exportadas desde el paquete.</li>
+</ul>
+<h3 id="changed_4">Changed</h3>
+<ul>
+<li><strong>BREAKING:</strong> los métodos <code>update_cell</code>, <code>update_row</code>, <code>spreadsheet_read_range</code> y
+  <code>get_row_with_empty_in_column</code> ya no reciben <code>sheet</code> como primer parámetro; usan la hoja
+  activa del conector. <code>sheet</code> sigue aceptándose como argumento opcional final por
+  compatibilidad, pero emite <code>DeprecationWarning</code>.</li>
+<li><strong><code>pandas</code> ahora es una dependencia opcional</strong>, ya no se instala por defecto. Solo
+  se requiere para <code>read_sheet_data(output_format='pandas')</code>, que lo importa de forma
+  lazy y lanza un <code>ImportError</code> claro si no está instalado.</li>
+<li>Versión unificada: <code>gspreadmanager.__version__</code> es la única fuente de verdad,
+  antes había desincronización entre <code>__init__.py</code> (0.1.5) y <code>setup.py</code> (0.2.0).</li>
+<li><code>requires-python</code> elevado a <code>&gt;=3.9</code>; CI con matriz 3.9–3.12, lint (<code>ruff</code> + <code>mypy</code>) y
+  cobertura sobre <code>gspreadmanager</code>.</li>
+<li><code>value_input_option</code> usa el enum <code>gspread.utils.ValueInputOption</code> en lugar de strings sueltos.</li>
+</ul>
+<h3 id="fixed_1">Fixed</h3>
+<ul>
+<li><code>spreadsheet_read_range</code> y <code>spreadsheet_insert</code> llamaban a <code>values_get</code>/<code>values_append</code>
+  sobre el <code>Worksheet</code>; ahora se invocan correctamente sobre el <code>Spreadsheet</code>
+  (<code>sheet.spreadsheet</code>), evitando un <code>AttributeError</code> en runtime con gspread 6.x.</li>
+<li><code>spreadsheet_insert</code> construía el rango con <code>chr(ord('A') + n)</code>, que se rompía más allá de
+  la columna Z; ahora usa <code>gspread.utils.rowcol_to_a1</code> y soporta cualquier cantidad de columnas.</li>
+<li><code>spreadsheet_insert</code> ahora lanza <code>InsertError</code> (antes <code>Exception</code> genérica).</li>
+</ul>
+<h2 id="020-2026-02-22">[0.2.0] - 2026-02-22</h2>
+<h3 id="changed_5">Changed</h3>
+<ul>
+<li><strong>BREAKING:</strong> Migrated from deprecated <code>oauth2client</code> to <code>google-auth</code> library</li>
+<li><code>oauth2client</code> has been deprecated by Google since 2017</li>
+<li>Replaced <code>oauth2client.service_account.ServiceAccountCredentials</code> with <code>google.oauth2.service_account.Credentials</code></li>
+<li>Updated dependency from <code>oauth2client&gt;=4.0</code> to <code>google-auth&gt;=2.0</code></li>
+</ul>
+<h3 id="migration-guide">Migration Guide</h3>
+<p><strong>For most users:</strong> The change is transparent. The API remains the same:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">gspreadmanager</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleSheetConector</span>
+
+<span class="c1"># This still works exactly as before</span>
+<span class="n">conector</span> <span class="o">=</span> <span class="n">GoogleSheetConector</span><span class="p">(</span>
+    <span class="n">doc_name</span><span class="o">=</span><span class="s1">&#39;My Sheet&#39;</span><span class="p">,</span>
+    <span class="n">json_google_file</span><span class="o">=</span><span class="s1">&#39;credentials.json&#39;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>For advanced users</strong> who may have been using internal authentication methods:</p>
+<p><strong>Before (v0.1.x):</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">oauth2client.service_account</span><span class="w"> </span><span class="kn">import</span> <span class="n">ServiceAccountCredentials</span>
+<span class="n">scope</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;https://spreadsheets.google.com/feeds&#39;</span><span class="p">,</span> 
+         <span class="s1">&#39;https://www.googleapis.com/auth/drive&#39;</span><span class="p">]</span>
+<span class="n">creds</span> <span class="o">=</span> <span class="n">ServiceAccountCredentials</span><span class="o">.</span><span class="n">from_json_keyfile_name</span><span class="p">(</span><span class="s1">&#39;creds.json&#39;</span><span class="p">,</span> <span class="n">scope</span><span class="p">)</span>
+</code></pre></div></p>
+<p><strong>After (v0.2.0):</strong>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">google.oauth2</span><span class="w"> </span><span class="kn">import</span> <span class="n">service_account</span>
+<span class="n">scope</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;https://spreadsheets.google.com/feeds&#39;</span><span class="p">,</span>
+         <span class="s1">&#39;https://www.googleapis.com/auth/drive&#39;</span><span class="p">]</span>
+<span class="n">creds</span> <span class="o">=</span> <span class="n">service_account</span><span class="o">.</span><span class="n">Credentials</span><span class="o">.</span><span class="n">from_service_account_file</span><span class="p">(</span>
+    <span class="s1">&#39;creds.json&#39;</span><span class="p">,</span>
+    <span class="n">scopes</span><span class="o">=</span><span class="n">scope</span>
+<span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Why this change?</strong>
+- <code>oauth2client</code> was deprecated in 2017 and is no longer maintained
+- <code>google-auth</code> is the official, actively maintained Google authentication library
+- Better security, performance, and future compatibility
+- Aligns with Google's recommended authentication practices</p>
+<p><strong>Compatibility:</strong>
+- Python 3.7+ (no change)
+- All public APIs remain unchanged
+- Service account JSON file format unchanged
+- No code changes required for standard usage</p>
+<h3 id="fixed_2">Fixed</h3>
+<ul>
+<li>Future-proofed authentication against <code>oauth2client</code> deprecation warnings</li>
+</ul>
+<h2 id="015-previous-release">[0.1.5] - Previous Release</h2>
+<ul>
+<li>Stable release with <code>oauth2client</code> dependency</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
