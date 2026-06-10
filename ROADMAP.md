@@ -91,7 +91,7 @@ gspread anunciaron que no pueden seguir manteniéndolo, lo que activa el dispara
    options (fórmulas).
 5. ✅ **Operaciones de alto nivel (v2.4):** `upsert` por clave (también para modelos),
    `worksheet_or_create`, `update_where`/`delete_where`, chunking automático de batch.
-6. **Hojas grandes (v2.5):** `iter_rows` paginado, lecturas/escrituras en streaming,
+6. ✅ **Hojas grandes (v2.5):** `iter_rows` paginado, lecturas/escrituras en streaming,
    caché v2 (TTL, LRU, invalidación por rango).
 7. **Pydantic y esquema avanzado (v2.6):** puerto `ModelCodec` (dataclasses + Pydantic v2
    opcional), `ensure_schema` con reporte de drift, coerciones extra (Decimal/Enum/Literal).

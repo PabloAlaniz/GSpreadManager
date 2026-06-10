@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–5 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
+Sprints 1–6 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
 cliente nativo de primera clase (gspread pasa a ser opcional), **paridad total** con
-gspread/pygsheets/EZSheets y la hoja como tabla.
+gspread/pygsheets/EZSheets, la hoja como tabla y streaming para hojas grandes.
 
 ### Added
+- **Streaming para hojas grandes (Sprint 6):** `ws.iter_rows(page_size=...)`,
+  `ws.iter_records(...)` (dicts por encabezado) y `ws.iter_as(Model, ...)` (dataclasses) —
+  iteradores perezosos que leen de a páginas vía `values_get`; cada página con su propio
+  retry y permiso del rate limiter. Solo se materializa una página por vez.
+- **Caché v2 (Sprint 6):** TTL opcional (`SheetManager(cache_ttl=...)`, acota la ventana de
+  staleness), límite de entradas con desalojo LRU (`cache_max_entries=...`; pasar
+  cualquiera de los dos activa la caché) e **invalidación selectiva**: `update_cell`/
+  `batch_update`/`batch_clear` solo invalidan lo cacheado que se superpone con el rango
+  escrito (nuevo `GridRange.overlaps` en el dominio); las escrituras de alcance hoja
+  (`update`/`append`/`clear`/formato) invalidan esa hoja sin tocar las demás; las
+  operaciones a nivel documento invalidan todo.
 - **La hoja como tabla (Sprint 5, nuevo `TableService`):**
   - `ws.upsert(rows, key=...)` — actualiza por columna clave y agrega lo nuevo; acepta
     dicts (actualiza solo las columnas presentes) o listas alineadas al encabezado;

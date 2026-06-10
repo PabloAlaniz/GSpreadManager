@@ -146,6 +146,26 @@ Las escrituras grandes (`append`, `batch_update`, `upsert`) se **parten automát
 en varias peticiones según `SheetManager(batch_cell_limit=...)` (50.000 celdas por defecto;
 cada chunk con su propio retry y permiso del rate limiter; `None` lo desactiva).
 
+## Hojas grandes (streaming)
+
+Para hojas de decenas de miles de filas, los iteradores leen **de a páginas** (lectura
+perezosa: una petición por página, cada una con su retry y su permiso del rate limiter):
+
+```python
+for fila in ws.iter_rows(page_size=2000):          # lista por fila
+    procesar(fila)
+
+for registro in ws.iter_records(page_size=2000):   # dict por fila (encabezado en fila 1)
+    procesar(registro["email"])
+
+for cliente in ws.iter_as(Cliente, page_size=2000):  # modelos tipados por página
+    procesar(cliente)
+```
+
+Para escrituras masivas, `append`/`batch_update`/`upsert` ya se parten solos
+(`batch_cell_limit`). Para DataFrames conviene `read_dataframe()` (materializa todo) o
+construir incrementalmente desde `iter_records`.
+
 ## Búsqueda
 
 ```python
@@ -387,8 +407,21 @@ ws.append([["x"]])  # invalida la caché del documento
 ws.read()        # vuelve a leer de la API
 ```
 
+La invalidación es **selectiva**: una escritura puntual (`update_cell`, `batch_update`)
+solo invalida lo que se superpone con el rango escrito; escribir en una pestaña no toca lo
+cacheado de las demás. Además:
+
+```python
+mgr = SheetManager(
+    "Mi Hoja", "creds.json",
+    cache_ttl=30,            # las entradas expiran a los 30s (acota el staleness)
+    cache_max_entries=500,   # límite de entradas con desalojo LRU
+)   # pasar cualquiera de los dos activa la caché sola
+```
+
 No detecta cambios hechos por **otros** procesos: si otra persona edita la hoja, forzá el
-refresco con `mgr.clear_cache()`. Por eso la caché es opt-in (por defecto está apagada).
+refresco con `mgr.clear_cache()` (o usá `cache_ttl` para acotar la ventana). Por eso la
+caché es opt-in (por defecto está apagada).
 
 ## Modelos de fila tipados (dataclasses)
 

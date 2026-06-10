@@ -107,7 +107,10 @@ Más allá de la paridad, dónde podemos liderar:
   *antes* de chocar la cuota, además del retry reactivo.
 - ✅ **Operaciones de alto nivel** (hecho, v2.4): `upsert`/`upsert_models` por clave,
   `worksheet_or_create`, `update_where`/`delete_where` y chunking automático de escrituras
-  (`batch_cell_limit`). Pendiente: *paginación/streaming* para hojas grandes (v2.5).
+  (`batch_cell_limit`).
+- ✅ **Streaming para hojas grandes** (hecho, v2.5): `iter_rows`/`iter_records`/`iter_as`
+  con paginación perezosa, y caché v2 (TTL, LRU, invalidación selectiva por rango/hoja) —
+  nadie en el ecosistema ofrece nada equivalente.
 - ✅ **CLI** (hecho): `gspreadmanager read/append/export/share`, sin dependencias extra.
 - **Documentación bilingüe (es/en)**: ya somos únicos en español; sumar inglés amplía alcance.
 
