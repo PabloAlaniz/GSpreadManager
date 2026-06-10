@@ -39,6 +39,7 @@ Documentation = "https://pabloalaniz.github.io/GSpreadManager/"
 Changelog = "https://github.com/PabloAlaniz/GSpreadManager/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
+async = ["httpx>=0.27"]
 gspread = ["gspread>=3.0"]
 pandas = ["pandas>=1.2.4"]
 pydantic = ["pydantic>=2.0"]
@@ -54,6 +55,7 @@ dev = [
     "mypy>=1.0",
     "bandit>=1.7",
     "gspread>=3.0",
+    "httpx>=0.27",
     "pandas>=1.2.4",
     "polars>=0.20",
     "pydantic>=2.0",
@@ -109,6 +111,7 @@ ban-relative-imports = "parents"
 "__init__.py" = ["F401"]
 # Spike del cliente nativo: métodos-stub con argumentos de interfaz aún sin usar.
 "gspreadmanager/infrastructure/native/sheets_api_client.py" = ["ARG002"]
+"gspreadmanager/infrastructure/native/async_client.py" = ["ARG002"]
 # polars no tiene índice: index_col/include_index son parte del puerto pero aquí no aplican.
 "gspreadmanager/infrastructure/polars_adapter.py" = ["ARG002"]
 # Backend en memoria: implementa la firma de los puertos pero ignora args sin efecto in-memory.

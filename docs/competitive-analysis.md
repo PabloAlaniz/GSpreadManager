@@ -95,8 +95,9 @@ sin equivalente en GSpreadManager.
 
 Más allá de la paridad, dónde podemos liderar:
 
-- **Async de verdad** (no threadpool): cliente `asyncio`-native sobre `httpx`, detrás de los
-  mismos puertos. gspread depende de `gspread-asyncio` (threadpool).
+- 🔄 **Async de verdad** (en curso, v3.0a): puertos async espejo + cliente nativo sobre
+  `httpx` + retry/rate-limit con `asyncio.sleep` ya implementados; falta la facade pública
+  (`AsyncSheetManager`, Sprint 10). gspread depende de `gspread-asyncio` (threadpool).
 - ✅ **Backend testeable sin red** (hecho): `gspreadmanager.testing.InMemoryBackend`, un fake
   in-memory que implementa los puertos para que los usuarios testeen sin tocar la API.
   A futuro, el cliente nativo REST se enchufa por el mismo `sheets_client` (ver ADR 0001).

@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–8 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
+Sprints 1–9 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
 cliente nativo de primera clase (gspread pasa a ser opcional), **paridad total** con
 gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes, modelos
-Pydantic y la API v4 profunda (charts/pivot/banding/metadata).
+Pydantic, la API v4 profunda (charts/pivot/banding/metadata) y el núcleo async.
 
 ### Added
+- **Async nativo, núcleo (Sprint 9):** asyncio real, no threadpool (nadie en el ecosistema
+  lo tiene; `gspread-asyncio` usa threads):
+  - Puertos async espejo (`ports/async_sheets.py`): `AsyncClientPort`/
+    `AsyncSpreadsheetPort`/`AsyncWorksheetPort` con la **misma superficie** que los
+    síncronos (verificado por test), más `AsyncRetryPolicy` y `AsyncRateLimiter`.
+  - `AsyncSheetsApiClient` (`infrastructure/native/async_client.py`): espejo async del
+    cliente nativo — Sheets v4 + Drive v3 completos, caché de documentos, 404 →
+    `SpreadsheetNotFoundError`, mismos errores de dominio.
+  - Sesión `httpx` autorizada (`build_async_session`, extra opcional
+    `pip install "GSpreadManager[async]"`): token Bearer de google-auth con refresh fuera
+    del event loop (`asyncio.to_thread`), timeout por petición, usable como
+    `async with`.
+  - `AsyncExponentialBackoffRetry` y `AsyncTokenBucketRateLimiter` con `asyncio.sleep`
+    (esperas cooperativas, sin bloquear el loop; reloj y sleep inyectables).
+  - La facade pública (`AsyncSheetManager`) llega en el Sprint 10 (release 3.0).
 - **API v4 profunda (Sprint 8, nuevo `VisualizationService`):**
   - `ws.add_chart(tipo, domain, series, title=..., anchor_cell=...)` — gráficos embebidos
     (LINE/BAR/COLUMN/AREA/SCATTER/PIE) y `ws.delete_chart(id)`.

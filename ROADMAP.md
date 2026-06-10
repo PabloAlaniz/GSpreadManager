@@ -97,7 +97,7 @@ gspread anunciaron que no pueden seguir manteniéndolo, lo que activa el dispara
    opcional), `ensure_schema` con reporte de drift, coerciones extra (Decimal/Enum/Literal).
 8. ✅ **API v4 profunda (v2.7):** charts, pivot tables, banding y developer metadata como
    value objects + requests (terreno donde solo pygsheets llega a medias).
-9. **Async nativo, parte 1 (v3.0a):** puertos async, cliente nativo sobre httpx
+9. ✅ **Async nativo, parte 1 (v3.0a):** puertos async, cliente nativo sobre httpx
    (extra `[async]`), retry y rate limiting con `asyncio.sleep`.
 10. **Async parte 2 + release 3.0:** `AsyncSheetManager`, in-memory async, **nativo como
     backend default** (culmina ADR 0001), documentación bilingüe es/en y release mayor.

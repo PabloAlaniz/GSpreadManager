@@ -13,12 +13,17 @@ de errores de la API a la jerarquía propia (``SheetsApiError`` es un ``ApiError
 Pendientes menores: mover a carpeta en ``create`` y semántica de ``with_link``.
 """
 
+from .async_client import AsyncSheetsApiClient
+from .async_http import AuthorizedAsyncSession, build_async_session
 from .http import DEFAULT_HTTP_TIMEOUT, TimeoutHttpSession, build_authorized_session
 from .sheets_api_client import SheetsApiClient
 
 __all__ = [
     "DEFAULT_HTTP_TIMEOUT",
+    "AsyncSheetsApiClient",
+    "AuthorizedAsyncSession",
     "SheetsApiClient",
     "TimeoutHttpSession",
+    "build_async_session",
     "build_authorized_session",
 ]
