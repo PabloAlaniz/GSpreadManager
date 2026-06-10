@@ -7,12 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–9 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
-cliente nativo de primera clase (gspread pasa a ser opcional), **paridad total** con
+## [3.0.0] - 2026-06-10
+
+Los 10 sprints del plan v2.2 → v3.0 (ver ROADMAP), publicados como un único release mayor:
+pureza de capas y contrato de errores, **cliente nativo como backend por defecto**
+(culmina el ADR 0001; gspread queda como extra opcional), **paridad total** con
 gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes, modelos
-Pydantic, la API v4 profunda (charts/pivot/banding/metadata) y el núcleo async.
+Pydantic, la API v4 profunda (charts/pivot/banding/metadata) y la **API async real**.
+Guía de migración: ``docs/migration-3.0.md``.
+
+### Breaking changes (desde 2.1.0)
+- **El backend por defecto es el cliente nativo** (REST sobre google-auth). Se usa gspread
+  solo si se pasa ``client=`` (preautorizado) o ``backend="gspread"``/``"auto"``.
+- **gspread es un extra opcional**: ``pip install "GSpreadManager[gspread]"``. El núcleo
+  solo depende de ``google-auth``.
 
 ### Added
+- **API async (Sprint 10):** ``AsyncSheetManager`` + ``AsyncWorksheetContext`` —
+  lectura (list/dict/render/numericise), escritura con chunking, streaming
+  (``iter_rows``/``iter_records``/``iter_as`` como async generators), la hoja como tabla
+  (``upsert``/``upsert_models``/``update_where``/``delete_where``), modelos tipados
+  (``read_as``/``append_models``/``write_models``/``ensure_schema``), import CSV,
+  find/replace, ``copy_to`` y operaciones de documento (Drive, permisos, propiedades,
+  export). Reutiliza la lógica pura del paquete (planners de tabla extraídos a funciones
+  de módulo en ``table_service``); usable como ``async with`` (cierra la sesión httpx).
+  Formato/validación/charts siguen, por ahora, solo en la API síncrona.
+- **``AsyncInMemoryBackend``** (``gspreadmanager.testing``): el mismo fake en memoria con
+  superficie async, para testear ``AsyncSheetManager`` sin red.
 - **Async nativo, núcleo (Sprint 9):** asyncio real, no threadpool (nadie en el ecosistema
   lo tiene; `gspread-asyncio` usa threads):
   - Puertos async espejo (`ports/async_sheets.py`): `AsyncClientPort`/
@@ -27,7 +48,6 @@ Pydantic, la API v4 profunda (charts/pivot/banding/metadata) y el núcleo async.
     `async with`.
   - `AsyncExponentialBackoffRetry` y `AsyncTokenBucketRateLimiter` con `asyncio.sleep`
     (esperas cooperativas, sin bloquear el loop; reloj y sleep inyectables).
-  - La facade pública (`AsyncSheetManager`) llega en el Sprint 10 (release 3.0).
 - **API v4 profunda (Sprint 8, nuevo `VisualizationService`):**
   - `ws.add_chart(tipo, domain, series, title=..., anchor_cell=...)` — gráficos embebidos
     (LINE/BAR/COLUMN/AREA/SCATTER/PIE) y `ws.delete_chart(id)`.

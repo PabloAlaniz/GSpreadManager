@@ -1,7 +1,7 @@
 # ADR 0001 — Dependencia de gspread: mantener, adaptar o reemplazar
 
-- **Estado:** Aceptado — opción B implementada; opción C **activada** (disparador cumplido,
-  ver actualización 2026-06-10)
+- **Estado:** Aceptado y **culminado** — opción C completada en la 3.0: el cliente nativo
+  es el backend por defecto y gspread quedó como extra opcional de compatibilidad
 - **Fecha:** 2026-06-08 (actualizado 2026-06-10)
 
 > **Actualización 2026-06-10 — disparador cumplido:** los maintainers de gspread anunciaron

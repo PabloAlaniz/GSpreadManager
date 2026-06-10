@@ -29,7 +29,8 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 - ⚡ **Robustez de cuota**: reintentos con backoff (429/500/503) + **rate limiting proactivo** (token bucket) + **caché de lecturas**
 - 🧪 **Testeable sin red**: backend en memoria (`gspreadmanager.testing`) que implementa los mismos puertos
 - ⌨️ **CLI**: `gspreadmanager read/append/export/share`
-- 🔌 **Backend nativo opcional** (`backend="native"`): cliente REST propio sobre `google-auth`, sin gspread en el medio
+- 🔌 **Cliente nativo por defecto** (REST sobre `google-auth`); gspread disponible como extra
+- ⚡ **API async real** (`AsyncSheetManager`, extra `[async]` con httpx): datos, streaming, tabla y modelos sin bloquear el loop
 - 🧱 **Arquitectura hexagonal** (dominio / aplicación / infraestructura / puertos) con type hints (PEP 561)
 - 📦 **Dependencias mínimas**: solo `gspread` y `google-auth` (`pandas`/`polars` opcionales)
 
@@ -43,11 +44,13 @@ pip install "GSpreadManager[gspread]"     # backend de gspread (default si está
 pip install "GSpreadManager[pandas]"      # DataFrames con pandas
 pip install "GSpreadManager[polars]"      # DataFrames con polars
 pip install "GSpreadManager[pydantic]"    # modelos de fila con Pydantic v2
+pip install "GSpreadManager[async]"       # API async (httpx)
 ```
 
-> Desde la v2.2 `gspread` es **opcional**: sin él, `SheetManager` usa automáticamente el
-> cliente nativo (REST sobre `google-auth`), con la misma API. Podés forzar el transporte
-> con `backend="gspread"` o `backend="native"`.
+> Desde la 3.0 el transporte por defecto es el **cliente nativo** (REST sobre
+> `google-auth`); `gspread` es un extra opcional con la misma API detrás de los mismos
+> puertos (`backend="gspread"` o `backend="auto"` para el comportamiento 2.x). Ver la
+> [guía de migración](https://pabloalaniz.github.io/GSpreadManager/migration-3.0/).
 
 ### Configuración en Google Cloud
 

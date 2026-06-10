@@ -29,11 +29,11 @@ mgr = SheetManager.open_by_url("https://docs.google.com/spreadsheets/d/1AbC...xy
 
 ### Backend nativo (sin gspread)
 
-Hay dos transportes intercambiables: el adaptador de **gspread** y el **cliente nativo**
-propio (REST directo sobre `google-auth`). El default es `backend="auto"`: usa gspread si
-está instalado (es un extra opcional: `pip install "GSpreadManager[gspread]"`) y si no, el
-nativo. La API es exactamente la misma — ambos backends implementan los mismos puertos y
-pasan el mismo test de contrato:
+Hay dos transportes intercambiables: el **cliente nativo** propio (REST directo sobre
+`google-auth`; **default desde la 3.0**) y el adaptador de **gspread** (extra opcional:
+`pip install "GSpreadManager[gspread]"`; se usa automáticamente si pasás `client=`). La API
+es exactamente la misma — ambos backends implementan los mismos puertos y pasan el mismo
+test de contrato:
 
 ```python
 mgr = SheetManager(
@@ -45,9 +45,32 @@ mgr = SheetManager(
 ```
 
 Funciona con `json_google_file`, `credentials`, `service_account_info` o `use_adc=True`
-(no con `client`, que es un cliente de gspread). Ver [benchmarks](benchmarks.md) para la
-comparación de rendimiento. Contexto: gspread quedó sin mantenimiento activo (ADR 0001);
-el nativo pasará a ser el default explícito en la 3.0.
+(no con `client`, que es un cliente de gspread). `backend="auto"` reproduce el default de
+la 2.x (gspread si está instalado). Ver [benchmarks](benchmarks.md) y la
+[guía de migración](migration-3.0.md). Contexto: gspread quedó sin mantenimiento activo
+(ADR 0001).
+
+### API async (`AsyncSheetManager`)
+
+Con el extra `pip install "GSpreadManager[async]"` (httpx), el flujo de datos completo
+está disponible en asyncio **real** (sin threadpool): lectura/escritura con chunking,
+streaming, la hoja como tabla, modelos tipados, import CSV, find/replace y las
+operaciones de documento. El retry y el rate limiting esperan con `asyncio.sleep`:
+
+```python
+from gspreadmanager import AsyncSheetManager
+
+async with AsyncSheetManager("Mi Hoja", json_google_file="creds.json",
+                             rate_limit=5) as mgr:
+    ws = await mgr.worksheet("Hoja1")
+    datos = await ws.read(output_format="dict")
+    await ws.upsert([{"id": "2", "nombre": "Luisa"}], key="id")
+    async for registro in ws.iter_records(page_size=2000):
+        procesar(registro)
+```
+
+Para testear sin red: `gspreadmanager.testing.AsyncInMemoryBackend` (mismo fake, superficie
+async). Formato/validación/charts siguen, por ahora, solo en la API síncrona.
 
 ## Lectura
 

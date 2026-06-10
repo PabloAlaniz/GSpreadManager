@@ -112,9 +112,10 @@ class TestNativeBackendWiring:
         with pytest.raises(GSpreadManagerError, match="No se proporcionaron credenciales"):
             SheetManager("Doc", backend="native")
 
-    def test_gspread_remains_default_backend(self):
-        mgr = SheetManager("Doc", credentials=Mock())
-        assert isinstance(mgr._client, GspreadClientAdapter)
+    def test_native_is_default_backend(self):
+        with patch("gspreadmanager.facade.build_authorized_session", return_value=FakeSession()):
+            mgr = SheetManager("Doc", credentials=Mock())
+        assert isinstance(mgr._client, SheetsApiClient)
 
 
 class TestNativeClientErrors:
@@ -160,11 +161,11 @@ class TestTimeoutHttpSession:
 
 
 class TestAutoBackend:
-    """``backend="auto"`` (default): gspread si está instalado, si no el nativo."""
+    """``backend="auto"`` (el default de la 2.x): gspread si está instalado, si no nativo."""
 
     def test_auto_prefers_gspread_when_installed(self):
         # En el entorno de dev gspread está instalado.
-        mgr = SheetManager("Doc", credentials=Mock())
+        mgr = SheetManager("Doc", credentials=Mock(), backend="auto")
         assert isinstance(mgr._client, GspreadClientAdapter)
 
     def test_auto_falls_back_to_native_without_gspread(self):
@@ -172,13 +173,18 @@ class TestAutoBackend:
             patch("gspreadmanager.facade.importlib.util.find_spec", return_value=None),
             patch("gspreadmanager.facade.build_authorized_session", return_value=FakeSession()),
         ):
-            mgr = SheetManager("Doc", credentials=Mock())
+            mgr = SheetManager("Doc", credentials=Mock(), backend="auto")
         assert isinstance(mgr._client, SheetsApiClient)
 
     def test_auto_with_preauthorized_client_uses_gspread(self):
         # Un `client` es un cliente de gspread: auto elige gspread aunque find_spec falle.
         with patch("gspreadmanager.facade.importlib.util.find_spec", return_value=None):
-            mgr = SheetManager("Doc", client=Mock())
+            mgr = SheetManager("Doc", client=Mock(), backend="auto")
+        assert isinstance(mgr._client, GspreadClientAdapter)
+
+    def test_default_with_preauthorized_client_uses_gspread(self):
+        # Compat 3.0: client= sin backend explícito implica gspread.
+        mgr = SheetManager("Doc", client=Mock())
         assert isinstance(mgr._client, GspreadClientAdapter)
 
     def test_explicit_gspread_without_package_raises_helpful_error(self):

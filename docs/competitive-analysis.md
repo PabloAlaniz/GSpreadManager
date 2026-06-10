@@ -3,12 +3,12 @@
 Comparación de **GSpreadManager** con las librerías del ecosistema Python para Google Sheets,
 y derivación del [ROADMAP](https://github.com/PabloAlaniz/GSpreadManager/blob/main/ROADMAP.md).
 
-_Última actualización: junio 2026 (post 2.3: paridad cerrada)._
+_Última actualización: junio 2026 (release 3.0)._
 
 > **Nota (jun-2026):** los maintainers de gspread anunciaron públicamente que no pueden
-> seguir manteniendo la librería y buscan nuevos maintainers. Esto cumple el disparador del
-> [ADR 0001](adr/0001-dependencia-de-gspread.md): el cliente nativo propio (hoy spike) se
-> promueve a adaptador de primera clase en los próximos sprints (ver ROADMAP).
+> seguir manteniendo la librería y buscan nuevos maintainers. Esto cumplió el disparador
+> del [ADR 0001](adr/0001-dependencia-de-gspread.md): desde la 3.0 el **cliente nativo
+> propio es el backend por defecto** y gspread quedó como extra opcional.
 
 ## Posicionamiento
 
@@ -77,7 +77,7 @@ oficial `google-api-python-client`.
 | **Banding (bandas alternadas)** | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 | **Developer metadata** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **DataFrame pluggable (pandas + polars)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
+| **Async (asyncio real)** | ✅ | ⚠️ vía `gspread-asyncio` (threadpool) | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 | **Rate limiting proactivo (token bucket)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **CLI** (`gspreadmanager ...`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
@@ -95,9 +95,10 @@ sin equivalente en GSpreadManager.
 
 Más allá de la paridad, dónde podemos liderar:
 
-- 🔄 **Async de verdad** (en curso, v3.0a): puertos async espejo + cliente nativo sobre
-  `httpx` + retry/rate-limit con `asyncio.sleep` ya implementados; falta la facade pública
-  (`AsyncSheetManager`, Sprint 10). gspread depende de `gspread-asyncio` (threadpool).
+- ✅ **Async de verdad** (hecho, 3.0): `AsyncSheetManager` sobre puertos async espejo y
+  cliente nativo `httpx`, con retry/rate-limit cooperativos (`asyncio.sleep`) y
+  `AsyncInMemoryBackend` para testear sin red. gspread depende de `gspread-asyncio`
+  (threadpool); nadie más tiene asyncio real.
 - ✅ **Backend testeable sin red** (hecho): `gspreadmanager.testing.InMemoryBackend`, un fake
   in-memory que implementa los puertos para que los usuarios testeen sin tocar la API.
   A futuro, el cliente nativo REST se enchufa por el mismo `sheets_client` (ver ADR 0001).
@@ -127,8 +128,8 @@ Más allá de la paridad, dónde podemos liderar:
 
 ## Conclusiones
 
-- **Paridad total (v2.3):** no queda capacidad de gspread/pygsheets/EZSheets sin equivalente
-  en GSpreadManager; el único ❌ restante de la tabla es **async**, planificado para la 3.0.
+- **Paridad total y tabla cerrada (3.0):** no queda capacidad del ecosistema sin
+  equivalente en GSpreadManager, y la columna propia no tiene ningún ❌ — async incluido.
 - **Independencia (v2.2):** con gspread sin mantenimiento, el cliente nativo propio ya es de
   primera clase (`backend="auto"`/`"native"`) y gspread es un extra opcional.
 - **Diferenciación:** arquitectura hexagonal (backend reemplazable, testeable sin red), tipado

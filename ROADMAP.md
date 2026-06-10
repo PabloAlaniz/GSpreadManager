@@ -42,7 +42,8 @@ quedó sin mantenimiento activo, así que la opción C está en ejecución.
 - [x] **gspread como extra opcional** (`pip install "GSpreadManager[gspread]"`) con
       `backend="auto"`: usa gspread si está instalado, si no el nativo. El núcleo solo
       depende de google-auth (Sprint 3). Benchmarks: `benchmarks/run_benchmarks.py`.
-- [ ] **Nativo como default explícito** (independiente de qué haya instalado) — release 3.0.
+- [x] **Nativo como default explícito** (3.0): ``SheetManager`` usa el nativo salvo
+      ``client=`` o ``backend="gspread"/"auto"``. **ADR 0001 culminado.**
 
 ## ✅ v2.1 — Paridad con gspread/pygsheets + diferenciación (RELEASED)
 
@@ -99,5 +100,8 @@ gspread anunciaron que no pueden seguir manteniéndolo, lo que activa el dispara
    value objects + requests (terreno donde solo pygsheets llega a medias).
 9. ✅ **Async nativo, parte 1 (v3.0a):** puertos async, cliente nativo sobre httpx
    (extra `[async]`), retry y rate limiting con `asyncio.sleep`.
-10. **Async parte 2 + release 3.0:** `AsyncSheetManager`, in-memory async, **nativo como
-    backend default** (culmina ADR 0001), documentación bilingüe es/en y release mayor.
+10. ✅ **Async parte 2 + release 3.0:** `AsyncSheetManager` + `AsyncWorksheetContext`
+    (datos/streaming/tabla/modelos/documento), `AsyncInMemoryBackend`, **nativo como
+    backend default** (culmina ADR 0001), guía de migración, página en inglés y release
+    3.0.0. Pendiente post-3.0: traducción completa de la guía al inglés; caché y
+    formato/charts en la API async.
