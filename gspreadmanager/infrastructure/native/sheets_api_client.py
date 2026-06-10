@@ -1,10 +1,11 @@
-"""Cliente nativo (spike) de Google Sheets/Drive vía REST, detrás de los puertos.
+"""Cliente nativo de Google Sheets/Drive vía REST, detrás de los puertos.
 
 Implementa ``ClientPort`` / ``SpreadsheetPort`` / ``WorksheetPort`` llamando a la Sheets API
-v4 y la Drive API v3 a través de una ``HttpSession`` (inyectable). **No está cableado** en el
-facade: gspread sigue siendo el adaptador por defecto. Cubre todas las operaciones de los
-puertos, con mapeo de errores de la API a ``SheetsApiError``; quedan pendientes refinamientos
-menores (mover a carpeta en ``create``, semántica de ``with_link``).
+v4 y la Drive API v3 a través de una ``HttpSession`` (inyectable). Se cablea con
+``SheetManager(backend="native")`` (opt-in; gspread sigue siendo el default hasta la 3.0 —
+ver ADR 0001). Cubre todas las operaciones de los puertos, con mapeo de errores de la API a
+``SheetsApiError`` (jerarquía de dominio); quedan pendientes refinamientos menores (mover a
+carpeta en ``create``, semántica de ``with_link``).
 """
 
 from __future__ import annotations
@@ -14,11 +15,15 @@ from typing import Any
 from urllib.parse import quote
 
 from gspreadmanager.config import DEFAULT_VALUE_INPUT_OPTION
-from gspreadmanager.domain.errors import GSpreadManagerError
+from gspreadmanager.domain.errors import (
+    GSpreadManagerError,
+    SpreadsheetNotFoundError,
+    WorksheetNotFoundError,
+)
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
 from ._a1 import a1_to_grid_range, rowcol_to_a1
-from .errors import SheetsApiError
+from .errors import SheetsApiError, build_sheets_api_error
 from .http import HttpResponse, HttpSession
 
 SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets"
@@ -27,7 +32,11 @@ _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
 
 
 def _ensure_ok(response: HttpResponse) -> None:
-    """Lanza ``SheetsApiError`` si la respuesta no es exitosa (al estilo de gspread.APIError)."""
+    """Lanza ``SheetsApiError`` si la respuesta no es exitosa (al estilo de gspread.APIError).
+
+    429/403 producen las subclases ``SheetsQuotaExceededError`` / ``SheetsPermissionDeniedError``
+    (que también heredan de los errores de dominio correspondientes).
+    """
     if response.ok:
         return
     code, status, message = response.status_code, "UNKNOWN", response.text
@@ -38,7 +47,7 @@ def _ensure_ok(response: HttpResponse) -> None:
         message = error.get("message", message)
     except (ValueError, KeyError, TypeError):
         pass
-    raise SheetsApiError(code, status, message)
+    raise build_sheets_api_error(code, status, message)
 
 
 class _ApiCaller:
@@ -65,6 +74,13 @@ class _ApiCaller:
         _ensure_ok(response)
         return response.json()
 
+    def _patch(
+        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
+    ) -> Any:
+        response = self._session.patch(url, params=params, json=json)
+        _ensure_ok(response)
+        return response.json()
+
     def _delete(self, url: str) -> None:
         response = self._session.delete(url)
         _ensure_ok(response)
@@ -79,40 +95,69 @@ class Cell:
     value: str
 
 
+_HTTP_NOT_FOUND = 404
+
+
 class SheetsApiClient(_ApiCaller):
-    """``ClientPort`` nativo: abre documentos (Drive) y opera a nivel Drive/Sheets."""
+    """``ClientPort`` nativo: abre documentos (Drive) y opera a nivel Drive/Sheets.
+
+    Cachea los documentos abiertos por nombre/key (como el adaptador de gspread): pedir
+    otra pestaña del mismo documento no repite la búsqueda en Drive ni la carga de metadata.
+    """
 
     def __init__(self, session: HttpSession) -> None:
         """Recibe una sesión HTTP autorizada (ver ``build_authorized_session``)."""
         self._session = session
+        self._spreadsheets: dict[str, SpreadsheetPort] = {}
 
     def open(self, doc_name: str) -> SpreadsheetPort:
-        """Resuelve el documento por nombre (Drive) y carga sus hojas (Sheets)."""
-        files = self._get(
-            DRIVE_FILES,
-            params={
-                "q": f"name = '{doc_name}' and mimeType = '{_SPREADSHEET_MIME}' and trashed = false",
-                "fields": "files(id,name)",
-            },
-        ).get("files", [])
-        if not files:
-            raise GSpreadManagerError(f"No se encontró el documento '{doc_name}'.")
-        return self.open_by_key(files[0]["id"])
+        """Resuelve el documento por nombre (Drive) y carga sus hojas (Sheets), cacheándolo."""
+        if doc_name not in self._spreadsheets:
+            files = self._get(
+                DRIVE_FILES,
+                params={
+                    "q": (
+                        f"name = '{doc_name}' and mimeType = '{_SPREADSHEET_MIME}' "
+                        "and trashed = false"
+                    ),
+                    "fields": "files(id,name)",
+                },
+            ).get("files", [])
+            if not files:
+                raise SpreadsheetNotFoundError(f"No se encontró el documento '{doc_name}'.")
+            self._spreadsheets[doc_name] = self.open_by_key(files[0]["id"])
+        return self._spreadsheets[doc_name]
 
     def open_by_key(self, key: str) -> SpreadsheetPort:
-        """Carga las hojas del documento por su key (id) y lo devuelve."""
-        meta = self._get(
-            f"{SHEETS_BASE}/{key}",
-            params={"fields": "sheets.properties(sheetId,title)"},
-        )
-        sheets = [
-            (s["properties"]["title"], s["properties"]["sheetId"]) for s in meta.get("sheets", [])
-        ]
-        return NativeSpreadsheet(self._session, key, sheets)
+        """Carga las hojas del documento por su key (id) y lo devuelve, cacheándolo."""
+        if key not in self._spreadsheets:
+            try:
+                meta = self._get(
+                    f"{SHEETS_BASE}/{key}",
+                    params={"fields": "sheets.properties(sheetId,title)"},
+                )
+            except SheetsApiError as exc:
+                if exc.code == _HTTP_NOT_FOUND:
+                    raise SpreadsheetNotFoundError(
+                        f"No se encontró el documento con key '{key}'."
+                    ) from exc
+                raise
+            sheets = [
+                (s["properties"]["title"], s["properties"]["sheetId"])
+                for s in meta.get("sheets", [])
+            ]
+            self._spreadsheets[key] = NativeSpreadsheet(self._session, key, sheets)
+        return self._spreadsheets[key]
 
     def create(self, title: str, folder_id: str | None) -> Any:
-        """Crea un documento (Sheets API). ``folder_id`` aún no se mueve (spike)."""
-        return self._post(SHEETS_BASE, json={"properties": {"title": title}})
+        """Crea un documento (Sheets API); con ``folder_id`` lo mueve a esa carpeta (Drive)."""
+        result = self._post(SHEETS_BASE, json={"properties": {"title": title}})
+        if folder_id is not None:
+            self._patch(
+                f"{DRIVE_FILES}/{result['spreadsheetId']}",
+                params={"addParents": folder_id, "removeParents": "root", "fields": "id,parents"},
+            )
+        return result
 
     def del_spreadsheet(self, file_id: str) -> None:
         """Elimina un documento (Drive)."""
@@ -173,7 +218,7 @@ class NativeSpreadsheet(_ApiCaller):
         for name, sheet_id in self._sheets:
             if name == title:
                 return sheet_id
-        raise GSpreadManagerError(f"No existe la hoja '{title}'.")
+        raise WorksheetNotFoundError(f"No existe la hoja '{title}'.")
 
     @property
     def sheet1(self) -> WorksheetPort:
@@ -313,13 +358,14 @@ class NativeWorksheet(_ApiCaller):
     def _values_url(self, a1_range: str) -> str:
         return f"{SHEETS_BASE}/{self._ss_id}/values/{quote(a1_range, safe='')}"
 
-    def get_all_values(self) -> list[list[str]]:
+    def get_all_values(self, value_render_option: str | None = None) -> list[list[str]]:
         """Lee toda la hoja (``values.get``), rellenando filas a un ancho uniforme.
 
         La API recorta celdas vacías al final de cada fila; se rellenan para devolver una
         matriz rectangular (como ``gspread.Worksheet.get_all_values``).
         """
-        data = self._parent.values_get(self._title)
+        params = {"valueRenderOption": value_render_option} if value_render_option else None
+        data = self._get(self._values_url(self._title), params=params)
         rows: list[list[str]] = data.get("values", [])
         width = max((len(row) for row in rows), default=0)
         return [row + [""] * (width - len(row)) for row in rows]
@@ -452,3 +498,10 @@ class NativeWorksheet(_ApiCaller):
             }
         }
         return self._parent.batch_update({"requests": [request]})
+
+    def copy_to(self, destination_spreadsheet_id: str) -> Any:
+        """Copia esta hoja a otro documento (``sheets.copyTo``)."""
+        return self._post(
+            f"{SHEETS_BASE}/{self._ss_id}/sheets/{self._sheet_id}:copyTo",
+            json={"destinationSpreadsheetId": destination_spreadsheet_id},
+        )

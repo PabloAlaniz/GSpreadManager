@@ -7,14 +7,19 @@ operaciones a nivel Drive. ``open`` devuelve un ``SpreadsheetPort`` (adaptador).
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from gspreadmanager.ports.auth import AuthStrategy
 from gspreadmanager.ports.sheets import SpreadsheetPort
 
 from .gspread_adapters import GspreadSpreadsheet
+from .gspread_errors import translates_gspread_errors
+
+logger = logging.getLogger(__name__)
 
 
+@translates_gspread_errors
 class GspreadClientAdapter:
     """Cliente de gspread con caché perezoso de autorización y de documentos."""
 
@@ -27,18 +32,21 @@ class GspreadClientAdapter:
     def _raw_client(self) -> Any:
         """Devuelve el cliente de gspread, autorizándolo (y cacheándolo) la primera vez."""
         if self._client is None:
+            logger.debug("Autenticando cliente de gspread.")
             self._client = self._auth.authorize()
         return self._client
 
     def open(self, doc_name: str) -> SpreadsheetPort:
         """Devuelve el documento (adaptado), cacheándolo por nombre para no reabrirlo."""
         if doc_name not in self._spreadsheets:
+            logger.debug("Abriendo documento por nombre: %r.", doc_name)
             self._spreadsheets[doc_name] = self._raw_client().open(doc_name)
         return GspreadSpreadsheet(self._spreadsheets[doc_name])
 
     def open_by_key(self, key: str) -> SpreadsheetPort:
         """Devuelve el documento por su key (id de Drive), cacheándolo."""
         if key not in self._spreadsheets:
+            logger.debug("Abriendo documento por key: %r.", key)
             self._spreadsheets[key] = self._raw_client().open_by_key(key)
         return GspreadSpreadsheet(self._spreadsheets[key])
 

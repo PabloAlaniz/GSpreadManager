@@ -7,6 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-06-10
+
+Los 10 sprints del plan v2.2 → v3.0 (ver ROADMAP), publicados como un único release mayor:
+pureza de capas y contrato de errores, **cliente nativo como backend por defecto**
+(culmina el ADR 0001; gspread queda como extra opcional), **paridad total** con
+gspread/pygsheets/EZSheets, la hoja como tabla, streaming para hojas grandes, modelos
+Pydantic, la API v4 profunda (charts/pivot/banding/metadata) y la **API async real**.
+Guía de migración: ``docs/migration-3.0.md``.
+
+### Breaking changes (desde 2.1.0)
+- **El backend por defecto es el cliente nativo** (REST sobre google-auth). Se usa gspread
+  solo si se pasa ``client=`` (preautorizado) o ``backend="gspread"``/``"auto"``.
+- **gspread es un extra opcional**: ``pip install "GSpreadManager[gspread]"``. El núcleo
+  solo depende de ``google-auth``.
+
+### Added
+- **API async (Sprint 10):** ``AsyncSheetManager`` + ``AsyncWorksheetContext`` —
+  lectura (list/dict/render/numericise), escritura con chunking, streaming
+  (``iter_rows``/``iter_records``/``iter_as`` como async generators), la hoja como tabla
+  (``upsert``/``upsert_models``/``update_where``/``delete_where``), modelos tipados
+  (``read_as``/``append_models``/``write_models``/``ensure_schema``), import CSV,
+  find/replace, ``copy_to`` y operaciones de documento (Drive, permisos, propiedades,
+  export). Reutiliza la lógica pura del paquete (planners de tabla extraídos a funciones
+  de módulo en ``table_service``); usable como ``async with`` (cierra la sesión httpx).
+  Formato/validación/charts siguen, por ahora, solo en la API síncrona.
+- **``AsyncInMemoryBackend``** (``gspreadmanager.testing``): el mismo fake en memoria con
+  superficie async, para testear ``AsyncSheetManager`` sin red.
+- **Async nativo, núcleo (Sprint 9):** asyncio real, no threadpool (nadie en el ecosistema
+  lo tiene; `gspread-asyncio` usa threads):
+  - Puertos async espejo (`ports/async_sheets.py`): `AsyncClientPort`/
+    `AsyncSpreadsheetPort`/`AsyncWorksheetPort` con la **misma superficie** que los
+    síncronos (verificado por test), más `AsyncRetryPolicy` y `AsyncRateLimiter`.
+  - `AsyncSheetsApiClient` (`infrastructure/native/async_client.py`): espejo async del
+    cliente nativo — Sheets v4 + Drive v3 completos, caché de documentos, 404 →
+    `SpreadsheetNotFoundError`, mismos errores de dominio.
+  - Sesión `httpx` autorizada (`build_async_session`, extra opcional
+    `pip install "GSpreadManager[async]"`): token Bearer de google-auth con refresh fuera
+    del event loop (`asyncio.to_thread`), timeout por petición, usable como
+    `async with`.
+  - `AsyncExponentialBackoffRetry` y `AsyncTokenBucketRateLimiter` con `asyncio.sleep`
+    (esperas cooperativas, sin bloquear el loop; reloj y sleep inyectables).
+- **API v4 profunda (Sprint 8, nuevo `VisualizationService`):**
+  - `ws.add_chart(tipo, domain, series, title=..., anchor_cell=...)` — gráficos embebidos
+    (LINE/BAR/COLUMN/AREA/SCATTER/PIE) y `ws.delete_chart(id)`.
+  - `ws.add_pivot_table(source, anchor_cell, rows=..., values=..., columns=...)` — pivot
+    tables (offsets 0-based + función de agregación).
+  - `ws.set_banding(rango, first_color=..., second_color=..., header_color=...)` y
+    `ws.delete_banding(id)` — bandas de color alternadas.
+  - **Developer metadata**: `ws.set_developer_metadata` (por pestaña),
+    `mgr.set_developer_metadata` (por documento), `mgr.list_developer_metadata` y
+    `mgr.delete_developer_metadata(key)`.
+  - Todo modelado como value objects del dominio (`ChartSpec`, `PivotTableSpec`,
+    `PivotField`/`PivotValue`, `BandingSpec`, `DeveloperMetadataEntry`) con `to_request`
+    validado por tests contra la forma exacta de la API. Fix del fake in-memory: solo
+    trata `updateCells` como nota cuando `fields="note"` (las pivots usan el mismo verbo).
+- **Modelos Pydantic v2 y esquema avanzado (Sprint 7):**
+  - Nuevo puerto `ModelCodec` con dos codecs (`infrastructure/model_codecs.py`):
+    dataclasses (el mapeo puro del dominio) y **Pydantic v2** (extra opcional
+    `pip install "GSpreadManager[pydantic]"`, import diferido). `read_as`/`append_models`/
+    `write_models`/`upsert_models`/`iter_as` aceptan ambos tipos de modelo; con Pydantic
+    la validación/coerción es nativa (alias de campo = nombre de columna; los
+    `ValidationError` llegan como `SchemaError`).
+  - `ws.ensure_schema(Model, create=True, strict=False)`: valida (o crea) el encabezado
+    contra el modelo, con **reporte de drift** — `SchemaError` enriquecido con
+    `missing_columns` / `extra_columns`.
+  - Coerciones nuevas en el codec de dataclasses: `Decimal`, `Enum` (por valor o nombre)
+    y `Literal`, también al serializar (`format_cell`).
+- **Streaming para hojas grandes (Sprint 6):** `ws.iter_rows(page_size=...)`,
+  `ws.iter_records(...)` (dicts por encabezado) y `ws.iter_as(Model, ...)` (dataclasses) —
+  iteradores perezosos que leen de a páginas vía `values_get`; cada página con su propio
+  retry y permiso del rate limiter. Solo se materializa una página por vez.
+- **Caché v2 (Sprint 6):** TTL opcional (`SheetManager(cache_ttl=...)`, acota la ventana de
+  staleness), límite de entradas con desalojo LRU (`cache_max_entries=...`; pasar
+  cualquiera de los dos activa la caché) e **invalidación selectiva**: `update_cell`/
+  `batch_update`/`batch_clear` solo invalidan lo cacheado que se superpone con el rango
+  escrito (nuevo `GridRange.overlaps` en el dominio); las escrituras de alcance hoja
+  (`update`/`append`/`clear`/formato) invalidan esa hoja sin tocar las demás; las
+  operaciones a nivel documento invalidan todo.
+- **La hoja como tabla (Sprint 5, nuevo `TableService`):**
+  - `ws.upsert(rows, key=...)` — actualiza por columna clave y agrega lo nuevo; acepta
+    dicts (actualiza solo las columnas presentes) o listas alineadas al encabezado;
+    devuelve `{"updated": n, "appended": m}`. `ws.upsert_models(models, key=...)` para
+    dataclasses. Idempotente: re-ejecutar el mismo upsert no duplica filas.
+  - `mgr.worksheet_or_create(title, rows=..., cols=...)` — find-or-create de pestaña.
+  - `ws.update_where(where, updates)` y `ws.delete_where(where)` — `where` como dict de
+    igualdades o predicado sobre la fila; el delete agrupa rangos contiguos y borra de
+    abajo hacia arriba (`deleteDimension`).
+  - **Chunking automático de escrituras** (`SheetManager(batch_cell_limit=50_000)`):
+    `append`/`batch_update`/`upsert` grandes se parten en varias peticiones — cada chunk
+    con su propio retry y permiso del rate limiter, así un 429 a mitad de camino no
+    re-ejecuta los chunks ya aplicados. Helpers puros en `domain/batching.py`
+    (`split_rows`/`split_range_data`; una fila o rango nunca se parte). `None` lo
+    desactiva.
+- **Paridad final con el ecosistema (Sprint 4):**
+  - `ws.import_csv(ruta_o_buffer, clear=..., delimiter=...)` — vuelca un CSV en la hoja
+    (parsing puro en `domain/csv_data.py`, escritura `RAW`).
+  - `mgr.update_title()` / `update_locale()` / `update_timezone()` — propiedades del
+    documento vía `updateSpreadsheetProperties`.
+  - `mgr.list_worksheets()` y apertura de pestañas por posición o id:
+    `worksheet_by_index(i)` / `worksheet_by_id(sheet_id)`.
+  - `ws.find_replace(find, replacement, match_case=..., match_entire_cell=...,
+    search_by_regex=..., include_formulas=...)` — `findReplace` de la API v4; devuelve el
+    resumen (`occurrencesChanged`, ...). El backend en memoria lo aplica de verdad a la
+    grilla (literal, sin regex) para poder testearlo.
+  - `ws.copy_to(destination_key)` — copia la pestaña a otro documento (`sheets.copyTo`;
+    nuevo método del `WorksheetPort` en los 4 backends; el in-memory copia entre documentos
+    del mismo `InMemoryBackend`).
+  - `ws.read(render="formatted" | "unformatted" | "formula")` — value render options al
+    leer (fórmulas o valores crudos); `get_all_values` del puerto acepta el render y la
+    caché memoiza por opción.
+- **gspread es ahora un extra opcional** (`pip install "GSpreadManager[gspread]"`): el
+  núcleo solo depende de `google-auth`. Nuevo default `backend="auto"`: usa gspread si está
+  instalado (o si se pasa `client=`), si no el cliente nativo — el quick start funciona
+  igual con cualquier instalación. Si se fuerza `backend="gspread"` sin el paquete, el
+  error explica cómo instalarlo. (Breaking solo para quien dependía de que gspread viniera
+  de fábrica: instalá el extra.)
+- **Hardening del cliente nativo:** `create(..., folder_id=...)` ahora mueve el documento a
+  la carpeta (Drive `files.update` con `addParents`; cierra un pendiente del spike), y los
+  errores 429/403 producen `SheetsQuotaExceededError` / `SheetsPermissionDeniedError`, que
+  heredan de `QuotaExceededError` / `PermissionDeniedError` del dominio: el mismo `except`
+  funciona con cualquier backend.
+- **Suite de benchmarks** (`benchmarks/run_benchmarks.py` + página en docs): compara
+  gspread vs nativo contra la API real (read/append/batch/update/formato) y emite la tabla
+  en Markdown. Manual, con las mismas credenciales que la suite de integración.
+- **Backend nativo opt-in (`SheetManager(backend="native")`):** ejecuta el ADR 0001 (gspread
+  quedó sin mantenimiento activo). El cliente REST propio (`infrastructure/native/`) deja de
+  ser spike: se cablea detrás de los mismos puertos con caché de documentos abiertos por
+  nombre/key, **timeouts por petición** (`http_timeout`, default 60s) y mapeo de
+  404 → `SpreadsheetNotFoundError`. Acepta `json_google_file`, `credentials`,
+  `service_account_info` o `use_adc` (nuevo `build_credentials` en `infrastructure/auth.py`,
+  que construye credenciales de google-auth sin gspread). gspread sigue como default
+  hasta la 3.0.
+- **Tests de integración opcionales** contra la API real (marker `integration`; se saltean
+  sin `GSPREADMANAGER_TEST_CREDENTIALS`).
+- **Jerarquía completa de errores de dominio:** `ApiError` (con `status_code`),
+  `QuotaExceededError` (429), `PermissionDeniedError` (403), `SpreadsheetNotFoundError`,
+  `WorksheetNotFoundError` y `CellNotFoundError`, exportadas desde el paquete raíz.
+  Los adaptadores de gspread traducen **todas** las excepciones de gspread a esta jerarquía
+  (`infrastructure/gspread_errors.py`): ninguna excepción del backend escapa al usuario.
+  El `SheetsApiError` del cliente nativo y los not-found del backend en memoria se integran
+  a la misma jerarquía.
+- **Logging estructurado opt-in:** logger `gspreadmanager` con `NullHandler` por defecto.
+  Reintentos en `WARNING`; rate limiting, caché (hit/miss/invalidación) y apertura de
+  documentos en `DEBUG`.
+- **Helpers A1 en el dominio:** `rowcol_to_a1`, `column_to_letter`, `letter_to_column` y
+  `GridRange.from_a1` viven en `domain/values/ranges.py` (lógica pura, errores
+  `InvalidRangeError`), con paridad verificada contra `gspread.utils`.
+
+### Changed
+- **`ExponentialBackoffRetry` desacoplada de gspread:** ahora opera sobre el `ApiError`
+  del dominio (los adaptadores traducen antes), por lo que funciona igual con cualquier
+  backend (gspread, nativo, in-memory).
+- **Sin `gspread.utils` fuera de los adaptadores:** la capa de aplicación
+  (`data_service`), los request builders y el backend en memoria usan las conversiones A1
+  del dominio. Cierra la última fuga de la regla de dependencias (DIP).
+
+### Fixed
+- `pytest.ini` usaba la sección `[tool:pytest]` (solo válida en setup.cfg), por lo que pytest
+  ignoraba `addopts`/`testpaths`; ahora es `[pytest]` y la config (cobertura mínima, markers)
+  aplica de verdad.
+
+### Docs
+- ROADMAP con el plan de 10 sprints (v2.2 → v3.0).
+- ADR 0001 actualizado: **disparador cumplido** (gspread sin maintainers); se ejecuta la
+  opción C de forma incremental (nativo opt-in primero, default en 3.0).
+- Análisis competitivo actualizado (estado de gspread) y guía con la jerarquía de errores,
+  el logging y el backend nativo (`backend="native"`).
+
 ## [2.1.0] - 2026-06-09
 
 Paridad con gspread/pygsheets y un conjunto de capacidades de diferenciación, todo sobre la

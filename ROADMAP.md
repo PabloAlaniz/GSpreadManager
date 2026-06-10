@@ -31,14 +31,19 @@ estado mutable. **Sin usuarios previos, se hizo el corte limpio** (se eliminó e
 ## 🧭 Independencia de gspread
 
 Ver [ADR 0001](docs/adr/0001-dependencia-de-gspread.md). gspread quedó aislado en
-`infrastructure/` detrás de puertos nominales.
+`infrastructure/` detrás de puertos nominales. **Disparador cumplido (jun-2026):** gspread
+quedó sin mantenimiento activo, así que la opción C está en ejecución.
 
 - [x] **Puertos nominales `WorksheetPort`/`SpreadsheetPort`/`ClientPort` + adaptadores**
       sobre gspread (opción B): resuelto el tipado y gspread queda 100% sustituible.
-- [ ] **Reemplazo total por cliente propio nativo** (REST directo con google-auth) detrás de
-      los mismos puertos. **Disparador (política):** se ejecuta si gspread es declarado EOL o
-      su repositorio queda inactivo (sin releases ni actividad de mantenimiento por un período
-      prolongado). Mientras tanto, gspread sigue como adaptador por defecto.
+- [x] **Cliente nativo opt-in** (`SheetManager(backend="native")`): REST directo con
+      google-auth detrás de los mismos puertos, con caché de documentos, timeouts y mapeo
+      de errores a la jerarquía propia (Sprint 2).
+- [x] **gspread como extra opcional** (`pip install "GSpreadManager[gspread]"`) con
+      `backend="auto"`: usa gspread si está instalado, si no el nativo. El núcleo solo
+      depende de google-auth (Sprint 3). Benchmarks: `benchmarks/run_benchmarks.py`.
+- [x] **Nativo como default explícito** (3.0): ``SheetManager`` usa el nativo salvo
+      ``client=`` o ``backend="gspread"/"auto"``. **ADR 0001 culminado.**
 
 ## ✅ v2.1 — Paridad con gspread/pygsheets + diferenciación (RELEASED)
 
@@ -66,12 +71,37 @@ arquitectura hexagonal de la 2.0 (ver [análisis competitivo](docs/competitive-a
       (`SheetManager(rate_limit=...)`).
 - [x] **CLI** (`gspreadmanager read/append/export/share`).
 
-## 🔜 Próximo (v2.2+)
+## 🔜 Plan de 10 sprints (v2.2 → v3.0)
 
-- [ ] **Async nativo** (`asyncio` sobre `httpx`, no threadpool) detrás de los puertos — el ítem
-      más grande; merece una iteración dedicada.
-- [ ] **Import CSV** (volcar un CSV/archivo a la hoja).
-- [ ] Operaciones de alto nivel (`upsert` por clave, find-or-create); paginación/streaming
-      para hojas grandes.
-- [ ] Modelos de fila con **Pydantic** (además de dataclasses).
-- [ ] Documentación bilingüe (es/en).
+Plan derivado de la auditoría SOLID/Clean Architecture/DDD de junio 2026 y del
+[análisis competitivo](docs/competitive-analysis.md). **Contexto clave:** los maintainers de
+gspread anunciaron que no pueden seguir manteniéndolo, lo que activa el disparador del
+[ADR 0001](docs/adr/0001-dependencia-de-gspread.md) para promover el cliente nativo.
+
+1. ✅ **Pureza de capas y errores de dominio (v2.2.0):** jerarquía completa de errores
+   (`ApiError`, `QuotaExceededError`, `PermissionDeniedError`, `*NotFoundError`), traducción
+   de todas las excepciones de gspread en los adaptadores, retry desacoplado de gspread,
+   helpers A1 promovidos al dominio (adiós a `gspread.utils` en aplicación) y logging
+   estructurado opt-in.
+2. ✅ **Cliente nativo, parte 1 (v2.2):** ejecutar ADR 0001 — `SheetManager(backend="native")`
+   opt-in, paridad total del spike con la facade, timeouts, tests de integración opcionales.
+3. ✅ **Cliente nativo, parte 2:** gspread pasa a extra opcional (`[gspread]`), benchmarks
+   nativo vs gspread, hardening (paginación Drive, refresh de credenciales).
+4. ✅ **Paridad final con el ecosistema (v2.3):** import CSV, update_title/locale/timezone,
+   listar/abrir pestañas por índice-id, find/replace, copy_to entre documentos, value render
+   options (fórmulas).
+5. ✅ **Operaciones de alto nivel (v2.4):** `upsert` por clave (también para modelos),
+   `worksheet_or_create`, `update_where`/`delete_where`, chunking automático de batch.
+6. ✅ **Hojas grandes (v2.5):** `iter_rows` paginado, lecturas/escrituras en streaming,
+   caché v2 (TTL, LRU, invalidación por rango).
+7. ✅ **Pydantic y esquema avanzado (v2.6):** puerto `ModelCodec` (dataclasses + Pydantic v2
+   opcional), `ensure_schema` con reporte de drift, coerciones extra (Decimal/Enum/Literal).
+8. ✅ **API v4 profunda (v2.7):** charts, pivot tables, banding y developer metadata como
+   value objects + requests (terreno donde solo pygsheets llega a medias).
+9. ✅ **Async nativo, parte 1 (v3.0a):** puertos async, cliente nativo sobre httpx
+   (extra `[async]`), retry y rate limiting con `asyncio.sleep`.
+10. ✅ **Async parte 2 + release 3.0:** `AsyncSheetManager` + `AsyncWorksheetContext`
+    (datos/streaming/tabla/modelos/documento), `AsyncInMemoryBackend`, **nativo como
+    backend default** (culmina ADR 0001), guía de migración, página en inglés y release
+    3.0.0. Pendiente post-3.0: traducción completa de la guía al inglés; caché y
+    formato/charts en la API async.

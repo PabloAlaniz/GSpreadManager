@@ -1,7 +1,17 @@
 # ADR 0001 — Dependencia de gspread: mantener, adaptar o reemplazar
 
-- **Estado:** Aceptado — opción B implementada; opción C diferida con disparador explícito
-- **Fecha:** 2026-06-08
+- **Estado:** Aceptado y **culminado** — opción C completada en la 3.0: el cliente nativo
+  es el backend por defecto y gspread quedó como extra opcional de compatibilidad
+- **Fecha:** 2026-06-08 (actualizado 2026-06-10)
+
+> **Actualización 2026-06-10 — disparador cumplido:** los maintainers de gspread anunciaron
+> que no pueden seguir manteniendo la librería y buscan nuevos maintainers (ver README del
+> repositorio de gspread). Conforme a la política de este ADR, se ejecuta la opción C: el
+> cliente nativo (spike en `infrastructure/native/`) se promueve a adaptador de primera
+> clase de forma incremental: primero opt-in (`backend="native"`, Sprint 2); luego gspread
+> pasa a **extra opcional** con `backend="auto"` — gspread si está instalado, si no el
+> nativo (Sprint 3); en la 3.0 el nativo pasa a ser el default explícito. Ver el plan de
+> 10 sprints en el ROADMAP.
 - **Contexto del proyecto:** GSpreadManager 2.0 (refactor a Clean Architecture / DDD táctico)
 
 ## Contexto

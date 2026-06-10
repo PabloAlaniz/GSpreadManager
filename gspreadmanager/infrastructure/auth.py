@@ -1,16 +1,16 @@
 """Estrategias de autenticación concretas (una por método) y su factory.
 
-Cada estrategia sabe construir un cliente de gspread a partir de un método de
-credenciales; ``build_auth_strategy`` selecciona la apropiada según los parámetros.
-Es de los pocos módulos (con ``facade`` y el resto de ``infrastructure``) que conocen
-``gspread`` y ``google-auth``.
+``build_credentials`` construye credenciales de google-auth desde cualquier método (las usa
+el backend nativo). Cada estrategia sabe construir un cliente de gspread a partir de un
+método de credenciales; ``build_auth_strategy`` selecciona la apropiada según los
+parámetros. gspread es un extra opcional: se importa de forma diferida, solo cuando se
+autoriza una estrategia del backend de gspread.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-import gspread
 from google.oauth2 import service_account
 
 from gspreadmanager.domain.errors import GSpreadManagerError
@@ -21,6 +21,56 @@ SCOPES = [
     "https://spreadsheets.google.com/feeds",
     "https://www.googleapis.com/auth/drive",
 ]
+
+_NO_CREDENTIALS_MESSAGE = (
+    "No se proporcionaron credenciales. Pasá uno de: json_google_file, "
+    "credentials, service_account_info, client o use_adc=True."
+)
+
+GSPREAD_MISSING_MESSAGE = (
+    "El backend de gspread requiere el paquete 'gspread' (es un extra opcional). "
+    "Instalalo con pip install \"GSpreadManager[gspread]\" o usá backend=\"native\"."
+)
+
+
+def _authorize(credentials: Any) -> Any:
+    """Autoriza un cliente de gspread (import diferido: gspread es un extra opcional)."""
+    try:
+        import gspread  # noqa: PLC0415
+    except ImportError as exc:
+        raise GSpreadManagerError(GSPREAD_MISSING_MESSAGE) from exc
+    return gspread.authorize(credentials)
+
+
+def build_credentials(
+    *,
+    credentials: Any = None,
+    service_account_info: dict[str, Any] | None = None,
+    json_google_file: str | None = None,
+    use_adc: bool = False,
+) -> Any:
+    """Construye credenciales de google-auth (sin gspread) según el método provisto.
+
+    Misma precedencia que ``build_auth_strategy``: ``credentials`` ya construidas,
+    ``service_account_info``, ``json_google_file`` y ``use_adc``. Las usa el backend
+    nativo para autorizar su sesión HTTP.
+    """
+    if credentials is not None:
+        return credentials
+    if service_account_info is not None:
+        return service_account.Credentials.from_service_account_info(
+            service_account_info, scopes=SCOPES
+        )
+    if json_google_file is not None:
+        return service_account.Credentials.from_service_account_file(
+            json_google_file, scopes=SCOPES
+        )
+    if use_adc:
+        import google.auth  # noqa: PLC0415  (carga diferida: solo si se usa ADC)
+
+        creds, _ = google.auth.default(scopes=SCOPES)
+        return creds
+    raise GSpreadManagerError(_NO_CREDENTIALS_MESSAGE)
 
 
 class PreauthorizedClientAuth:
@@ -44,7 +94,7 @@ class CredentialsAuth:
 
     def authorize(self) -> Any:
         """Autoriza un cliente de gspread con las credenciales provistas."""
-        return gspread.authorize(self._credentials)
+        return _authorize(self._credentials)
 
 
 class ServiceAccountInfoAuth:
@@ -56,8 +106,7 @@ class ServiceAccountInfoAuth:
 
     def authorize(self) -> Any:
         """Construye credenciales desde el diccionario y autoriza el cliente."""
-        creds = service_account.Credentials.from_service_account_info(self._info, scopes=SCOPES)
-        return gspread.authorize(creds)
+        return _authorize(build_credentials(service_account_info=self._info))
 
 
 class ServiceAccountFileAuth:
@@ -69,8 +118,7 @@ class ServiceAccountFileAuth:
 
     def authorize(self) -> Any:
         """Construye credenciales desde el archivo y autoriza el cliente."""
-        creds = service_account.Credentials.from_service_account_file(self._path, scopes=SCOPES)
-        return gspread.authorize(creds)
+        return _authorize(build_credentials(json_google_file=self._path))
 
 
 class ADCAuth:
@@ -78,10 +126,7 @@ class ADCAuth:
 
     def authorize(self) -> Any:
         """Resuelve las ADC del entorno y autoriza el cliente."""
-        import google.auth  # noqa: PLC0415  (carga diferida: solo si se usa ADC)
-
-        creds, _ = google.auth.default(scopes=SCOPES)
-        return gspread.authorize(creds)
+        return _authorize(build_credentials(use_adc=True))
 
 
 def build_auth_strategy(
@@ -108,7 +153,4 @@ def build_auth_strategy(
         return ServiceAccountFileAuth(json_google_file)
     if use_adc:
         return ADCAuth()
-    raise GSpreadManagerError(
-        "No se proporcionaron credenciales. Pasá uno de: json_google_file, "
-        "credentials, service_account_info, client o use_adc=True."
-    )
+    raise GSpreadManagerError(_NO_CREDENTIALS_MESSAGE)

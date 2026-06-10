@@ -19,7 +19,7 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 ## ✨ Características
 
 - 🔐 **Autenticación flexible**: service account (archivo o dict), credenciales de `google-auth`, cliente ya autorizado o ADC
-- 📖 **Lectura flexible**: listas, diccionarios, `pandas`/`polars` o **modelos de fila tipados** (`@dataclass`)
+- 📖 **Lectura flexible**: listas, diccionarios, `pandas`/`polars` o **modelos de fila tipados** (`@dataclass` o **Pydantic v2**)
 - ✏️ **Escritura y actualización**: celdas, filas, rangos, append, insert y lotes
 - 📐 **Estructura de la hoja**: insertar/eliminar/redimensionar/ocultar filas y columnas, **orden y filtro**, merge/unmerge, color de pestaña
 - 🗂️ **Gestión de hojas y documentos** (Drive): crear, copiar, listar, borrar, **compartir/permisos** y **exportar** (PDF/CSV/XLSX/...)
@@ -29,18 +29,28 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 - ⚡ **Robustez de cuota**: reintentos con backoff (429/500/503) + **rate limiting proactivo** (token bucket) + **caché de lecturas**
 - 🧪 **Testeable sin red**: backend en memoria (`gspreadmanager.testing`) que implementa los mismos puertos
 - ⌨️ **CLI**: `gspreadmanager read/append/export/share`
+- 🔌 **Cliente nativo por defecto** (REST sobre `google-auth`); gspread disponible como extra
+- ⚡ **API async real** (`AsyncSheetManager`, extra `[async]` con httpx): datos, streaming, tabla y modelos sin bloquear el loop
 - 🧱 **Arquitectura hexagonal** (dominio / aplicación / infraestructura / puertos) con type hints (PEP 561)
 - 📦 **Dependencias mínimas**: solo `gspread` y `google-auth` (`pandas`/`polars` opcionales)
 
 ## 🚀 Instalación
 
 ```bash
-pip install GSpreadManager
+pip install GSpreadManager                # núcleo (cliente nativo, solo google-auth)
 
-# Con soporte de DataFrames (opcional)
-pip install "GSpreadManager[pandas]"
-pip install "GSpreadManager[polars]"
+# Extras opcionales
+pip install "GSpreadManager[gspread]"     # backend de gspread (default si está instalado)
+pip install "GSpreadManager[pandas]"      # DataFrames con pandas
+pip install "GSpreadManager[polars]"      # DataFrames con polars
+pip install "GSpreadManager[pydantic]"    # modelos de fila con Pydantic v2
+pip install "GSpreadManager[async]"       # API async (httpx)
 ```
+
+> Desde la 3.0 el transporte por defecto es el **cliente nativo** (REST sobre
+> `google-auth`); `gspread` es un extra opcional con la misma API detrás de los mismos
+> puertos (`backend="gspread"` o `backend="auto"` para el comportamiento 2.x). Ver la
+> [guía de migración](https://pabloalaniz.github.io/GSpreadManager/migration-3.0/).
 
 ### Configuración en Google Cloud
 

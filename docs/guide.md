@@ -27,6 +27,51 @@ mgr = SheetManager.open_by_url("https://docs.google.com/spreadsheets/d/1AbC...xy
                                json_google_file="credenciales.json")
 ```
 
+### Backend nativo (sin gspread)
+
+Hay dos transportes intercambiables: el **cliente nativo** propio (REST directo sobre
+`google-auth`; **default desde la 3.0**) y el adaptador de **gspread** (extra opcional:
+`pip install "GSpreadManager[gspread]"`; se usa automáticamente si pasás `client=`). La API
+es exactamente la misma — ambos backends implementan los mismos puertos y pasan el mismo
+test de contrato:
+
+```python
+mgr = SheetManager(
+    "Mi Hoja de Cálculo",
+    json_google_file="credenciales.json",
+    backend="native",     # cliente REST propio (gspread no se importa)
+    http_timeout=30.0,    # timeout por petición en segundos (default 60; None lo desactiva)
+)
+```
+
+Funciona con `json_google_file`, `credentials`, `service_account_info` o `use_adc=True`
+(no con `client`, que es un cliente de gspread). `backend="auto"` reproduce el default de
+la 2.x (gspread si está instalado). Ver [benchmarks](benchmarks.md) y la
+[guía de migración](migration-3.0.md). Contexto: gspread quedó sin mantenimiento activo
+(ADR 0001).
+
+### API async (`AsyncSheetManager`)
+
+Con el extra `pip install "GSpreadManager[async]"` (httpx), el flujo de datos completo
+está disponible en asyncio **real** (sin threadpool): lectura/escritura con chunking,
+streaming, la hoja como tabla, modelos tipados, import CSV, find/replace y las
+operaciones de documento. El retry y el rate limiting esperan con `asyncio.sleep`:
+
+```python
+from gspreadmanager import AsyncSheetManager
+
+async with AsyncSheetManager("Mi Hoja", json_google_file="creds.json",
+                             rate_limit=5) as mgr:
+    ws = await mgr.worksheet("Hoja1")
+    datos = await ws.read(output_format="dict")
+    await ws.upsert([{"id": "2", "nombre": "Luisa"}], key="id")
+    async for registro in ws.iter_records(page_size=2000):
+        procesar(registro)
+```
+
+Para testear sin red: `gspreadmanager.testing.AsyncInMemoryBackend` (mismo fake, superficie
+async). Formato/validación/charts siguen, por ahora, solo en la API síncrona.
+
 ## Lectura
 
 ```python
@@ -44,6 +89,10 @@ rango = ws.read_range(1, 10, "A", "D")
 
 # Con inferencia de tipos ("3" -> 3, "1.5" -> 1.5; preserva "007")
 ws.read(output_format="dict", numericise=True)
+
+# Cómo renderiza los valores la API
+ws.read(render="formula")       # devuelve "=SUM(A1:A10)" en vez del resultado
+ws.read(render="unformatted")   # números crudos (sin formato de moneda/fecha)
 ```
 
 ## Escritura y actualización
@@ -57,6 +106,10 @@ ws.insert([["A", "B"]], fila=10)        # inserta en una fila concreta (o al fin
 ws.batch_update([
     {"range": "Hoja1!A1:B1", "values": [["Mes", "Total"]]},
 ])
+
+# Volcar un CSV en la hoja (ruta o file-like; limpia la hoja salvo clear=False)
+ws.import_csv("datos.csv")
+ws.import_csv(io.StringIO("a,b\n1,2"), delimiter=",")
 ```
 
 ## Gestión de hojas
@@ -66,6 +119,13 @@ nueva = mgr.create_sheet("Reporte 2026", rows=500, cols=10)   # devuelve un Work
 mgr.delete_sheet("Borrador")
 ws.clear("A1:C10")    # un rango
 ws.clear()            # toda la hoja
+
+mgr.list_worksheets()          # [{"sheetId": ..., "title": ..., "index": ...}, ...]
+ws = mgr.worksheet_by_index(0) # por posición (0-based)
+ws = mgr.worksheet_by_id(123)  # por sheetId
+
+# Copiar una pestaña a otro documento (por su key de Drive)
+ws.copy_to("1AbC...keyDestino")
 ```
 
 ## Filas y columnas
@@ -83,12 +143,64 @@ ws.hide_rows(2, 4)            # oculta filas 2..4
 ws.unhide_rows(2, 4)
 ```
 
+## La hoja como tabla
+
+Con encabezado en la fila 1, la pestaña se puede operar como una tabla con clave:
+
+```python
+ws = mgr.worksheet_or_create("Clientes")   # devuelve la pestaña, creándola si falta
+
+# Upsert por columna clave: actualiza las filas existentes y agrega las nuevas.
+ws.upsert([
+    {"id": "2", "nombre": "Luisa"},          # dict: solo actualiza las columnas presentes
+    {"id": "9", "nombre": "Nuevo", "estado": "pendiente"},
+], key="id")
+# -> {"updated": 1, "appended": 1}
+
+# También con modelos tipados (dataclasses)
+ws.upsert_models([Cliente(id=2, nombre="Luisa", estado="ok")], key="id")
+
+# Update / delete condicional: dict de igualdades o un predicado sobre la fila
+ws.update_where({"estado": "pendiente"}, {"estado": "en curso"})   # -> filas afectadas
+ws.delete_where(lambda fila: fila["edad"] == "")                   # -> filas borradas
+```
+
+Las escrituras grandes (`append`, `batch_update`, `upsert`) se **parten automáticamente**
+en varias peticiones según `SheetManager(batch_cell_limit=...)` (50.000 celdas por defecto;
+cada chunk con su propio retry y permiso del rate limiter; `None` lo desactiva).
+
+## Hojas grandes (streaming)
+
+Para hojas de decenas de miles de filas, los iteradores leen **de a páginas** (lectura
+perezosa: una petición por página, cada una con su retry y su permiso del rate limiter):
+
+```python
+for fila in ws.iter_rows(page_size=2000):          # lista por fila
+    procesar(fila)
+
+for registro in ws.iter_records(page_size=2000):   # dict por fila (encabezado en fila 1)
+    procesar(registro["email"])
+
+for cliente in ws.iter_as(Cliente, page_size=2000):  # modelos tipados por página
+    procesar(cliente)
+```
+
+Para escrituras masivas, `append`/`batch_update`/`upsert` ya se parten solos
+(`batch_cell_limit`). Para DataFrames conviene `read_dataframe()` (materializa todo) o
+construir incrementalmente desde `iter_records`.
+
 ## Búsqueda
 
 ```python
 celda = ws.find("Total")
 if celda:
     print(celda.row, celda.col, celda.value)
+
+# Buscar y reemplazar en toda la pestaña (findReplace de la API)
+resumen = ws.find_replace("2025", "2026")                       # substring, sin case
+ws.find_replace("borrador", "final", match_entire_cell=True)    # celda exacta
+ws.find_replace(r"v\d+", "vFinal", search_by_regex=True)        # regex (RE2)
+print(resumen.get("occurrencesChanged"))
 ```
 
 ## Notas, named ranges y protected ranges
@@ -124,6 +236,43 @@ ws.unmerge("A1:B2")
 from gspreadmanager import Color
 ws.set_tab_color(Color.from_hex("#D9EAD3"))
 ws.clear_tab_color()
+```
+
+## Charts, pivot tables y banding
+
+Gráficos embebidos, tablas dinámicas y bandas de color, directo desde la API v4 (terreno
+donde gspread no llega y pygsheets solo a medias):
+
+```python
+# Gráfico de columnas: domain = etiquetas (eje X), series = rangos de datos
+chart_id = ws.add_chart("COLUMN", "A1:A13", ["B1:B13", "C1:C13"],
+                        title="Ventas 2026", anchor_cell="E2")
+ws.add_chart("PIE", "A2:A6", ["B2:B6"], anchor_cell="E20")   # torta (usa la 1ª serie)
+ws.delete_chart(chart_id)
+
+# Pivot table: rows/columns son offsets 0-based del rango fuente; values, (offset, función)
+ws.add_pivot_table("A1:C100", "E1", rows=[0], values=[(2, "SUM")], columns=[1])
+
+# Bandas alternadas por fila
+banded_id = ws.set_banding(
+    "A1:C100",
+    first_color=Color.from_hex("#FFFFFF"),
+    second_color=Color.from_hex("#F3F3F3"),
+    header_color=Color.from_hex("#D9EAD3"),
+)
+ws.delete_banding(banded_id)
+```
+
+## Developer metadata
+
+Pares clave/valor invisibles para el usuario final, anclados al documento o a una pestaña
+(útiles para versionado, sincronización o marcar hojas generadas por tu app):
+
+```python
+mgr.set_developer_metadata("owner", "data-team")       # a nivel documento
+ws.set_developer_metadata("schema_version", "3")       # a nivel pestaña
+mgr.list_developer_metadata()                          # documento + todas las hojas
+mgr.delete_developer_metadata("schema_version")        # por clave
 ```
 
 ## Exportación
@@ -218,6 +367,11 @@ nuevo = mgr.create_spreadsheet("Reporte mensual")
 copia = mgr.copy_spreadsheet(nuevo.id, title="Reporte (copia)")
 docs = mgr.list_spreadsheets(title="Reporte")
 mgr.delete_spreadsheet(copia.id)
+
+# Propiedades del documento
+mgr.update_title("Reporte 2026")
+mgr.update_locale("es_AR")
+mgr.update_timezone("America/Argentina/Buenos_Aires")
 ```
 
 ## Compartir y permisos
@@ -232,16 +386,47 @@ mgr.remove_permission("alguien@example.com")
 ## Manejo de errores
 
 Las operaciones reintentan automáticamente ante errores transitorios (HTTP 429/500/503).
-La librería expone excepciones propias:
+La librería expone una jerarquía propia de excepciones — ninguna excepción del backend
+(gspread o el cliente nativo) escapa sin traducir:
 
 ```python
-from gspreadmanager import InsertError
+from gspreadmanager import (
+    ApiError,                  # error genérico de la API (con .status_code)
+    GSpreadManagerError,       # base de toda la jerarquía
+    InsertError,
+    PermissionDeniedError,     # HTTP 403
+    QuotaExceededError,        # HTTP 429 (el retry ya lo reintentó)
+    SpreadsheetNotFoundError,
+    WorksheetNotFoundError,
+)
+
+try:
+    ws = mgr.worksheet("Hoja inexistente")
+except WorksheetNotFoundError as e:
+    print(f"No existe la pestaña: {e}")
 
 try:
     ws.insert([["A", "B"]])
-except InsertError as e:
-    print(f"No se pudo insertar: {e}")
+except QuotaExceededError:
+    print("Cuota agotada incluso después de los reintentos.")
+except ApiError as e:
+    print(f"Error de la API (HTTP {e.status_code}): {e}")
 ```
+
+## Logging
+
+La librería no configura handlers (usa un `NullHandler`); si querés ver qué hace por dentro
+(requests, reintentos, esperas del rate limiter, hits de caché), activá el logger:
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("gspreadmanager").setLevel(logging.DEBUG)
+```
+
+Los reintentos ante errores transitorios se loguean en nivel `WARNING`; el detalle de caché
+y rate limiting, en `DEBUG`.
 
 ## Context manager
 
@@ -282,14 +467,27 @@ ws.append([["x"]])  # invalida la caché del documento
 ws.read()        # vuelve a leer de la API
 ```
 
+La invalidación es **selectiva**: una escritura puntual (`update_cell`, `batch_update`)
+solo invalida lo que se superpone con el rango escrito; escribir en una pestaña no toca lo
+cacheado de las demás. Además:
+
+```python
+mgr = SheetManager(
+    "Mi Hoja", "creds.json",
+    cache_ttl=30,            # las entradas expiran a los 30s (acota el staleness)
+    cache_max_entries=500,   # límite de entradas con desalojo LRU
+)   # pasar cualquiera de los dos activa la caché sola
+```
+
 No detecta cambios hechos por **otros** procesos: si otra persona edita la hoja, forzá el
-refresco con `mgr.clear_cache()`. Por eso la caché es opt-in (por defecto está apagada).
+refresco con `mgr.clear_cache()` (o usá `cache_ttl` para acotar la ventana). Por eso la
+caché es opt-in (por defecto está apagada).
 
-## Modelos de fila tipados (dataclasses)
+## Modelos de fila tipados (dataclasses o Pydantic)
 
-Leé y escribí filas como objetos tipados, con coerción de tipos (int/float/bool/date) y
-validación. El encabezado de la hoja mapea a los campos del modelo por nombre (o por
-`field(metadata={"column": ...})`):
+Leé y escribí filas como objetos tipados, con coerción de tipos (int/float/bool/date/
+Decimal/Enum/Literal) y validación. El encabezado de la hoja mapea a los campos del modelo
+por nombre (o por `field(metadata={"column": ...})`):
 
 ```python
 from dataclasses import dataclass, field
@@ -311,8 +509,44 @@ ws.write_models(personas)                     # reescribe la hoja desde A1 (con 
 ```
 
 Los booleanos se parsean de `TRUE`/`FALSE`/`1`/`0`/`sí`/`no`; las fechas con
-`fromisoformat`. Un valor que no encaja con el tipo del campo lanza `SchemaError`. Los campos
-con valor por defecto toleran que falte su columna en la hoja.
+`fromisoformat`; también `Decimal`, `Enum` (por valor o nombre) y `Literal`. Un valor que no
+encaja con el tipo del campo lanza `SchemaError`. Los campos con valor por defecto toleran
+que falte su columna en la hoja.
+
+### Modelos Pydantic v2
+
+Con el extra `pip install "GSpreadManager[pydantic]"`, los mismos métodos aceptan modelos
+Pydantic (la validación y coerción la hace Pydantic; los errores llegan como `SchemaError`).
+El nombre de columna es el `alias` del campo, o su nombre:
+
+```python
+from pydantic import BaseModel, Field
+
+class Cliente(BaseModel):
+    id: int
+    nombre: str = Field(alias="nombre completo")
+    activo: bool = True            # celda vacía -> default
+
+clientes = ws.read_as(Cliente)
+ws.append_models([Cliente.model_validate({"id": 9, "nombre completo": "Eva"})])
+ws.upsert_models(clientes, key="id")
+for c in ws.iter_as(Cliente, page_size=1000): ...
+```
+
+### Validar o crear el esquema (`ensure_schema`)
+
+Antes de operar, asegurate de que el encabezado de la hoja coincide con el modelo:
+
+```python
+ws.ensure_schema(Cliente)
+# Hoja vacía -> escribe el encabezado del modelo y devuelve {"created": True, ...}
+# Coincide   -> {"created": False, "missing": [], "extra": [...toleradas...]}
+
+try:
+    ws.ensure_schema(Cliente, strict=True)   # strict: las columnas extra también fallan
+except SchemaError as e:
+    print(e.missing_columns, e.extra_columns)  # reporte de drift
+```
 
 ## Testear sin red (backend en memoria)
 

@@ -3,7 +3,12 @@
 Comparación de **GSpreadManager** con las librerías del ecosistema Python para Google Sheets,
 y derivación del [ROADMAP](https://github.com/PabloAlaniz/GSpreadManager/blob/main/ROADMAP.md).
 
-_Última actualización: junio 2026 (post 2.0)._
+_Última actualización: junio 2026 (release 3.0)._
+
+> **Nota (jun-2026):** los maintainers de gspread anunciaron públicamente que no pueden
+> seguir manteniendo la librería y buscan nuevos maintainers. Esto cumplió el disparador
+> del [ADR 0001](adr/0001-dependencia-de-gspread.md): desde la 3.0 el **cliente nativo
+> propio es el backend por defecto** y gspread quedó como extra opcional.
 
 ## Posicionamiento
 
@@ -17,7 +22,7 @@ oficial `google-api-python-client`.
 
 | Librería | Enfoque | Estado |
 |---|---|---|
-| **gspread** | El wrapper de facto sobre Sheets API. | Maduro; mantenimiento desacelerado (último release may-2025) |
+| **gspread** | El wrapper de facto sobre Sheets API. | Maduro; **sin mantenimiento activo** (último release may-2025; los maintainers anunciaron que buscan reemplazo) |
 | **pygsheets** | Wrapper rico (formato, named ranges, pandas). | Maduro; baja actividad |
 | **gspread-pandas** | DataFrames sobre gspread. | Activo (capa fina) |
 | **gspread-dataframe** | `get_as_dataframe` / `set_with_dataframe`. | Mantenido |
@@ -61,9 +66,18 @@ oficial `google-api-python-client`.
 | **Type inference de valores** (`numericise`) | ✅ | ✅ | ✅ | ✅ (DF) | ⚠️ | ⚠️ |
 | **Abrir por key / URL** | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
 | **Export (xlsx/csv/pdf)** | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **Import CSV** | ❌ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **Import CSV** | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **Find / replace** (`findReplace`) | ✅ | ⚠️ (solo find) | ✅ | ❌ | ❌ | ❌ |
+| **Copiar pestaña a otro documento** (`copy_to`) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **Value render options** (leer fórmulas/crudo) | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ❌ |
+| **Propiedades del documento** (title/locale/tz) | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠️ |
+| **Listar/abrir pestañas por índice o id** | ✅ | ✅ | ✅ | ⚠️ | ⚠️ | ✅ |
+| **Charts embebidos** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Pivot tables** | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
+| **Banding (bandas alternadas)** | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
+| **Developer metadata** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
 | **DataFrame pluggable (pandas + polars)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Async** | ❌ | vía `gspread-asyncio` | ❌ | ❌ | ❌ | ❌ |
+| **Async (asyncio real)** | ✅ | ⚠️ vía `gspread-asyncio` (threadpool) | ❌ | ❌ | ❌ | ❌ |
 | Caché de lecturas con invalidación | ✅ | ❌ | ⚠️ | ❌ | ❌ | ❌ |
 | **Rate limiting proactivo (token bucket)** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **CLI** (`gspreadmanager ...`) | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
@@ -72,24 +86,27 @@ Leyenda: ✅ soportado · ⚠️ parcial/indirecto · ❌ no soportado.
 
 ## Features de gspread que (todavía) no tenemos
 
-Candidatas a sumar, ordenadas por valor percibido. (✅ ya hechas: abrir por key/URL, type
-inference, filas/columnas, notas, named/protected ranges, sort/basic filter, unmerge, tab
-color, export xlsx/csv/pdf).
-
-1. **Import CSV** (`import_csv`): volcar un CSV/archivo a la hoja (pendiente del Sprint 4).
-2. **update_title/locale/timezone** del documento, **listar worksheets** y abrir por índice/id.
+**Paridad cerrada (v2.3):** import CSV, update_title/locale/timezone, listar worksheets,
+abrir pestaña por índice/id, find/replace, copy_to entre documentos y value render options
+(leer fórmulas/valores crudos). No queda ninguna capacidad de gspread/pygsheets/EZSheets
+sin equivalente en GSpreadManager.
 
 ## Oportunidades (lo que casi nadie tiene y podríamos diferenciar)
 
 Más allá de la paridad, dónde podemos liderar:
 
-- **Async de verdad** (no threadpool): cliente `asyncio`-native sobre `httpx`, detrás de los
-  mismos puertos. gspread depende de `gspread-asyncio` (threadpool).
+- ✅ **Async de verdad** (hecho, 3.0): `AsyncSheetManager` sobre puertos async espejo y
+  cliente nativo `httpx`, con retry/rate-limit cooperativos (`asyncio.sleep`) y
+  `AsyncInMemoryBackend` para testear sin red. gspread depende de `gspread-asyncio`
+  (threadpool); nadie más tiene asyncio real.
 - ✅ **Backend testeable sin red** (hecho): `gspreadmanager.testing.InMemoryBackend`, un fake
   in-memory que implementa los puertos para que los usuarios testeen sin tocar la API.
   A futuro, el cliente nativo REST se enchufa por el mismo `sheets_client` (ver ADR 0001).
-- ✅ **Mapeo de filas a modelos tipados** (hecho, dataclasses): `read_as`/`append_models`/
-  `write_models` con coerción de tipos y validación (`SchemaError`). Pydantic queda pendiente.
+- ✅ **Mapeo de filas a modelos tipados** (hecho: dataclasses **y Pydantic v2**, v2.6):
+  `read_as`/`append_models`/`write_models`/`upsert_models`/`iter_as` con coerción
+  (int/float/bool/date/Decimal/Enum/Literal) y validación (`SchemaError`), más
+  `ensure_schema` con reporte de drift de columnas. Codecs pluggables vía el puerto
+  `ModelCodec`.
 - ✅ **Caché de lecturas con invalidación al escribir** (hecho, opt-in `cache=True`): clave
   para apps que releen; implementada como wrappers de los puertos.
 - ✅ **Backend de DataFrame pluggable** (hecho): pandas **y polars** vía el `DataFramePort`
@@ -97,20 +114,28 @@ Más allá de la paridad, dónde podemos liderar:
   `index_col`) y escritura anclada (`start_cell`, `include_index`).
 - ✅ **Rate limiting proactivo** (hecho, opt-in `rate_limit=...`): token bucket que frena
   *antes* de chocar la cuota, además del retry reactivo.
-- **Operaciones de alto nivel**: `upsert` por clave, *find-or-create* de pestaña, *bulk* con
-  control de batch automático, *paginación/streaming* para hojas grandes.
+- ✅ **Operaciones de alto nivel** (hecho, v2.4): `upsert`/`upsert_models` por clave,
+  `worksheet_or_create`, `update_where`/`delete_where` y chunking automático de escrituras
+  (`batch_cell_limit`).
+- ✅ **Streaming para hojas grandes** (hecho, v2.5): `iter_rows`/`iter_records`/`iter_as`
+  con paginación perezosa, y caché v2 (TTL, LRU, invalidación selectiva por rango/hoja) —
+  nadie en el ecosistema ofrece nada equivalente.
+- ✅ **API v4 profunda** (hecho, v2.7): charts embebidos, pivot tables, banding y developer
+  metadata como value objects tipados — gspread no los tiene; pygsheets solo charts y
+  metadata.
 - ✅ **CLI** (hecho): `gspreadmanager read/append/export/share`, sin dependencias extra.
 - **Documentación bilingüe (es/en)**: ya somos únicos en español; sumar inglés amplía alcance.
 
 ## Conclusiones
 
-- **Brecha cerrada:** con la 2.0, formato, validación, condicional, Drive y permisos ya están a
-  la par de pygsheets/gspread+ext (eran las grandes ausencias de la 1.x).
-- **Próxima paridad (v2.1):** abrir por key/URL, type inference, manipulación de filas/columnas,
-  notas y named/protected ranges — lo que aún nos separa de gspread/pygsheets.
+- **Paridad total y tabla cerrada (3.0):** no queda capacidad del ecosistema sin
+  equivalente en GSpreadManager, y la columna propia no tiene ningún ❌ — async incluido.
+- **Independencia (v2.2):** con gspread sin mantenimiento, el cliente nativo propio ya es de
+  primera clase (`backend="auto"`/`"native"`) y gspread es un extra opcional.
 - **Diferenciación:** arquitectura hexagonal (backend reemplazable, testeable sin red), tipado
-  estricto, retry de fábrica, modelos de fila tipados y async nativo — terreno donde el
-  ecosistema actual es débil.
+  estricto, retry + rate limiting + caché de fábrica, modelos de fila tipados, CLI y timeouts —
+  terreno donde el ecosistema actual es débil. Próximos pasos: operaciones de alto nivel
+  (upsert/streaming), Pydantic, charts/pivot y async nativo (ver ROADMAP).
 
 ## Fuentes
 

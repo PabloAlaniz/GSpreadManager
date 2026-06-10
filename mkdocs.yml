@@ -25,8 +25,11 @@ theme:
 nav:
   - Inicio: index.md
   - Guía de uso: guide.md
+  - Migración 3.0: migration-3.0.md
+  - English: en/index.md
   - Referencia de API: api.md
   - Análisis competitivo: competitive-analysis.md
+  - Benchmarks: benchmarks.md
   - Decisiones (ADR):
       - Dependencia de gspread: adr/0001-dependencia-de-gspread.md
   - Changelog: changelog.md

@@ -16,6 +16,7 @@ from gspreadmanager.infrastructure.auth import (
     ServiceAccountFileAuth,
     ServiceAccountInfoAuth,
     build_auth_strategy,
+    build_credentials,
 )
 from gspreadmanager.infrastructure.gspread_adapters import GspreadSpreadsheet
 from gspreadmanager.infrastructure.gspread_client import GspreadClientAdapter
@@ -54,43 +55,43 @@ class TestBuildAuthStrategy:
 class TestStrategies:
     def test_preauthorized_client_returns_client_without_authorizing(self):
         client = Mock()
-        with patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs:
+        with patch("gspreadmanager.infrastructure.auth._authorize") as mock_auth:
             assert PreauthorizedClientAuth(client).authorize() is client
-        mock_gs.authorize.assert_not_called()
+        mock_auth.assert_not_called()
 
     def test_credentials_auth(self):
         creds = Mock()
-        with patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs:
+        with patch("gspreadmanager.infrastructure.auth._authorize") as mock_auth:
             CredentialsAuth(creds).authorize()
-        mock_gs.authorize.assert_called_once_with(creds)
+        mock_auth.assert_called_once_with(creds)
 
     def test_service_account_info_auth(self):
         info = {"type": "service_account"}
         with (
             patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth._authorize") as mock_auth,
         ):
             ServiceAccountInfoAuth(info).authorize()
         mock_creds.from_service_account_info.assert_called_once()
-        mock_gs.authorize.assert_called_once()
+        mock_auth.assert_called_once()
 
     def test_service_account_file_auth(self):
         with (
             patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
-            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth._authorize") as mock_auth,
         ):
             ServiceAccountFileAuth("creds.json").authorize()
         mock_creds.from_service_account_file.assert_called_once()
-        mock_gs.authorize.assert_called_once()
+        mock_auth.assert_called_once()
 
     def test_adc_auth(self):
         with (
             patch("google.auth.default", return_value=(Mock(), "proj")) as mock_default,
-            patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
+            patch("gspreadmanager.infrastructure.auth._authorize") as mock_auth,
         ):
             ADCAuth().authorize()
         mock_default.assert_called_once()
-        mock_gs.authorize.assert_called_once()
+        mock_auth.assert_called_once()
 
 
 class TestGspreadClientAdapter:
@@ -165,3 +166,35 @@ def test_gspread_spreadsheet_get_metadata():
     ss = GspreadSpreadsheet(raw)
     assert ss.get_metadata(["A1:B2"], "namedRanges") == {"namedRanges": []}
     raw.fetch_sheet_metadata.assert_called_once_with({"fields": "namedRanges", "ranges": ["A1:B2"]})
+
+
+class TestBuildCredentials:
+    """``build_credentials`` construye credenciales de google-auth sin gspread (backend nativo)."""
+
+    def test_returns_given_credentials_untouched(self):
+        creds = Mock()
+        assert build_credentials(credentials=creds) is creds
+
+    def test_service_account_info(self):
+        with patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds:
+            build_credentials(service_account_info={"type": "service_account"})
+        mock_creds.from_service_account_info.assert_called_once()
+
+    def test_service_account_file(self):
+        with patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds:
+            build_credentials(json_google_file="creds.json")
+        mock_creds.from_service_account_file.assert_called_once()
+
+    def test_adc(self):
+        adc_creds = Mock()
+        with patch("google.auth.default", return_value=(adc_creds, "proj")) as mock_default:
+            assert build_credentials(use_adc=True) is adc_creds
+        mock_default.assert_called_once()
+
+    def test_no_credentials_raises(self):
+        with pytest.raises(GSpreadManagerError, match="No se proporcionaron credenciales"):
+            build_credentials()
+
+    def test_precedence_credentials_over_file(self):
+        creds = Mock()
+        assert build_credentials(credentials=creds, json_google_file="x.json") is creds
