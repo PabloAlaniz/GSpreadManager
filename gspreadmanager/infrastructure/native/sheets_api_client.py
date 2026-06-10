@@ -23,7 +23,7 @@ from gspreadmanager.domain.errors import (
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
 from ._a1 import a1_to_grid_range, rowcol_to_a1
-from .errors import SheetsApiError
+from .errors import SheetsApiError, build_sheets_api_error
 from .http import HttpResponse, HttpSession
 
 SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets"
@@ -32,7 +32,11 @@ _SPREADSHEET_MIME = "application/vnd.google-apps.spreadsheet"
 
 
 def _ensure_ok(response: HttpResponse) -> None:
-    """Lanza ``SheetsApiError`` si la respuesta no es exitosa (al estilo de gspread.APIError)."""
+    """Lanza ``SheetsApiError`` si la respuesta no es exitosa (al estilo de gspread.APIError).
+
+    429/403 producen las subclases ``SheetsQuotaExceededError`` / ``SheetsPermissionDeniedError``
+    (que también heredan de los errores de dominio correspondientes).
+    """
     if response.ok:
         return
     code, status, message = response.status_code, "UNKNOWN", response.text
@@ -43,7 +47,7 @@ def _ensure_ok(response: HttpResponse) -> None:
         message = error.get("message", message)
     except (ValueError, KeyError, TypeError):
         pass
-    raise SheetsApiError(code, status, message)
+    raise build_sheets_api_error(code, status, message)
 
 
 class _ApiCaller:
@@ -67,6 +71,13 @@ class _ApiCaller:
         self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
     ) -> Any:
         response = self._session.put(url, params=params, json=json)
+        _ensure_ok(response)
+        return response.json()
+
+    def _patch(
+        self, url: str, json: dict[str, Any] | None = None, params: dict[str, Any] | None = None
+    ) -> Any:
+        response = self._session.patch(url, params=params, json=json)
         _ensure_ok(response)
         return response.json()
 
@@ -139,8 +150,14 @@ class SheetsApiClient(_ApiCaller):
         return self._spreadsheets[key]
 
     def create(self, title: str, folder_id: str | None) -> Any:
-        """Crea un documento (Sheets API). ``folder_id`` aún no se mueve (spike)."""
-        return self._post(SHEETS_BASE, json={"properties": {"title": title}})
+        """Crea un documento (Sheets API); con ``folder_id`` lo mueve a esa carpeta (Drive)."""
+        result = self._post(SHEETS_BASE, json={"properties": {"title": title}})
+        if folder_id is not None:
+            self._patch(
+                f"{DRIVE_FILES}/{result['spreadsheetId']}",
+                params={"addParents": folder_id, "removeParents": "root", "fields": "id,parents"},
+            )
+        return result
 
     def del_spreadsheet(self, file_id: str) -> None:
         """Elimina un documento (Drive)."""

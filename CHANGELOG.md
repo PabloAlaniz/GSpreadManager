@@ -7,10 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1 y 2 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores y
-cliente nativo opt-in.
+Sprints 1–3 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores y
+cliente nativo de primera clase (gspread pasa a ser opcional).
 
 ### Added
+- **gspread es ahora un extra opcional** (`pip install "GSpreadManager[gspread]"`): el
+  núcleo solo depende de `google-auth`. Nuevo default `backend="auto"`: usa gspread si está
+  instalado (o si se pasa `client=`), si no el cliente nativo — el quick start funciona
+  igual con cualquier instalación. Si se fuerza `backend="gspread"` sin el paquete, el
+  error explica cómo instalarlo. (Breaking solo para quien dependía de que gspread viniera
+  de fábrica: instalá el extra.)
+- **Hardening del cliente nativo:** `create(..., folder_id=...)` ahora mueve el documento a
+  la carpeta (Drive `files.update` con `addParents`; cierra un pendiente del spike), y los
+  errores 429/403 producen `SheetsQuotaExceededError` / `SheetsPermissionDeniedError`, que
+  heredan de `QuotaExceededError` / `PermissionDeniedError` del dominio: el mismo `except`
+  funciona con cualquier backend.
+- **Suite de benchmarks** (`benchmarks/run_benchmarks.py` + página en docs): compara
+  gspread vs nativo contra la API real (read/append/batch/update/formato) y emite la tabla
+  en Markdown. Manual, con las mismas credenciales que la suite de integración.
 - **Backend nativo opt-in (`SheetManager(backend="native")`):** ejecuta el ADR 0001 (gspread
   quedó sin mantenimiento activo). El cliente REST propio (`infrastructure/native/`) deja de
   ser spike: se cablea detrás de los mismos puertos con caché de documentos abiertos por

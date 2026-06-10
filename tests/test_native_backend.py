@@ -5,15 +5,25 @@ Verifican que el facade enchufa el ``SheetsApiClient`` detrás de los mismos pue
 ``SpreadsheetNotFoundError`` y el timeout por petición.
 """
 
+import sys
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from gspreadmanager import SheetManager, SpreadsheetNotFoundError
+from gspreadmanager import (
+    PermissionDeniedError,
+    QuotaExceededError,
+    SheetManager,
+    SpreadsheetNotFoundError,
+)
 from gspreadmanager.domain.errors import GSpreadManagerError
 from gspreadmanager.infrastructure.gspread_client import GspreadClientAdapter
 from gspreadmanager.infrastructure.native import SheetsApiClient, TimeoutHttpSession
-from gspreadmanager.infrastructure.native.errors import SheetsApiError
+from gspreadmanager.infrastructure.native.errors import (
+    SheetsApiError,
+    SheetsQuotaExceededError,
+    build_sheets_api_error,
+)
 from gspreadmanager.infrastructure.native.http import DEFAULT_HTTP_TIMEOUT
 
 from .test_native_spike import FakeSession
@@ -133,9 +143,89 @@ class TestTimeoutHttpSession:
         session.get("u", params={"a": 1})
         session.post("u", json={"b": 2})
         session.put("u", json={"c": 3})
+        session.patch("u", json={"d": 4})
         session.delete("u")
 
         inner.get.assert_called_once_with("u", params={"a": 1}, timeout=7.5)
         inner.post.assert_called_once_with("u", params=None, json={"b": 2}, timeout=7.5)
         inner.put.assert_called_once_with("u", params=None, json={"c": 3}, timeout=7.5)
+        inner.patch.assert_called_once_with("u", params=None, json={"d": 4}, timeout=7.5)
         inner.delete.assert_called_once_with("u", params=None, timeout=7.5)
+
+
+class TestAutoBackend:
+    """``backend="auto"`` (default): gspread si está instalado, si no el nativo."""
+
+    def test_auto_prefers_gspread_when_installed(self):
+        # En el entorno de dev gspread está instalado.
+        mgr = SheetManager("Doc", credentials=Mock())
+        assert isinstance(mgr._client, GspreadClientAdapter)
+
+    def test_auto_falls_back_to_native_without_gspread(self):
+        with (
+            patch("gspreadmanager.facade.importlib.util.find_spec", return_value=None),
+            patch("gspreadmanager.facade.build_authorized_session", return_value=FakeSession()),
+        ):
+            mgr = SheetManager("Doc", credentials=Mock())
+        assert isinstance(mgr._client, SheetsApiClient)
+
+    def test_auto_with_preauthorized_client_uses_gspread(self):
+        # Un `client` es un cliente de gspread: auto elige gspread aunque find_spec falle.
+        with patch("gspreadmanager.facade.importlib.util.find_spec", return_value=None):
+            mgr = SheetManager("Doc", client=Mock())
+        assert isinstance(mgr._client, GspreadClientAdapter)
+
+    def test_explicit_gspread_without_package_raises_helpful_error(self):
+        with (
+            patch.dict(sys.modules, {"gspreadmanager.infrastructure.gspread_client": None}),
+            pytest.raises(GSpreadManagerError, match=r"GSpreadManager\[gspread\]"),
+        ):
+            SheetManager("Doc", backend="gspread", credentials=Mock())
+
+
+class TestNativeErrorSubclasses:
+    """429/403 del nativo heredan de los errores de dominio (mismo catch en ambos backends)."""
+
+    def test_429_is_quota_exceeded(self):
+        error = build_sheets_api_error(429, "RESOURCE_EXHAUSTED", "quota")
+        assert isinstance(error, SheetsQuotaExceededError)
+        assert isinstance(error, QuotaExceededError)
+        assert error.status_code == 429
+
+    def test_403_is_permission_denied(self):
+        assert isinstance(build_sheets_api_error(403, "PERMISSION_DENIED", "x"), PermissionDeniedError)
+
+    def test_other_codes_build_plain_sheets_api_error(self):
+        error = build_sheets_api_error(500, "INTERNAL", "boom")
+        assert type(error) is SheetsApiError
+
+    def test_quota_error_raised_from_response(self):
+        session = FakeSession()
+        session.queue(
+            "get",
+            {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED", "message": "quota"}},
+            ok=False,
+            status_code=429,
+        )
+        with pytest.raises(QuotaExceededError):
+            SheetsApiClient(session).open_by_key("k")
+
+
+class TestNativeCreateInFolder:
+    def test_create_without_folder_does_not_patch(self):
+        session = FakeSession()
+        session.queue("post", {"spreadsheetId": "nuevo123"})
+        SheetsApiClient(session).create("Doc", None)
+        assert [c[0] for c in session.calls] == ["POST"]
+
+    def test_create_with_folder_moves_via_drive_patch(self):
+        session = FakeSession()
+        session.queue("post", {"spreadsheetId": "nuevo123"})
+        session.queue("patch", {"id": "nuevo123", "parents": ["carpeta9"]})
+
+        SheetsApiClient(session).create("Doc", "carpeta9")
+
+        method, url, params, _ = session.calls[1]
+        assert method == "PATCH"
+        assert url.endswith("/files/nuevo123")
+        assert params["addParents"] == "carpeta9"

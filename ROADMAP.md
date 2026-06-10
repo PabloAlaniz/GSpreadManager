@@ -39,7 +39,10 @@ quedó sin mantenimiento activo, así que la opción C está en ejecución.
 - [x] **Cliente nativo opt-in** (`SheetManager(backend="native")`): REST directo con
       google-auth detrás de los mismos puertos, con caché de documentos, timeouts y mapeo
       de errores a la jerarquía propia (Sprint 2).
-- [ ] **Nativo como default** (gspread pasa a extra opcional) — Sprint 3 y release 3.0.
+- [x] **gspread como extra opcional** (`pip install "GSpreadManager[gspread]"`) con
+      `backend="auto"`: usa gspread si está instalado, si no el nativo. El núcleo solo
+      depende de google-auth (Sprint 3). Benchmarks: `benchmarks/run_benchmarks.py`.
+- [ ] **Nativo como default explícito** (independiente de qué haya instalado) — release 3.0.
 
 ## ✅ v2.1 — Paridad con gspread/pygsheets + diferenciación (RELEASED)
 

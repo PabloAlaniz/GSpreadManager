@@ -29,10 +29,11 @@ mgr = SheetManager.open_by_url("https://docs.google.com/spreadsheets/d/1AbC...xy
 
 ### Backend nativo (sin gspread)
 
-Por defecto el transporte es gspread, pero podés usar el **cliente nativo** propio
-(REST directo sobre `google-auth`, sin gspread en el medio) con `backend="native"`.
-La API es exactamente la misma — ambos backends implementan los mismos puertos y pasan
-el mismo test de contrato:
+Hay dos transportes intercambiables: el adaptador de **gspread** y el **cliente nativo**
+propio (REST directo sobre `google-auth`). El default es `backend="auto"`: usa gspread si
+está instalado (es un extra opcional: `pip install "GSpreadManager[gspread]"`) y si no, el
+nativo. La API es exactamente la misma — ambos backends implementan los mismos puertos y
+pasan el mismo test de contrato:
 
 ```python
 mgr = SheetManager(
@@ -44,8 +45,9 @@ mgr = SheetManager(
 ```
 
 Funciona con `json_google_file`, `credentials`, `service_account_info` o `use_adc=True`
-(no con `client`, que es un cliente de gspread). gspread sigue siendo el default hasta la
-3.0 (ver ADR 0001 — gspread quedó sin mantenimiento activo, por eso existe esta salida).
+(no con `client`, que es un cliente de gspread). Ver [benchmarks](benchmarks.md) para la
+comparación de rendimiento. Contexto: gspread quedó sin mantenimiento activo (ADR 0001);
+el nativo pasará a ser el default explícito en la 3.0.
 
 ## Lectura
 

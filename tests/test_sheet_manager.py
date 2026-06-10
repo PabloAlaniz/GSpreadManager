@@ -26,7 +26,7 @@ def gs():
     """Mockea gspread: authorize -> client -> open -> spreadsheet, con hojas por nombre."""
     with (
         patch("gspreadmanager.infrastructure.auth.service_account.Credentials") as mock_creds,
-        patch("gspreadmanager.infrastructure.auth.gspread") as mock_gs,
+        patch("gspreadmanager.infrastructure.auth._authorize") as mock_authorize,
     ):
         mock_creds.from_service_account_file.return_value = Mock()
         client = Mock()
@@ -39,13 +39,13 @@ def gs():
             ws.spreadsheet = spreadsheet
             return ws
 
-        mock_gs.authorize.return_value = client
+        mock_authorize.return_value = client
         client.open.return_value = spreadsheet
         spreadsheet.worksheet.side_effect = make_ws
         spreadsheet.sheet1 = make_ws("Sheet1")
 
         yield {
-            "gspread": mock_gs,
+            "authorize": mock_authorize,
             "client": client,
             "spreadsheet": spreadsheet,
             "worksheets": worksheets,
@@ -87,7 +87,7 @@ def test_client_and_doc_cached_across_worksheets(gs):
     mgr.worksheet("A")
     mgr.worksheet("B")
     # Autoriza una vez y abre el documento una vez (caché del adaptador)
-    gs["gspread"].authorize.assert_called_once()
+    gs["authorize"].assert_called_once()
     gs["client"].open.assert_called_once_with("Doc")
 
 

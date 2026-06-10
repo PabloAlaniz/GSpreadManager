@@ -46,7 +46,8 @@ def mgr(doc_key):
 
 def test_write_and_read_roundtrip(mgr):
     ws = mgr.worksheet()
-    ws.write([["nombre", "edad"], ["Ana", "30"]], "A1")
+    ws.clear()
+    ws.append([["nombre", "edad"], ["Ana", "30"]])
     assert ws.read() == [["nombre", "edad"], ["Ana", "30"]]
 
 
@@ -54,6 +55,14 @@ def test_append_and_structure(mgr):
     ws = mgr.worksheet()
     ws.append([["Luis", "41"]])
     assert ws.read()[-1] == ["Luis", "41"]
+    assert ws.find("Luis") is not None
+
+
+def test_update_cell_and_format(mgr):
+    ws = mgr.worksheet()
+    ws.update_cell(1, 1, "encabezado")
+    ws.format_header()
+    assert ws.read()[0][0] == "encabezado"
 
 
 def test_create_and_delete_sheet(mgr):

@@ -81,6 +81,10 @@ class FakeSession:
         self.calls.append(("PUT", url, params, json))
         return self._resp("put")
 
+    def patch(self, url: str, *, params: Any = None, json: Any = None) -> FakeResponse:
+        self.calls.append(("PATCH", url, params, json))
+        return self._resp("patch")
+
     def delete(self, url: str, *, params: Any = None) -> FakeResponse:
         self.calls.append(("DELETE", url, params, None))
         return self._resp("delete")

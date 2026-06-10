@@ -66,6 +66,16 @@ class HttpSession(Protocol):
         """PUT con cuerpo JSON."""
         ...
 
+    def patch(
+        self,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> HttpResponse:
+        """PATCH con cuerpo JSON (Drive ``files.update``)."""
+        ...
+
     def delete(self, url: str, *, params: dict[str, Any] | None = None) -> HttpResponse:
         """DELETE."""
         ...
@@ -110,6 +120,16 @@ class TimeoutHttpSession:
     ) -> HttpResponse:
         """PUT con timeout."""
         return self._inner.put(url, params=params, json=json, timeout=self._timeout)
+
+    def patch(
+        self,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> HttpResponse:
+        """PATCH con timeout."""
+        return self._inner.patch(url, params=params, json=json, timeout=self._timeout)
 
     def delete(self, url: str, *, params: dict[str, Any] | None = None) -> HttpResponse:
         """DELETE con timeout."""

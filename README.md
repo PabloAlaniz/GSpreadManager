@@ -36,12 +36,17 @@ para lectura, escritura, formato, validación y gestión de hojas y documentos.
 ## 🚀 Instalación
 
 ```bash
-pip install GSpreadManager
+pip install GSpreadManager                # núcleo (cliente nativo, solo google-auth)
 
-# Con soporte de DataFrames (opcional)
-pip install "GSpreadManager[pandas]"
-pip install "GSpreadManager[polars]"
+# Extras opcionales
+pip install "GSpreadManager[gspread]"     # backend de gspread (default si está instalado)
+pip install "GSpreadManager[pandas]"      # DataFrames con pandas
+pip install "GSpreadManager[polars]"      # DataFrames con polars
 ```
+
+> Desde la v2.2 `gspread` es **opcional**: sin él, `SheetManager` usa automáticamente el
+> cliente nativo (REST sobre `google-auth`), con la misma API. Podés forzar el transporte
+> con `backend="gspread"` o `backend="native"`.
 
 ### Configuración en Google Cloud
 
