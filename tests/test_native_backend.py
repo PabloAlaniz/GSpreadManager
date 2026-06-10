@@ -10,6 +10,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+from gspread.utils import ValueRenderOption
 from gspreadmanager import (
     PermissionDeniedError,
     QuotaExceededError,
@@ -17,6 +18,7 @@ from gspreadmanager import (
     SpreadsheetNotFoundError,
 )
 from gspreadmanager.domain.errors import GSpreadManagerError
+from gspreadmanager.infrastructure.gspread_adapters import GspreadWorksheet
 from gspreadmanager.infrastructure.gspread_client import GspreadClientAdapter
 from gspreadmanager.infrastructure.native import SheetsApiClient, TimeoutHttpSession
 from gspreadmanager.infrastructure.native.errors import (
@@ -25,6 +27,10 @@ from gspreadmanager.infrastructure.native.errors import (
     build_sheets_api_error,
 )
 from gspreadmanager.infrastructure.native.http import DEFAULT_HTTP_TIMEOUT
+from gspreadmanager.infrastructure.native.sheets_api_client import (
+    NativeSpreadsheet,
+    NativeWorksheet,
+)
 
 from .test_native_spike import FakeSession
 
@@ -229,3 +235,60 @@ class TestNativeCreateInFolder:
         assert method == "PATCH"
         assert url.endswith("/files/nuevo123")
         assert params["addParents"] == "carpeta9"
+
+
+class TestNativeParityOperations:
+    """Render options y copy_to en el cliente nativo (Sprint 4)."""
+
+    def _worksheet(self, session: FakeSession) -> NativeWorksheet:
+        ss = NativeSpreadsheet(session, "doc", [("Hoja1", 7)])
+        return NativeWorksheet(ss, session, "doc", "Hoja1", 7)
+
+    def test_get_all_values_passes_render_option(self):
+        session = FakeSession()
+        session.queue("get", {"values": [["=A1+1"]]})
+        ws = self._worksheet(session)
+
+        assert ws.get_all_values("FORMULA") == [["=A1+1"]]
+        _, _, params, _ = session.calls[0]
+        assert params == {"valueRenderOption": "FORMULA"}
+
+    def test_get_all_values_without_render_sends_no_params(self):
+        session = FakeSession()
+        session.queue("get", {"values": [["1"]]})
+        ws = self._worksheet(session)
+
+        ws.get_all_values()
+        assert session.calls[0][2] is None
+
+    def test_copy_to_posts_to_copyto_endpoint(self):
+        session = FakeSession()
+        session.queue("post", {"sheetId": 99, "title": "Copia de Hoja1"})
+        ws = self._worksheet(session)
+
+        result = ws.copy_to("destino123")
+
+        method, url, _, body = session.calls[0]
+        assert method == "POST"
+        assert url.endswith("/doc/sheets/7:copyTo")
+        assert body == {"destinationSpreadsheetId": "destino123"}
+        assert result["sheetId"] == 99
+
+
+class TestGspreadParityOperations:
+    def test_get_all_values_maps_render_option_enum(self):
+        raw = Mock()
+        GspreadWorksheet(raw).get_all_values("UNFORMATTED_VALUE")
+        raw.get_all_values.assert_called_once_with(
+            value_render_option=ValueRenderOption.unformatted
+        )
+
+    def test_get_all_values_without_render_uses_default(self):
+        raw = Mock()
+        GspreadWorksheet(raw).get_all_values()
+        raw.get_all_values.assert_called_once_with()
+
+    def test_copy_to_delegates(self):
+        raw = Mock()
+        GspreadWorksheet(raw).copy_to("destino")
+        raw.copy_to.assert_called_once_with("destino")

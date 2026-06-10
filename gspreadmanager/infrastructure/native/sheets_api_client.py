@@ -358,13 +358,14 @@ class NativeWorksheet(_ApiCaller):
     def _values_url(self, a1_range: str) -> str:
         return f"{SHEETS_BASE}/{self._ss_id}/values/{quote(a1_range, safe='')}"
 
-    def get_all_values(self) -> list[list[str]]:
+    def get_all_values(self, value_render_option: str | None = None) -> list[list[str]]:
         """Lee toda la hoja (``values.get``), rellenando filas a un ancho uniforme.
 
         La API recorta celdas vacías al final de cada fila; se rellenan para devolver una
         matriz rectangular (como ``gspread.Worksheet.get_all_values``).
         """
-        data = self._parent.values_get(self._title)
+        params = {"valueRenderOption": value_render_option} if value_render_option else None
+        data = self._get(self._values_url(self._title), params=params)
         rows: list[list[str]] = data.get("values", [])
         width = max((len(row) for row in rows), default=0)
         return [row + [""] * (width - len(row)) for row in rows]
@@ -497,3 +498,10 @@ class NativeWorksheet(_ApiCaller):
             }
         }
         return self._parent.batch_update({"requests": [request]})
+
+    def copy_to(self, destination_spreadsheet_id: str) -> Any:
+        """Copia esta hoja a otro documento (``sheets.copyTo``)."""
+        return self._post(
+            f"{SHEETS_BASE}/{self._ss_id}/sheets/{self._sheet_id}:copyTo",
+            json={"destinationSpreadsheetId": destination_spreadsheet_id},
+        )

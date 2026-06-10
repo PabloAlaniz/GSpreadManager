@@ -77,16 +77,16 @@ Plan derivado de la auditoría SOLID/Clean Architecture/DDD de junio 2026 y del
 gspread anunciaron que no pueden seguir manteniéndolo, lo que activa el disparador del
 [ADR 0001](docs/adr/0001-dependencia-de-gspread.md) para promover el cliente nativo.
 
-1. **Pureza de capas y errores de dominio (v2.2.0):** jerarquía completa de errores
+1. ✅ **Pureza de capas y errores de dominio (v2.2.0):** jerarquía completa de errores
    (`ApiError`, `QuotaExceededError`, `PermissionDeniedError`, `*NotFoundError`), traducción
    de todas las excepciones de gspread en los adaptadores, retry desacoplado de gspread,
    helpers A1 promovidos al dominio (adiós a `gspread.utils` en aplicación) y logging
    estructurado opt-in.
-2. **Cliente nativo, parte 1 (v2.2):** ejecutar ADR 0001 — `SheetManager(backend="native")`
+2. ✅ **Cliente nativo, parte 1 (v2.2):** ejecutar ADR 0001 — `SheetManager(backend="native")`
    opt-in, paridad total del spike con la facade, timeouts, tests de integración opcionales.
-3. **Cliente nativo, parte 2:** gspread pasa a extra opcional (`[gspread]`), benchmarks
+3. ✅ **Cliente nativo, parte 2:** gspread pasa a extra opcional (`[gspread]`), benchmarks
    nativo vs gspread, hardening (paginación Drive, refresh de credenciales).
-4. **Paridad final con el ecosistema (v2.3):** import CSV, update_title/locale/timezone,
+4. ✅ **Paridad final con el ecosistema (v2.3):** import CSV, update_title/locale/timezone,
    listar/abrir pestañas por índice-id, find/replace, copy_to entre documentos, value render
    options (fórmulas).
 5. **Operaciones de alto nivel (v2.4):** `upsert` por clave (también para modelos),

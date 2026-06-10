@@ -7,10 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Sprints 1–3 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores y
-cliente nativo de primera clase (gspread pasa a ser opcional).
+Sprints 1–4 del plan v2.2 → v3.0 (ver ROADMAP): pureza de capas, contrato de errores,
+cliente nativo de primera clase (gspread pasa a ser opcional) y **paridad total** con
+gspread/pygsheets/EZSheets.
 
 ### Added
+- **Paridad final con el ecosistema (Sprint 4):**
+  - `ws.import_csv(ruta_o_buffer, clear=..., delimiter=...)` — vuelca un CSV en la hoja
+    (parsing puro en `domain/csv_data.py`, escritura `RAW`).
+  - `mgr.update_title()` / `update_locale()` / `update_timezone()` — propiedades del
+    documento vía `updateSpreadsheetProperties`.
+  - `mgr.list_worksheets()` y apertura de pestañas por posición o id:
+    `worksheet_by_index(i)` / `worksheet_by_id(sheet_id)`.
+  - `ws.find_replace(find, replacement, match_case=..., match_entire_cell=...,
+    search_by_regex=..., include_formulas=...)` — `findReplace` de la API v4; devuelve el
+    resumen (`occurrencesChanged`, ...). El backend en memoria lo aplica de verdad a la
+    grilla (literal, sin regex) para poder testearlo.
+  - `ws.copy_to(destination_key)` — copia la pestaña a otro documento (`sheets.copyTo`;
+    nuevo método del `WorksheetPort` en los 4 backends; el in-memory copia entre documentos
+    del mismo `InMemoryBackend`).
+  - `ws.read(render="formatted" | "unformatted" | "formula")` — value render options al
+    leer (fórmulas o valores crudos); `get_all_values` del puerto acepta el render y la
+    caché memoiza por opción.
 - **gspread es ahora un extra opcional** (`pip install "GSpreadManager[gspread]"`): el
   núcleo solo depende de `google-auth`. Nuevo default `backend="auto"`: usa gspread si está
   instalado (o si se pasa `client=`), si no el cliente nativo — el quick start funciona

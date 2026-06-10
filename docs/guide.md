@@ -66,6 +66,10 @@ rango = ws.read_range(1, 10, "A", "D")
 
 # Con inferencia de tipos ("3" -> 3, "1.5" -> 1.5; preserva "007")
 ws.read(output_format="dict", numericise=True)
+
+# Cómo renderiza los valores la API
+ws.read(render="formula")       # devuelve "=SUM(A1:A10)" en vez del resultado
+ws.read(render="unformatted")   # números crudos (sin formato de moneda/fecha)
 ```
 
 ## Escritura y actualización
@@ -79,6 +83,10 @@ ws.insert([["A", "B"]], fila=10)        # inserta en una fila concreta (o al fin
 ws.batch_update([
     {"range": "Hoja1!A1:B1", "values": [["Mes", "Total"]]},
 ])
+
+# Volcar un CSV en la hoja (ruta o file-like; limpia la hoja salvo clear=False)
+ws.import_csv("datos.csv")
+ws.import_csv(io.StringIO("a,b\n1,2"), delimiter=",")
 ```
 
 ## Gestión de hojas
@@ -88,6 +96,13 @@ nueva = mgr.create_sheet("Reporte 2026", rows=500, cols=10)   # devuelve un Work
 mgr.delete_sheet("Borrador")
 ws.clear("A1:C10")    # un rango
 ws.clear()            # toda la hoja
+
+mgr.list_worksheets()          # [{"sheetId": ..., "title": ..., "index": ...}, ...]
+ws = mgr.worksheet_by_index(0) # por posición (0-based)
+ws = mgr.worksheet_by_id(123)  # por sheetId
+
+# Copiar una pestaña a otro documento (por su key de Drive)
+ws.copy_to("1AbC...keyDestino")
 ```
 
 ## Filas y columnas
@@ -111,6 +126,12 @@ ws.unhide_rows(2, 4)
 celda = ws.find("Total")
 if celda:
     print(celda.row, celda.col, celda.value)
+
+# Buscar y reemplazar en toda la pestaña (findReplace de la API)
+resumen = ws.find_replace("2025", "2026")                       # substring, sin case
+ws.find_replace("borrador", "final", match_entire_cell=True)    # celda exacta
+ws.find_replace(r"v\d+", "vFinal", search_by_regex=True)        # regex (RE2)
+print(resumen.get("occurrencesChanged"))
 ```
 
 ## Notas, named ranges y protected ranges
@@ -240,6 +261,11 @@ nuevo = mgr.create_spreadsheet("Reporte mensual")
 copia = mgr.copy_spreadsheet(nuevo.id, title="Reporte (copia)")
 docs = mgr.list_spreadsheets(title="Reporte")
 mgr.delete_spreadsheet(copia.id)
+
+# Propiedades del documento
+mgr.update_title("Reporte 2026")
+mgr.update_locale("es_AR")
+mgr.update_timezone("America/Argentina/Buenos_Aires")
 ```
 
 ## Compartir y permisos

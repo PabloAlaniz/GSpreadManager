@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from gspread.utils import ValueInputOption
+from gspread.utils import ValueInputOption, ValueRenderOption
 
 from gspreadmanager.ports.sheets import SpreadsheetPort, WorksheetPort
 
@@ -49,9 +49,13 @@ class GspreadWorksheet:
         """Actualiza una celda."""
         self._ws.update_cell(row, col, value)
 
-    def get_all_values(self) -> list[list[str]]:
-        """Devuelve todas las filas."""
-        return self._ws.get_all_values()
+    def get_all_values(self, value_render_option: str | None = None) -> list[list[str]]:
+        """Devuelve todas las filas (con render opcional: FORMATTED/UNFORMATTED/FORMULA)."""
+        if value_render_option is None:
+            return self._ws.get_all_values()
+        return self._ws.get_all_values(
+            value_render_option=ValueRenderOption(value_render_option)
+        )
 
     def append_rows(self, data: list[list[Any]], value_input_option: str) -> Any:
         """Añade filas al final."""
@@ -105,6 +109,10 @@ class GspreadWorksheet:
         if range_name is not None:
             return self._ws.update(values=values, range_name=range_name, value_input_option=option)
         return self._ws.update(values, value_input_option=option)
+
+    def copy_to(self, destination_spreadsheet_id: str) -> Any:
+        """Copia esta hoja a otro documento."""
+        return self._ws.copy_to(destination_spreadsheet_id)
 
 
 @translates_gspread_errors
